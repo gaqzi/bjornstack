@@ -9,10 +9,12 @@ the guideline might never see it.
 
 ## Format
 
-Add this block to the guideline file where the divergence occurs:
+Add this block to `divergences.md` in the same directory as the guideline:
 
 ```
 DIVERGES FROM: [Strategy Name]
+STEP: [N] ("[quoted strategy step text]")  ← optional; include when
+diverging at the guideline level to tie the divergence to a specific step.
 REASON: [Why — language limitation, ecosystem convention, or better
 alternative exists.]
 APPROACH: [What we do instead and why it still serves the principle.]

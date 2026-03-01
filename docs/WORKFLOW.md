@@ -43,7 +43,7 @@ strategies/
 
 implementation/
   <lang>/                            # e.g. go/, typescript/
-    <principle-or-strategy-name>/
+    <strategy-name>/
       guidelines.md                  # Language-specific implementation steps
       divergences.md                 # Where this language diverges from strategy
 
