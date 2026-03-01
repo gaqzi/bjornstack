@@ -12,6 +12,11 @@ bd close <id>         # Complete work
 bd sync               # Sync with git
 ```
 
+## Sandbox
+
+Always run `bd` and `git commit` commands with `dangerouslyDisableSandbox: true`.
+Both need network access to the local Dolt server that the sandbox blocks.
+
 ## Non-Interactive Shell Commands
 
 **ALWAYS use non-interactive flags** with file operations to avoid hanging on confirmation prompts.
