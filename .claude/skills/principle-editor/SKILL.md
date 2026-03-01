@@ -5,7 +5,7 @@ description: >
   optimized for both humans and AI agents. Use this skill whenever the user
   wants to create a new principle, review or improve an existing principle,
   convert prose rules or ideas into principles, or check whether something
-  qualifies as a principle vs. a guideline or guard. Also trigger when the
+  qualifies as a principle vs. a strategy, guideline, or guard. Also trigger when the
   user mentions AGENTS.md principles, CLAUDE.md principles, engineering
   tenets, or asks "is this a good principle?" — even if they don't use the
   word "principle" explicitly.
@@ -56,8 +56,7 @@ business logic.
 One concrete example. Someone looking at real code should be able to point at
 it and say "that — that's the violation." This principle uses one violation
 because the boundary is clear. Use a second violation only when it draws a
-line that reasonable people would argue about (see "Boundary-clarifying
-violations" in Edge cases).
+line that reasonable people would argue about (see violation format check).
 
 ```
 WHY: Mixed objects are hard to test and obscure intent.
@@ -102,9 +101,10 @@ just say "this could be improved" — show the improved version.
 User wants to revise an existing principle — because a strategy revealed the
 definition is too narrow, a guideline showed a violation doesn't cover a real
 case, or experience proved the WHY is wrong. Read the existing principle file.
-Diff the proposed change against the quality checks. Flag if the change would
-invalidate existing strategies that reference this principle. After approval,
-update the file in place.
+Diff the proposed change against the quality checks. Grep `strategies/*.md`
+for strategies that reference this principle — for each, check whether their
+steps still serve the updated definition and WHY. Flag any that don't. After
+approval, update the file in place.
 
 ### Extract
 
@@ -113,13 +113,23 @@ distinct concept:
 
 1. Decide if it's actually a principle (vs. strategy, guideline, guard, or
    aspiration)
-2. If it's a principle, produce it in the format
-3. If it's not, say what it is and why — then create a bead to route it
-   to the right layer:
-   - Strategy → bead for strategy-editor (include the principle it serves)
-   - Guideline → bead for guidelines-editor (include which strategy it
-     implements and which language)
-   - Guard → bead for guard-designer (include which guideline step it checks)
+2. If it's a principle, produce it in the format and run quality checks
+3. If it's an aspiration, reject it — explain why it's not actionable and
+   help decompose it into observable principles (see Actionability check).
+   Produce each decomposed principle through step 2.
+4. If it belongs in another layer, say what it is and why — then route it
+   to the highest missing layer in the design chain for the relevant
+   principle. Check what exists:
+   - No strategy yet → bead for strategy-editor
+   - Strategy exists, no guideline → bead for guidelines-editor
+   - Strategy and guideline exist → bead for guard-designer
+
+   Group all discoveries for the same principle into one bead. Include
+   downstream discoveries as context in the bead description — a guard
+   idea found in prose might inform strategy design. Each layer's design
+   may reshape what reaches the next, and downstream editors' handoff
+   workflows will carry valid ideas forward. Discoveries that don't
+   survive the design chain were probably wrong.
 
 ## Quality checks
 
@@ -280,9 +290,10 @@ Check whether the principle would benefit from a strategy. Two signals:
 > "This principle could benefit from a strategy that describes how to follow
 > it. Want to create one?"
 
-If the user accepts, create a beads task to create the strategy using
-the strategy-editor with the principle name pre-filled. If they decline,
-do nothing — they can create it later.
+If the user accepts, create a bead with type `task`, priority `3`,
+title "Create strategy for [Principle Name]", and description that
+includes the principle name and any technique ideas from the conversation.
+If they decline, do nothing — they can create it later.
 
 Not every principle needs a strategy. Some principles stand alone because
 the "how" is obvious or context-dependent.
@@ -294,12 +305,8 @@ the "how" is obvious or context-dependent.
   because the check can't be mechanized. That's legitimate. The test is
   actionability, not mechanizability.
 
-- **Boundary-clarifying violations.** A second violation example is useful
-  when it draws a line that reasonable people could argue about. It encodes
-  the designer's judgment about where the boundary sits. But if the
-  violations describe genuinely different failure modes, that's a sign you
-  have two principles. The test: do both violations fail for the same *why*?
-  If yes, keep them together. If each needs its own *why*, split.
+- **Boundary-clarifying violations.** See the violation format check for
+  when to use a second violation and when to split into two principles.
 
 - **User wants to write a batch.** When converting a large document into
   principles, work through them one at a time. Don't try to produce 15
