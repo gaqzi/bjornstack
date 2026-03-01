@@ -132,17 +132,19 @@ Decomposed into real principles:
 
 ### Layer check
 
-Principles exist in a three-layer system. Make sure the principle is in the
+Principles exist in a four-layer system. Make sure the principle is in the
 right layer.
 
-- **Principles** are high-level, language-agnostic constraints that encode
+- **Principles** — WHY: high-level, language-agnostic constraints that encode
   *why* something matters. They require judgment to apply.
-- **Guidelines** are tactical, language-specific implementation steps. They
-  tell you *how* to follow a principle.
-- **Guards** are mechanical checks with zero judgment — linter rules, CI
-  gates. They reject, they don't advise.
+- **Strategies** — HOW: abstract, language-agnostic techniques that bridge
+  a principle to a guideline. They describe a conceptual recipe.
+- **Guidelines** — WHAT: tactical, language-specific implementation steps.
+  They tell you what to do concretely to follow a principle or strategy.
+- **Guards** — CHECK: mechanical checks with zero judgment — linter rules,
+  CI gates. They reject, they don't advise.
 
-Check for two common misplacements:
+Check for these common misplacements:
 
 1. **Guideline disguised as principle.** If it prescribes specific steps
    or references a specific language/framework, it's a guideline. Nudge
@@ -151,7 +153,15 @@ Check for two common misplacements:
    FIX: The principle is "No Conditional Test Logic." The table-driven
    approach is a guideline that implements it.
 
-2. **Guard disguised as principle.** If it can be checked mechanically
+2. **Strategy disguised as principle.** If it describes a multi-step
+   technique without language specifics, it's a strategy, not a principle.
+   Principles are one sentence. Strategies need space for steps.
+   FAIL: "Identify variations, extract to data, write one test body,
+   iterate."
+   FIX: The principle is "No Conditional Test Logic." The technique is a
+   strategy called "Data-Driven Test Cases."
+
+3. **Guard disguised as principle.** If it can be checked mechanically
    with zero human judgment, it's a guard. It belongs in a linter or CI.
    FAIL: "No if statements in test bodies."
    FIX: This is a guard (linter rule). The principle behind it is
@@ -159,7 +169,7 @@ Check for two common misplacements:
    hide which case failed and make tests act as multiple tests in a
    trenchcoat.
 
-3. **Language-specific principle.** Principles are language-agnostic. If
+4. **Language-specific principle.** Principles are language-agnostic. If
    the principle references Go interfaces, TypeScript generics, or any
    language-specific construct, abstract up. Language-specific
    implementation belongs in guidelines.

@@ -1,10 +1,17 @@
 {
   "permissions": {
-    "allow": []
+    "allow": [
+      "Bash(bd:*)"
+    ]
   },
   "sandbox": {
     "enabled": true,
-    "autoAllowBashIfSandboxed": true
+    "autoAllowBashIfSandboxed": true,
+    "allowUnixSockets": [".git/fsmonitor--daemon.ipc"],
+    "allowLocalBinding": true,
+    "excludedCommands": [
+      "Bash(bd:*)"
+    ]
   },
   "hooks": {
     "PreCompact": [

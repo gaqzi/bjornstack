@@ -28,11 +28,13 @@ I have to re-read, re-verify, and eventually rewrite.
 
 bjornstack makes my standards explicit, layered, and enforceable:
 
-- **Principles** constrain and express how we design our system,
+- **Principles** — WHY: constrain and express how we design our system,
   what is important to us, and why
-- **Guidelines** are derived from principles and give us step-by-step
-  instructions for implementation
-- **Guards** flow from principles and block violations mechanically,
+- **Strategies** — HOW: the abstract, language-agnostic approach that bridges
+  a principle to a guideline
+- **Guidelines** — WHAT: derived from principles (via strategies) and give us
+  step-by-step instructions for implementation in a specific language
+- **Guards** — CHECK: flow from guidelines and block violations mechanically,
   no judgment required
 
 Think engineering manifesto, standards, tenets, etc. that you'd see in any
@@ -40,9 +42,9 @@ organization, just made to be well-understood by agents too. And a stronger
 focus on mechanistic enforcement through agents or linters. Because the
 agent will follow the same steps time after time where a human loses focus.
 
-## The three layers
+## The four layers
 
-### Principles
+### Principles — WHY
 
 High-level constraints that encode *why* something matters. Language-agnostic.
 
@@ -53,18 +55,35 @@ spot it.
 
 See [principles/FORMAT.md](principles/FORMAT.md) for the full format spec.
 
-### Guidelines
+### Strategies — HOW
+
+The abstract, language-agnostic approach that bridges a principle to a
+guideline. Strategies describe a technique step-by-step in an idealized
+setting, without language-specific constraints.
+
+Not every principle needs a strategy. When a principle is direct enough that
+guidelines can implement it without an intermediate step, skip straight to
+guidelines. But when a principle says "don't do X" and the natural follow-up
+is "so what do I do instead?", the answer is a strategy.
+
+See [strategies/FORMAT.md](strategies/FORMAT.md) for the full format spec.
+
+### Guidelines — WHAT
 
 Tactical implementation steps for when principles alone aren't enough to act on.
-Guidelines are language-specific, the same principle looks different in Go
-vs. TypeScript.
+Guidelines are language-specific, the same principle (and strategy) looks
+different in Go vs. TypeScript.
 
 Procedural steps to achieve a principle. Not necessarily the _only way_ but a
 way. Usually followed without thought as the "golden path" until a better
 approach is tested and validated. If there are multiple known valid ways,
 a rubric exists to decide approach first.
 
-### Guards
+When a guideline can't follow a strategy due to language limitations or
+ecosystem conventions, it documents the divergence. See
+[strategies/DIVERGENCE.md](strategies/DIVERGENCE.md).
+
+### Guards — CHECK
 
 Mechanical checks that block violations before they land. If there's no wiggle
 room, it's a guard, implemented as linter rules, CI checks, or other automated
@@ -79,20 +98,22 @@ automated checks over time.
 
 ## How things move between layers
 
-Principles are discovered first. When a principle needs more specificity to be
-actionable, it becomes a guideline. When a guideline can be checked with zero
-human judgment, it becomes a guard.
+Principles are discovered first. When a principle needs an abstract technique
+to be actionable, it becomes a strategy. When a strategy needs language-specific
+steps, it becomes a guideline. When a guideline can be checked with zero human
+judgment, it becomes a guard.
 
 ```
-Principle    → "Tests must not contain conditional logic"
-Guideline    → How to restructure a test with ifs into table-driven tests
-               or separate test functions
-Guard        → testnoifs linter: mechanically rejects if in test bodies
+Principle    → WHY     "Tests must not contain conditional logic"
+Strategy     → HOW     Data-Driven Test Cases (the abstract technique)
+Guideline    → WHAT    Go: table-driven tests with t.Run subtests
+Guard        → CHECK   testnoifs linter: mechanically rejects if in test bodies
 ```
 
-Not everything moves down. Some principles stay principles because they require
-judgment. Some guidelines never become guards because the check can't be
-mechanized.
+Not everything moves through all four layers. Some principles are direct enough
+to skip strategy and go straight to guidelines. Some principles stay principles
+because they require judgment. Some guidelines never become guards because the
+check can't be mechanized.
 
 ## Language support
 
@@ -100,8 +121,8 @@ mechanized.
 |------------|-------------|
 | Go         | In progress |
 
-Principles are shared across all languages. Guidelines and guards are
-language-specific.
+Principles and strategies are shared across all languages. Guidelines and
+guards are language-specific.
 
 ## Installation
 

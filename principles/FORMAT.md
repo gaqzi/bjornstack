@@ -1,5 +1,9 @@
 # How to Write Principles
 
+Principles are the WHY layer — high-level, language-agnostic constraints that
+encode *why* something matters. They sit at the top of a four-layer system:
+Principle (WHY) → Strategy (HOW) → Guideline (WHAT) → Guard (CHECK).
+
 Principles are not prose rules or tutorials. They are named concepts with a
 tight definition, a violation example, and a one-line why.
 
