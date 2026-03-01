@@ -47,6 +47,10 @@ implementation/
       guidelines.md                  # Language-specific implementation steps
       divergences.md                 # Where this language diverges from strategy
 
+guards/
+  <lang>/                            # e.g. go/, typescript/
+    <guard-name>.md                  # Guard design documents
+
 script/
   audit-principles                   # Scans for gaps (planned)
 ```
@@ -75,7 +79,7 @@ guards are language-specific.
 
 ## The editor skills
 
-Three editor skills drive the pipeline. Each is a separate Claude Code skill
+Four editor skills drive the pipeline. Each is a separate Claude Code skill
 that can be invoked independently.
 
 | Skill              | Layer      | Invocation         |
@@ -83,6 +87,7 @@ that can be invoked independently.
 | principle-editor   | Principles | `/principle-editor`|
 | strategy-editor    | Strategies | `/strategy-editor` |
 | guidelines-editor  | Guidelines | `/guidelines-editor`|
+| guard-designer     | Guards     | `/guard-designer`  |
 
 ### Separate skills, optional handoff
 
@@ -131,7 +136,7 @@ or the outcomes suggest language-specific checks.
 If accepted, invoke guidelines-editor with the strategy and principle
 pre-filled.
 
-#### guidelines-editor → guard definition
+#### guidelines-editor → guard-designer
 
 **When:** After creating a guideline, if any step can be checked mechanically
 with zero judgment.
@@ -139,8 +144,11 @@ with zero judgment.
 **Signal:** A guideline step is a binary check — it either passes or fails,
 no context needed.
 
-**Offer:** *"This guideline step could be enforced as a guard. Want to define
-one?"*
+**Handoff:** The guidelines-editor creates a "Design [language] guard: [check
+description]" bead for each guard candidate. When someone picks up that bead,
+they invoke guard-designer, which reads the guard candidate from the guideline
+and designs the full guard: tool selection, rejection/acceptance patterns,
+false positive assessment, escape hatch, and implementation plan.
 
 ### How strategies are discovered
 
