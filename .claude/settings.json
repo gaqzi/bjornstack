@@ -3,7 +3,6 @@
     "allow": [
       "Bash(bd:*)",
       "Bash(git log:*)",
-      "Bash(git list:*)",
       "Bash(git ls-tree:*)"
     ]
   },
