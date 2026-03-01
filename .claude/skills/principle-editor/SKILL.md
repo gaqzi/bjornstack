@@ -177,10 +177,30 @@ Check for these common misplacements:
    FIX: "Consumer-Defined Contracts" — Abstractions are defined by the
    code that depends on them, not the code that implements them.
 
-## Handoff to strategy-editor
+## After approval
 
-After creating a principle, check whether it would benefit from a strategy.
-Two signals:
+Once the user approves the principle, complete these steps in order.
+
+### 1. Uniqueness check
+
+Glob `principles/*.md` (excluding FORMAT.md). For each existing principle,
+compare the name and definition against the new one:
+
+- **Name collision** — Same or nearly identical name. Resolve before writing.
+- **Semantic overlap** — Different name but the definition covers the same
+  constraint. Show both to the user and ask: merge, differentiate, or abort?
+
+If no conflicts, proceed.
+
+### 2. Write the principle file
+
+Write the principle to `principles/<kebab-name>.md` using the exact format
+from FORMAT.md. The filename uses the kebab-case version of the principle
+name (e.g., "No Conditional Test Logic" → `no-conditional-test-logic.md`).
+
+### 3. Offer strategy handoff
+
+Check whether the principle would benefit from a strategy. Two signals:
 
 1. **"So what do I do instead?"** — The principle says "don't do X" and the
    natural follow-up is how to avoid it. That technique is a strategy.
@@ -193,9 +213,12 @@ Two signals:
 > "This principle could benefit from a strategy that describes how to follow
 > it. Want to create one?"
 
-If the user accepts, create a beads task to create the strategy using 
+If the user accepts, create a beads task to create the strategy using
 the strategy-editor with the principle name pre-filled. If they decline,
 do nothing — they can create it later.
+
+Not every principle needs a strategy. Some principles stand alone because
+the "how" is obvious or context-dependent.
 
 ## Edge cases
 
