@@ -33,32 +33,93 @@ WHY: [One sentence: the mechanism — what goes wrong without it.]
 
 No exceptions. If the output doesn't match this structure, revise until it does.
 
+### Annotated example
+
+This is what a complete principle looks like and why each part works:
+
+```
+## Coordinator/Logic Separation
+```
+Name: 3-word noun phrase. Works as shorthand — you can say "CLS violation"
+and the agent knows exactly what you mean.
+
+```
+Objects either coordinate collaborators or perform business logic — never both.
+```
+One sentence. One period. If you need more, you have two principles hiding
+in one. The em-dash signals the constraint boundary.
+
+```
+VIOLATION: A struct that calls external services AND contains conditional
+business logic.
+```
+One concrete example. Someone looking at real code should be able to point at
+it and say "that — that's the violation." This principle uses one violation
+because the boundary is clear. Use a second violation only when it draws a
+line that reasonable people would argue about (see "Boundary-clarifying
+violations" in Edge cases).
+
+```
+WHY: Mixed objects are hard to test and obscure intent.
+```
+One sentence. States the mechanism — what breaks and how. Not "because mixing
+is bad" (restates the rule) but "hard to test and obscure intent" (names the
+consequences). The WHY should be short enough to remember but specific enough
+to apply in novel situations.
+
 ## Modes
 
 ### Create
 
 User describes a concept, rule, or constraint. Produce a principle.
 
-1. Draft the principle in the exact format
-2. Run every quality check (see below)
-3. If any check fails, revise and show the improved version
-4. Present the final principle with a brief note on any tradeoffs or
+The user often arrives with a vague rule, a frustration, or an instinct about
+what matters. This isn't a principle yet — it's raw material. Your job is to
+find the one-sentence constraint hiding in it. Ask: "What goes wrong when
+this is violated?" The answer reveals the definition and WHY. If the answer
+is "everything" or "it's just bad," help decompose into something observable.
+
+1. Shape the raw input into a one-sentence constraint (see above)
+2. Draft the principle in the exact format
+3. Run every quality check (see below)
+4. If any check fails, revise and show the improved version
+5. Present the final principle with a brief note on any tradeoffs or
    judgment calls you made
+6. Wait for user approval before writing. Do not proceed to the
+   after-approval workflow until the user confirms.
 
 ### Review
 
 User provides a draft principle. Evaluate it against every quality check.
-For each failure, explain what's wrong and offer a concrete rewrite.
-Don't just say "this could be improved"; show the improved version.
+Lead with a summary: which checks pass, which fail. Then for each failure,
+show the failing text, explain what's wrong, and provide a concrete rewrite.
+If a fix to one part would ripple into others (e.g., changing the definition
+affects what counts as a violation), call out the ripple explicitly. Don't
+just say "this could be improved" — show the improved version.
+
+### Update
+
+User wants to revise an existing principle — because a strategy revealed the
+definition is too narrow, a guideline showed a violation doesn't cover a real
+case, or experience proved the WHY is wrong. Read the existing principle file.
+Diff the proposed change against the quality checks. Flag if the change would
+invalidate existing strategies that reference this principle. After approval,
+update the file in place.
 
 ### Extract
 
 User provides prose rules, a document, or a list of ideas. For each
 distinct concept:
 
-1. Decide if it's actually a principle (vs. guideline, guard, or aspiration)
+1. Decide if it's actually a principle (vs. strategy, guideline, guard, or
+   aspiration)
 2. If it's a principle, produce it in the format
-3. If it's not, say what it is and why — suggest where it belongs instead
+3. If it's not, say what it is and why — then create a bead to route it
+   to the right layer:
+   - Strategy → bead for strategy-editor (include the principle it serves)
+   - Guideline → bead for guidelines-editor (include which strategy it
+     implements and which language)
+   - Guard → bead for guard-designer (include which guideline step it checks)
 
 ## Quality checks
 
@@ -81,13 +142,19 @@ optional.
 
 - **Violation is a concrete, recognizable example.** Not abstract. Someone
   looking at real code or a real design should be able to point at it and
-  say "that — that's the violation."
+  say "that — that's the violation." 1-2 sentences. Most principles need
+  one violation. Use a second only when it draws a boundary that reasonable
+  people would argue about — it encodes the designer's judgment about where
+  the line sits. If the two violations describe genuinely different failure
+  modes (each needing its own WHY), you have two principles — split them.
   FAIL: "Code that doesn't follow the principle."
   PASS: "A struct that calls external services AND contains conditional
   business logic."
 
 - **Why states the mechanism.** It explains what breaks and how — not just
-  that something is "bad" or restates the rule in different words.
+  that something is "bad" or restates the rule in different words. One
+  sentence. Short enough to remember, specific enough to apply in novel
+  situations. Name consequences, not feelings.
   FAIL: "Because mixing coordination and logic is wrong."
   PASS: "Mixed objects are hard to test and obscure intent."
 
