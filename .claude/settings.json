@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": []
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
+  }
+}
