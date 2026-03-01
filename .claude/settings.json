@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(bd:*)"
+      "Bash(bd:*)",
+      "Bash(git log:*)",
+      "Bash(git list:*)",
+      "Bash(git ls-tree:*)"
     ]
   },
   "sandbox": {

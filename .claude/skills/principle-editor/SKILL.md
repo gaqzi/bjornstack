@@ -177,6 +177,26 @@ Check for these common misplacements:
    FIX: "Consumer-Defined Contracts" — Abstractions are defined by the
    code that depends on them, not the code that implements them.
 
+## Handoff to strategy-editor
+
+After creating a principle, check whether it would benefit from a strategy.
+Two signals:
+
+1. **"So what do I do instead?"** — The principle says "don't do X" and the
+   natural follow-up is how to avoid it. That technique is a strategy.
+2. **Layer check caught a strategy.** — You identified a multi-step technique
+   disguised as a principle. After extracting the real principle, offer to
+   create the technique as a strategy.
+
+**Always offer, never force.** Say something like:
+
+> "This principle could benefit from a strategy that describes how to follow
+> it. Want to create one?"
+
+If the user accepts, create a beads task to create the strategy using 
+the strategy-editor with the principle name pre-filled. If they decline,
+do nothing — they can create it later.
+
 ## Edge cases
 
 - **Principle requires judgment and that's fine.** Not every principle needs
