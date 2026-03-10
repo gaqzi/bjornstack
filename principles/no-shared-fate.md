@@ -1,4 +1,4 @@
-## No Shared Fate
+# No Shared Fate
 Units that should be independently testable, deployable, or changeable must not couple through shared mutable state — each operates in isolation so that one's failure cannot silently break another.
 VIOLATION: Two tests that pass individually but fail when run in parallel because they both read and write the same database row.
 VIOLATION: Two services sharing a database where one team's migration breaks the other's queries.

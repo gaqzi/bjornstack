@@ -1,4 +1,4 @@
-## Earned Abstraction
+# Earned Abstraction
 Abstractions must emerge from repeated concrete cases — only after solving the same problem multiple times can you distinguish the essential pattern from incidental similarity.
 VIOLATION: An abstraction that takes a boolean or mode flag to handle a second use case, revealing it was built from one case and extended rather than extracted from understanding.
 WHY: Premature abstractions attract flags and modes because they don't understand their own boundaries — each new case warps the abstraction further from cohesion.

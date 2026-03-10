@@ -9,45 +9,99 @@ tight definition, a violation example, and a one-line why.
 
 ## Format
 
+Every principle file has two parts: a tight **principle block** and a
+**rationale section**.
+
+### Principle block
+
 ```
-## [Principle Name]
-[One sentence: what the rule is.]
+# [Principle Name]
+[One constraint, clearly stated.]
 VIOLATION: [Concrete example of what wrong looks like.]
+VIOLATION: [Optional — a second example that clarifies a borderline case.]
 WHY: [One sentence: the mechanism, what goes wrong without it.]
 ```
+
+### Rationale section
+
+```
+---
+<!-- Rationale below — read when creating strategies, reviewing, or
+questioning the principle. Not needed for routine application. -->
+
+## Rationale
+
+[How this principle was arrived at. Edge cases. What this principle is NOT.
+Tensions with other principles and how they resolve. Cross-references to
+sibling principles.]
+
+### [Subsection as needed]
+
+[Define ambiguous terms. Carve out exceptions. Explain what the principle
+covers and what it doesn't.]
+```
+
+Agents read only the principle block for routine application (checking code,
+listing principles, quick violation checks). The rationale is for deeper work:
+creating strategies, reviewing principles, resolving ambiguous cases, or
+onboarding new contributors.
 
 ## Example
 
 ```
-## Coordinator/Logic Separation
-Objects either coordinate collaborators or perform business logic, never both.
-VIOLATION: A struct that calls external services AND contains conditional business logic.
-WHY: Mixed objects are hard to test and obscure intent.
+# Fail Early and Loud
+Code must surface problems visibly and early rather than absorbing them into
+implicit defaults, silent fallbacks, or hidden paths.
+VIOLATION: A hashmap lookup returns null, a downstream null-check substitutes
+a default, and the bug surfaces three layers later as wrong data in production.
+VIOLATION: A parameterized test uses `if tc.expectError` to branch between
+error and success assertions, hiding which path actually executed when the
+test fails.
+WHY: Every silent failure is a bug that compounds — the distance between cause
+and discovery is the cost.
+
+---
+<!-- Rationale below — read when creating strategies, reviewing, or
+questioning the principle. Not needed for routine application. -->
+
+## Rationale
+
+[What "early" means, what "loud" means, why explicit fallbacks like circuit
+breakers are not violations, how conditional test logic belongs here, etc.]
 ```
 
 ## Why this format works
 
-- The **name** gives agents a shorthand. You can say "ZFC violation" and the
-  agent knows exactly what you mean without re-reading the rule.
-- The **definition** is one sentence because if you can't say it in one
-  sentence, you don't understand the principle yet.
-- The **violation example** is the most important part, it gives the agent a
-  pattern to recognize, not just a rule to memorize.
+- The **name** gives agents and humans a shorthand. You can say "FEAL
+  violation" and the agent knows exactly what you mean without re-reading the
+  rule. Names should be memorable and conversational — something you'd say at
+  a whiteboard, not in a corporate memo.
+- The **definition** states one constraint clearly. If you can't say it in one
+  sentence (with qualifying clauses as needed), you don't understand the
+  principle yet — or you have two principles hiding in one.
+- The **violation example** is the most important part. It gives the agent a
+  pattern to recognize, not just a rule to memorize. Violations must be
+  language-agnostic: "object" not "struct", "hashmap" not "hash".
 - The **why** encodes the mechanism, so agents can apply the principle in novel
   situations rather than just pattern-matching on familiar ones.
+- The **rationale** captures the thinking for future editors: how ambiguous
+  terms should be interpreted, what doesn't count as a violation, how this
+  principle relates to others. It's institutional memory.
 
 ## What principles are NOT
 
-- Tactical implementation rules (e.g. "use `require` over `assert`"), these
+- Tactical implementation rules (e.g. "use `require` over `assert`") — these
   belong in guidelines or guards, not principles.
-- Tutorials or background reading, agents don't need context, they need
+- Tutorials or background reading — agents don't need context, they need
   constraints.
-- Long prose, length is not depth. If a principle needs three paragraphs, it's
-  probably two principles.
+- Long prose — length is not depth. If the principle block needs three
+  paragraphs, it's probably two principles. (The rationale section can be as
+  long as it needs to be.)
 
 ## Source
 
 Informed by Steve Yegge's Gas Town/Beads approach: named principles (GUPP,
 ZFC, MEOW) with terse definitions that agents invoke by name. The violation
 example format is our own addition based on what makes principles actionable
-rather than decorative.
+rather than decorative. The rationale section was added to capture institutional
+memory — the reasoning that future editors need to make good updates.

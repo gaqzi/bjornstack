@@ -1,4 +1,4 @@
-## Highlight the Difference
+# Highlight the Difference
 When things are similar, structure them so the differences are instantly visible — the reader should never scan boilerplate to find what actually changed.
 VIOLATION: Five test cases that each repeat 12 lines of setup, differing only in the third argument and the expected result.
 VIOLATION: Three API endpoint handlers that each contain 40 lines of identical middleware setup, differing only in the route and the inner handler — instead of extracting the shared setup and making only the varying parts visible.

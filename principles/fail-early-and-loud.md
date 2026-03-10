@@ -1,4 +1,4 @@
-## Fail Early and Loud
+# Fail Early and Loud
 Code must surface problems visibly and early rather than absorbing them into implicit defaults, silent fallbacks, or hidden paths.
 VIOLATION: A hashmap lookup returns null, a downstream null-check substitutes a default, and the bug surfaces three layers later as wrong data in production.
 VIOLATION: A parameterized test uses `if tc.expectError` to branch between error and success assertions, hiding which path actually executed when the test fails.

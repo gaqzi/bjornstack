@@ -21,50 +21,92 @@ explains why each part matters.
 
 ## What you produce
 
-Every principle follows this exact structure:
+Every principle file has two parts: a tight **principle block** that agents
+match against, and a **rationale section** that captures the thinking.
+
+### Principle block
 
 ```
-## [Principle Name]
-[One sentence: what the rule is.]
+# [Principle Name]
+[One constraint, clearly stated.]
 VIOLATION: [Concrete example of what wrong looks like.]
 VIOLATION: [Optional — a second example that clarifies a borderline case.]
 WHY: [One sentence: the mechanism — what goes wrong without it.]
 ```
 
-No exceptions. If the output doesn't match this structure, revise until it does.
+### Rationale section
+
+Below the principle block, separated by `---` and an HTML comment:
+
+```
+---
+<!-- Rationale below — read when creating strategies, reviewing, or
+questioning the principle. Not needed for routine application. -->
+
+## Rationale
+
+[The thinking behind the principle. How it was arrived at. Edge cases.
+What this principle is NOT. Tensions with other principles and how they
+resolve.]
+```
+
+Agents read only the principle block for routine application. The rationale
+is for deeper work: creating strategies, reviewing principles, resolving
+ambiguous cases, or onboarding new contributors.
 
 ### Annotated example
 
 This is what a complete principle looks like and why each part works:
 
 ```
-## Coordinator/Logic Separation
+# Fail Early and Loud
 ```
-Name: 3-word noun phrase. Works as shorthand — you can say "CLS violation"
-and the agent knows exactly what you mean.
+Name: 4 words, memorable, conversational. You'd say "that's a FEAL violation"
+at a whiteboard. Works as a TLA. Someone hearing it for the first time gets
+the gist before reading the definition.
 
 ```
-Objects either coordinate collaborators or perform business logic — never both.
+Code must surface problems visibly and early rather than absorbing them into
+implicit defaults, silent fallbacks, or hidden paths.
 ```
-One sentence. One period. If you need more, you have two principles hiding
-in one. The em-dash signals the constraint boundary.
+One constraint, clearly stated. The em-dash and qualifying phrases ("implicit",
+"silent", "hidden") carve out what IS and ISN'T a violation. If a qualifying
+clause can be removed and the principle still makes sense, the clause belongs
+in the rationale instead.
 
 ```
-VIOLATION: A struct that calls external services AND contains conditional
-business logic.
+VIOLATION: A hashmap lookup returns null, a downstream null-check substitutes
+a default, and the bug surfaces three layers later as wrong data in production.
 ```
-One concrete example. Someone looking at real code should be able to point at
-it and say "that — that's the violation." This principle uses one violation
-because the boundary is clear. Use a second violation only when it draws a
-line that reasonable people would argue about (see violation format check).
+Concrete, recognizable, language-agnostic. Uses "hashmap" not "hash" (Ruby) or
+"map" (Go). Uses "object" not "struct." Someone looking at real code should be
+able to point at it and say "that — that's the violation."
 
 ```
-WHY: Mixed objects are hard to test and obscure intent.
+WHY: Every silent failure is a bug that compounds — the distance between cause
+and discovery is the cost.
 ```
-One sentence. States the mechanism — what breaks and how. Not "because mixing
-is bad" (restates the rule) but "hard to test and obscure intent" (names the
-consequences). The WHY should be short enough to remember but specific enough
-to apply in novel situations.
+States the mechanism — what breaks and how. Not "because silent failures are
+bad" (restates the rule) but names the specific consequence (compounding cost
+of distance). Short enough to remember, specific enough to apply in novel
+situations.
+
+## Voice
+
+Principles should sound like a person explaining something at a whiteboard,
+not like a corporate policy document. The user's natural language and lived
+experience are the richest source material.
+
+- **Names**: "Fail Early and Loud" not "Proactive Failure Surfacing."
+  "Consistent Beats Correct" not "Pattern Adherence Prioritization."
+- **Definitions**: "the reader should never scan boilerplate to find what
+  actually changed" not "boilerplate should be minimized to optimize for
+  differential readability."
+- **Rationale**: write for someone reading this for the first time who doesn't
+  know the author. No first-person ("I", "my colleague"). No corporate
+  jargon ("stakeholder alignment", "peer agreement"). Say it plainly.
+
+The test: read it aloud. If it sounds like a memo, rewrite it.
 
 ## Modes
 
@@ -73,19 +115,72 @@ to apply in novel situations.
 User describes a concept, rule, or constraint. Produce a principle.
 
 The user often arrives with a vague rule, a frustration, or an instinct about
-what matters. This isn't a principle yet — it's raw material. Your job is to
-find the one-sentence constraint hiding in it. Ask: "What goes wrong when
-this is violated?" The answer reveals the definition and WHY. If the answer
-is "everything" or "it's just bad," help decompose into something observable.
+what matters. This isn't a principle yet — it's raw material. Their stories,
+frustrations, and natural language are valuable — encourage them. The phrase
+they use to explain the idea to a friend is often better than any formal name.
 
-1. Shape the raw input into a one-sentence constraint (see above)
-2. Draft the principle in the exact format
-3. Run every quality check (see below)
-4. If any check fails, revise and show the improved version
-5. Present the final principle with a brief note on any tradeoffs or
-   judgment calls you made
-6. Wait for user approval before writing. Do not proceed to the
-   after-approval workflow until the user confirms.
+#### Step 1: Explore
+
+Don't draft too early. The first identification is rarely the right one — it's
+usually a symptom of a broader principle.
+
+- Ask: "What goes wrong when this is violated?" The answer reveals the
+  definition and WHY.
+- Ask: "What other things share this same WHY?" If multiple candidates share
+  a WHY, they're strategies/guidelines for one principle, not separate
+  principles. Zoom out.
+- If the answer to "what goes wrong" is "everything" or "it's just bad,"
+  help decompose into something observable.
+- The actionability check is the zoom-out limiter: if the principle becomes
+  so abstract that violations are vague, you've zoomed too far.
+
+#### Step 2: Name
+
+Generate 5-10 name options. Don't converge too early. Good names tend to
+emerge from the user's own language — listen for phrases they naturally use.
+
+The naming test (all must pass):
+- **Short**: 2-5 words.
+- **Memorable**: you'd remember it after hearing it once.
+- **Conversational**: you'd say it at a whiteboard or in a code review.
+- **Invocable**: "[Name] violation!" makes sense.
+
+Don't require noun phrases. "Fail Early and Loud", "Consistent Beats Correct",
+"Be Your Name", "Highlight the Difference" — none are noun phrases, all are
+excellent principle names. TLAs/eTLAs (FEAL, CBC, BYN, HtD) are a bonus when
+they fall out naturally but not a requirement.
+
+FAIL: "Proactive Failure Surface Optimization." Corporate, forgettable.
+PASS: "Fail Early and Loud." Human, sticky, immediately clear.
+
+#### Step 3: Draft
+
+Produce the principle block in the exact format.
+
+#### Step 4: Quality checks
+
+Run every quality check (see below).
+
+#### Step 5: Red team
+
+If other principles exist, stress-test against the set:
+- **Tensions**: does this principle conflict with any existing one? If so,
+  which yields and why? Resolve in the rationale.
+- **Overlaps**: does this principle cover the same constraint as an existing
+  one with different words? If so, merge, differentiate, or abort.
+- **Gaps**: does adding this principle reveal something missing from the set?
+- **Ambiguous terms**: read every word in the definition. Could any term be
+  misread? ("immediately" could mean "stop at the first error."
+  "objects" could sound OO-specific.) Stress-test and tighten.
+- **Novelty**: is this just an existing concept (screaming architecture, SRP,
+  YAGNI) with a new name? If so, be honest about the relationship. Either
+  acknowledge the lineage or genuinely differentiate.
+
+#### Step 6: Present and wait
+
+Present the final principle with a brief note on any tradeoffs or judgment
+calls. Wait for user approval before writing. Do not proceed to the
+after-approval workflow until the user confirms.
 
 ### Review
 
@@ -108,8 +203,26 @@ approval, update the file in place.
 
 ### Extract
 
-User provides prose rules, a document, or a list of ideas. For each
-distinct concept:
+User provides prose rules, a document, or a list of ideas.
+
+#### Step 1: Explore before classifying
+
+Don't jump to formal drafts. Present your initial read of the material:
+- Which concepts look like principles (and why)
+- Which look like strategies, guidelines, or guards (and why)
+- Where you suspect the real principle is broader than any single rule
+
+Discuss with the user. Encourage them to share stories and frustrations
+behind the rules — the lived experience often reveals the real principle
+that the written rule was approximating.
+
+#### Step 2: Zoom out
+
+For each candidate principle, ask "what other rules in this document share
+the same WHY?" Group them. Often 3-4 written rules are strategies/guidelines
+for one principle that hasn't been named yet.
+
+#### Step 3: For each distinct principle
 
 1. Decide if it's actually a principle (vs. strategy, guideline, guard, or
    aspiration)
@@ -131,6 +244,12 @@ distinct concept:
    workflows will carry valid ideas forward. Discoveries that don't
    survive the design chain were probably wrong.
 
+#### Step 4: Red team the set
+
+Once all candidates are drafted, red team the full set (see Create step 5).
+Present in groups of 3-5 for review. Don't try to finalize 15 principles at
+once — quality drops.
+
 ## Quality checks
 
 Run every check on every principle you produce or review. These are not
@@ -138,35 +257,49 @@ optional.
 
 ### Format checks
 
-- **Name is a short noun phrase.** 2-4 words. It must work as a shorthand
-  agents and humans can invoke by name ("ZFC violation!", "GUPP violation!").
+- **Name is memorable, conversational, and invocable.** 2-5 words. It must
+  work as shorthand agents and humans can invoke by name. You'd say it at a
+  whiteboard. The "[Name] violation!" test must sound natural. Don't require
+  noun phrases — verb phrases, imperative phrases, and short declarative
+  phrases all work.
+  FAIL: "Proactive Failure Surface Optimization."
+  PASS: "Fail Early and Loud."
   FAIL: "We Should Always Separate Coordination From Logic."
-  PASS: "Coordinator/Logic Separation."
+  PASS: "Compute or Coordinate."
 
-- **Definition is exactly one sentence.** One period. If you need more, you
-  have two principles hiding in one. Split them.
+- **Definition states one constraint clearly.** The constraint should be
+  expressible as one sentence, though qualifying clauses (em-dashes,
+  subordinate phrases) are fine when they carve out what IS and ISN'T a
+  violation. The test: if a qualifying clause can be removed and the principle
+  still makes sense, the clause is elaboration that belongs in the rationale.
+  If removing it changes what counts as a violation, it's part of the
+  constraint.
   FAIL: "Objects either coordinate or perform logic. They should never do
-  both because it makes testing hard."
-  PASS: "Objects either coordinate collaborators or perform business logic —
-  never both."
+  both because it makes testing hard." (Two sentences, second restates WHY.)
+  PASS: "Code must surface problems visibly and early rather than absorbing
+  them into implicit defaults, silent fallbacks, or hidden paths."
 
-- **Violation is a concrete, recognizable example.** Not abstract. Someone
-  looking at real code or a real design should be able to point at it and
-  say "that — that's the violation." 1-2 sentences. Most principles need
-  one violation. Use a second only when it draws a boundary that reasonable
-  people would argue about — it encodes the designer's judgment about where
-  the line sits. If the two violations describe genuinely different failure
-  modes (each needing its own WHY), you have two principles — split them.
+- **Violation is a concrete, recognizable, language-agnostic example.**
+  Not abstract. Someone looking at real code or a real design should be able
+  to point at it and say "that — that's the violation." 1-2 sentences. Use
+  language-agnostic terms: "object" not "struct", "hashmap" not "hash",
+  "parameterized test" not "table test". Most principles need one violation.
+  Use a second only when it draws a boundary that reasonable people would
+  argue about — it encodes the designer's judgment about where the line sits.
+  If the two violations describe genuinely different failure modes (each
+  needing its own WHY), you have two principles — split them.
   FAIL: "Code that doesn't follow the principle."
-  PASS: "A struct that calls external services AND contains conditional
-  business logic."
+  PASS: "A hashmap lookup returns null, a downstream null-check substitutes
+  a default, and the bug surfaces three layers later as wrong data in
+  production."
 
 - **Why states the mechanism.** It explains what breaks and how — not just
   that something is "bad" or restates the rule in different words. One
   sentence. Short enough to remember, specific enough to apply in novel
   situations. Name consequences, not feelings.
   FAIL: "Because mixing coordination and logic is wrong."
-  PASS: "Mixed objects are hard to test and obscure intent."
+  PASS: "Mixed code obscures intent and makes testing harder — you can't tell
+  whether a failure is in the logic or the wiring."
 
 ### Actionability check
 
@@ -227,22 +360,23 @@ Check for these common misplacements:
    or references a specific language/framework, it's a guideline. Nudge
    the user to promote the *why* behind it into the principle.
    FAIL: "Use table-driven tests when you have multiple input cases."
-   FIX: The principle is "No Conditional Test Logic." The table-driven
-   approach is a guideline that implements it.
+   FIX: The principle is "Fail Early and Loud." The table-driven approach
+   is a guideline that implements it via the "Parameterized Test Structure"
+   strategy.
 
 2. **Strategy disguised as principle.** If it describes a multi-step
    technique without language specifics, it's a strategy, not a principle.
-   Principles are one sentence. Strategies need space for steps.
+   Principles are one constraint. Strategies need space for steps.
    FAIL: "Identify variations, extract to data, write one test body,
    iterate."
-   FIX: The principle is "No Conditional Test Logic." The technique is a
-   strategy called "Data-Driven Test Cases."
+   FIX: The principle is "Highlight the Difference." The technique is a
+   strategy called "Parameterized Test Structure."
 
 3. **Guard disguised as principle.** If it can be checked mechanically
    with zero human judgment, it's a guard. It belongs in a linter or CI.
    FAIL: "No if statements in test bodies."
    FIX: This is a guard (linter rule). The principle behind it is
-   "No Conditional Test Logic" — the *why* is that conditionals in tests
+   "Fail Early and Loud" — the *why* is that conditionals in tests
    hide which case failed and make tests act as multiple tests in a
    trenchcoat.
 
@@ -254,9 +388,30 @@ Check for these common misplacements:
    FIX: "Consumer-Defined Contracts" — Abstractions are defined by the
    code that depends on them, not the code that implements them.
 
+### Rationale quality check
+
+After writing the rationale section, verify it covers:
+
+- **Ambiguous terms defined.** If the definition uses words that could be
+  misread ("early", "loud", "independent"), the rationale defines what they
+  mean and what they don't.
+- **What this is NOT.** Carve out the exceptions — things that look like
+  violations but aren't (e.g., explicit circuit breakers are not FEAL
+  violations).
+- **Tensions resolved.** If this principle can conflict with another, the
+  rationale says which yields and why.
+- **Sibling cross-references.** If this principle was split from another or
+  shares a clear boundary with one, the rationale links them and explains
+  the boundary.
+- **No first-person.** The rationale should make sense if someone copies it
+  who doesn't know the author.
+- **Lineage acknowledged.** If the principle builds on an existing concept
+  (screaming architecture, SRP, fail-fast), say so and explain what's the
+  same and what's different.
+
 ## After approval
 
-Once the user approves the principle, complete these steps in order.
+Once the user approves the principle(s), complete these steps in order.
 
 ### 1. Uniqueness check
 
@@ -271,13 +426,16 @@ If no conflicts, proceed.
 
 ### 2. Write the principle file
 
-Write the principle to `principles/<kebab-name>.md` using the exact format
-from FORMAT.md. The filename uses the kebab-case version of the principle
-name (e.g., "No Conditional Test Logic" → `no-conditional-test-logic.md`).
+Write the principle to `principles/<kebab-name>.md` using the format from
+FORMAT.md — principle block followed by rationale section. The filename uses
+the kebab-case version of the principle name (e.g., "Fail Early and Loud" →
+`fail-early-and-loud.md`).
+
+When writing multiple principles at once, write all files in parallel.
 
 ### 3. Offer strategy handoff
 
-Check whether the principle would benefit from a strategy. Two signals:
+Check whether each principle would benefit from a strategy. Two signals:
 
 1. **"So what do I do instead?"** — The principle says "don't do X" and the
    natural follow-up is how to avoid it. That technique is a strategy.
@@ -291,8 +449,12 @@ Check whether the principle would benefit from a strategy. Two signals:
 > it. Want to create one?"
 
 If the user accepts, create a bead with type `task`, priority `3`,
-title "Create strategy for [Principle Name]", and description that
-includes the principle name and any technique ideas from the conversation.
+title "Create strategy for [Principle Name]", and description that includes:
+- Which principle(s) the strategy serves
+- Expected guidelines underneath (language-specific implementation steps)
+- Guard candidates (mechanical checks that could enforce guideline steps)
+- Cross-references to related strategies
+
 If they decline, do nothing — they can create it later.
 
 Not every principle needs a strategy. Some principles stand alone because
@@ -309,6 +471,12 @@ the "how" is obvious or context-dependent.
   when to use a second violation and when to split into two principles.
 
 - **User wants to write a batch.** When converting a large document into
-  principles, work through them one at a time. Don't try to produce 15
-  principles at once — quality drops. Present them in groups of 3-5 for
-  review.
+  principles, work through the exploration and zoom-out steps first. Present
+  candidates in groups of 3-5 for review. Don't try to produce 15 principles
+  at once — quality drops.
+
+- **Meta-principles.** Some principles constrain how you use other principles
+  (e.g., "Practicality Beats Purity" — when and how to break principles).
+  These are legitimate and follow the same format. They're recognizable
+  because their violations describe principle-following behavior, not code
+  behavior.

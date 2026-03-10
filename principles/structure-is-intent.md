@@ -1,4 +1,4 @@
-## Structure Is Intent
+# Structure Is Intent
 The organization of code communicates how the system works — a reader should understand the architecture from the directory tree, not from tracing imports.
 VIOLATION: A flat `pkg/` directory with 30 files where the only way to understand module boundaries is to read import graphs.
 VIOLATION: A package named `utils` that contains unrelated functions grouped only by the fact that they didn't fit elsewhere.

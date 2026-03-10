@@ -1,4 +1,4 @@
-## Compute or Coordinate
+# Compute or Coordinate
 Code either performs computation (business logic) or orchestrates collaborators — never both.
 VIOLATION: An object that calls external services AND contains conditional business logic.
 WHY: Mixed code obscures intent and makes testing harder — you can't tell whether a failure is in the logic or the wiring.

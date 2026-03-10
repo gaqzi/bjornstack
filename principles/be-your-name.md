@@ -1,4 +1,4 @@
-## Be Your Name
+# Be Your Name
 Code declares its behavior through names so that understanding comes from reading signatures, not implementations.
 VIOLATION: A function named `process` that parses CSV, validates rows, and writes to a database — discoverable only by reading the body.
 VIOLATION: A test named "TestService_HappyPath" that doesn't describe what scenario is being tested or what outcome is expected.

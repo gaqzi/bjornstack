@@ -1,4 +1,4 @@
-## Consistent Beats Correct
+# Consistent Beats Correct
 Follow established patterns even when a locally better approach exists — the ability to make assumptions across the codebase is worth more than any single optimization.
 VIOLATION: Using a different paradigm in one module without wrapping it behind the codebase's established interface patterns — forcing callers to learn a second interaction style.
 VIOLATION: Mocking some collaborators with real implementations and others with test doubles in the same test because "this one is simple enough to use directly."

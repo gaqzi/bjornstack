@@ -1,4 +1,4 @@
-## Practicality Beats Purity
+# Practicality Beats Purity
 When following a principle costs more than violating it, break the principle deliberately — but only after convincing yourself and at least one other person, and documenting the tradeoff.
 VIOLATION: Breaking a principle without documentation because "it was faster" or "it's just this once."
 VIOLATION: Documenting a deviation that nobody else reviewed — self-approval isn't approval.
