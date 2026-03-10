@@ -7,9 +7,14 @@ A principle says *why something matters*. A strategy says *how to achieve it*
 as an abstract recipe. A guideline says *what to do concretely* in a specific
 language or framework.
 
-Not every principle needs a strategy. When a principle is direct enough that
-guidelines can implement it without an intermediate step, skip the strategy.
-The SKIP WHEN field makes this explicit.
+**Strategies are an authoring tool, not a runtime artifact.** They are consumed
+by guideline authors (human or AI) when creating language-specific guidelines —
+they are not loaded into projects. Their purpose is to help express abstractly
+*what the technique is* before getting pulled into the specifics of a target
+language or stack. When a principle can be made into a repeatable technique,
+the path is always principle → strategy → guideline. The exception is
+pure-judgment principles where the technique can't be abstracted into
+repeatable steps.
 
 ## Format
 
@@ -74,9 +79,9 @@ SKIP WHEN: Only one case exists. A single test function is fine.
   (over-engineering, wrong context) rather than simply violated. This field
   shows what the strategy looks like when it goes wrong — a pattern to
   recognize and correct.
-- **SKIP WHEN** makes it explicit when the strategy layer is unnecessary.
-  Some principles are direct enough that guidelines can implement them
-  without an intermediate abstraction.
+- **SKIP WHEN** makes it explicit when this specific strategy is not the right
+  fit — typically when a different strategy for the same principle applies, or
+  when the situation doesn't call for this technique.
 
 ## What strategies are NOT
 
@@ -90,12 +95,13 @@ SKIP WHEN: Only one case exists. A single test function is fine.
 ## How strategies relate to other layers
 
 ```
-Principle    → WHY     "Tests must not contain conditional logic"
-Strategy     → HOW     Data-Driven Test Cases (the abstract technique)
-Guideline    → WHAT    Go: table-driven tests with t.Run subtests
-Guard        → CHECK   testnoifs linter: rejects if in test bodies
+Principle    → WHY     "Tests must not contain conditional logic"        ← loaded into project
+Strategy     → HOW     Data-Driven Test Cases (the abstract technique)   ← used when writing guidelines
+Guideline    → WHAT    Go: table-driven tests with t.Run subtests        ← loaded into project
+Guard        → CHECK   testnoifs linter: rejects if/switch in tests      ← loaded into project, runs automatically
 ```
 
 A single principle may have multiple strategies (different approaches to the
 same WHY). A single strategy may have multiple guidelines (same approach
-adapted per language). Not every path uses all four layers.
+adapted per language). Not every guideline produces guards — some require
+judgment that can't be mechanized.

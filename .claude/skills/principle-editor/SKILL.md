@@ -346,13 +346,14 @@ Principles exist in a four-layer system. Make sure the principle is in the
 right layer.
 
 - **Principles** — WHY: high-level, language-agnostic constraints that encode
-  *why* something matters. They require judgment to apply.
-- **Strategies** — HOW: abstract, language-agnostic techniques that bridge
-  a principle to a guideline. They describe a conceptual recipe.
+  *why* something matters. Loaded into projects.
+- **Strategies** — HOW: abstract, language-agnostic techniques that make a
+  principle actionable. Used by guideline authors (human or AI) when creating
+  guidelines — not loaded into projects.
 - **Guidelines** — WHAT: tactical, language-specific implementation steps.
-  They tell you what to do concretely to follow a principle or strategy.
+  Loaded into projects.
 - **Guards** — CHECK: mechanical checks with zero judgment — linter rules,
-  CI gates. They reject, they don't advise.
+  CI gates. Loaded into projects, run automatically.
 
 Check for these common misplacements:
 
@@ -435,37 +436,34 @@ When writing multiple principles at once, write all files in parallel.
 
 ### 3. Offer strategy handoff
 
-Check whether each principle would benefit from a strategy. Two signals:
+Most principles need a strategy. The strategy is where the abstract technique
+gets worked out before language-specific guidelines are written. This ensures
+consistency across languages and prevents guideline authors from each
+independently inventing their own approach.
 
-1. **"So what do I do instead?"** — The principle says "don't do X" and the
-   natural follow-up is how to avoid it. That technique is a strategy.
-2. **Layer check caught a strategy.** — You identified a multi-step technique
-   disguised as a principle. After extracting the real principle, offer to
-   create the technique as a strategy.
+The exception is pure-judgment principles — principles where the technique
+can't be abstracted into repeatable steps. These stay principles without
+strategies or guidelines.
 
-**Always offer, never force.** Say something like:
-
-> "This principle could benefit from a strategy that describes how to follow
-> it. Want to create one?"
-
-If the user accepts, create a bead with type `task`, priority `3`,
-title "Create strategy for [Principle Name]", and description that includes:
+For principles that do get strategies, create a bead with type `task`,
+priority `3`, title "Create strategy for [Principle Name]", and description
+that includes:
 - Which principle(s) the strategy serves
 - Expected guidelines underneath (language-specific implementation steps)
 - Guard candidates (mechanical checks that could enforce guideline steps)
 - Cross-references to related strategies
 
-If they decline, do nothing — they can create it later.
-
-Not every principle needs a strategy. Some principles stand alone because
-the "how" is obvious or context-dependent.
+If the layer check caught a multi-step technique disguised as a principle,
+note the extracted technique in the bead description — it's a head start
+for the strategy-editor.
 
 ## Edge cases
 
 - **Principle requires judgment and that's fine.** Not every principle needs
-  to become a guideline or guard. Some principles stay principles forever
-  because the check can't be mechanized. That's legitimate. The test is
-  actionability, not mechanizability.
+  a strategy or guidelines. Some principles are pure judgment calls that
+  stay principles forever because the technique can't be abstracted into
+  repeatable steps. That's legitimate. The test is actionability, not
+  mechanizability.
 
 - **Boundary-clarifying violations.** See the violation format check for
   when to use a second violation and when to split into two principles.

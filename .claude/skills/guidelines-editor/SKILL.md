@@ -18,6 +18,12 @@ description: >
 Write, review, and refine language-specific guidelines that implement strategies
 for a target language.
 
+**Guidelines are loaded into projects** alongside principles and guards. They
+are the concrete, language-specific steps that developers (human or AI) follow
+when writing code. Guidelines are always derived from strategies — the strategy
+provides the abstract technique, the guideline translates it into what you
+actually do in a specific language.
+
 Read `references/FORMAT.md` before proceeding — it defines the strategy format
 you'll be reading and deriving from. Read `references/DIVERGENCE.md` for when a
 language can't follow a strategy step as-is.
@@ -388,9 +394,10 @@ and `README.md`.
   `implementation/go/data-driven-test-cases/` and
   `implementation/go/property-based-testing/` can both exist.
 
-- **No strategy exists and user declines to create one.** Question why
-  there can be a guideline but no abstraction that's more generic. This seem
-  to indicate not enough thought has gone into the strategy.
+- **No strategy exists.** A strategy is required before guidelines can be
+  created. Redirect the user to strategy-editor first. Guidelines without
+  a strategy are not allowed — the abstract technique must be worked out
+  before translating into language specifics.
 
 - **Strategy discovered during guideline creation.** If you realize the
   abstract technique hasn't been documented as a strategy yet, suggest

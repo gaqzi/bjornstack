@@ -29,13 +29,14 @@ I have to re-read, re-verify, and eventually rewrite.
 bjornstack makes my standards explicit, layered, and enforceable:
 
 - **Principles** — WHY: constrain and express how we design our system,
-  what is important to us, and why
-- **Strategies** — HOW: the abstract, language-agnostic approach that bridges
-  a principle to a guideline
+  what is important to us, and why *(loaded into project)*
+- **Strategies** — HOW: the abstract, language-agnostic technique that makes
+  a principle actionable *(used by guideline authors, not loaded into projects)*
 - **Guidelines** — WHAT: derived from principles (via strategies) and give us
   step-by-step instructions for implementation in a specific language
+  *(loaded into project)*
 - **Guards** — CHECK: flow from guidelines and block violations mechanically,
-  no judgment required
+  no judgment required *(loaded into project, runs automatically)*
 
 Think engineering manifesto, standards, tenets, etc. that you'd see in any
 organization, just made to be well-understood by agents too. And a stronger
@@ -57,14 +58,23 @@ See [principles/FORMAT.md](principles/FORMAT.md) for the full format spec.
 
 ### Strategies — HOW
 
-The abstract, language-agnostic approach that bridges a principle to a
-guideline. Strategies describe a technique step-by-step in an idealized
-setting, without language-specific constraints.
+The abstract, language-agnostic technique that makes a principle actionable.
+Strategies describe a technique step-by-step in an idealized setting, without
+language-specific constraints.
 
-Not every principle needs a strategy. When a principle is direct enough that
-guidelines can implement it without an intermediate step, skip straight to
-guidelines. But when a principle says "don't do X" and the natural follow-up
-is "so what do I do instead?", the answer is a strategy.
+**Strategies are an authoring tool, not a runtime artifact.** They are consumed
+by guideline authors (human or AI) when creating language-specific guidelines.
+They are not loaded into projects. Their purpose is to help you express
+abstractly *what the technique is* before getting pulled into the specifics of
+a target language or stack. This matters for growth — when you add a second or
+third language, the strategy ensures consistency across all guidelines derived
+from it.
+
+Most principles get a strategy. The strategy is where you work out *how* to
+follow the principle at a conceptual level, so that guideline authors for any
+language can translate from a shared, well-thought-out technique rather than
+each independently inventing their own approach. The exception is pure-judgment
+principles where the technique can't be abstracted into repeatable steps.
 
 See [strategies/FORMAT.md](strategies/FORMAT.md) for the full format spec.
 
@@ -104,16 +114,17 @@ steps, it becomes a guideline. When a guideline can be checked with zero human
 judgment, it becomes a guard.
 
 ```
-Principle    → WHY     "Tests must not contain conditional logic"
-Strategy     → HOW     Data-Driven Test Cases (the abstract technique)
-Guideline    → WHAT    Go: table-driven tests with t.Run subtests
-Guard        → CHECK   testnoifs linter: mechanically rejects if in test bodies
+Principle    → WHY     "Tests must not contain conditional logic"        ← loaded into project
+Strategy     → HOW     Data-Driven Test Cases (the abstract technique)   ← used when writing guidelines
+Guideline    → WHAT    Go: table-driven tests with t.Run subtests        ← loaded into project
+Guard        → CHECK   testnoifs linter: rejects if/switch in tests      ← loaded into project, runs automatically
 ```
 
-Not everything moves through all four layers. Some principles are direct enough
-to skip strategy and go straight to guidelines. Some principles stay principles
-because they require judgment. Some guidelines never become guards because the
-check can't be mechanized.
+Principles flow through strategies to guidelines for each target language. Not
+everything reaches the guard layer — some guidelines require judgment and can't
+be mechanized. And some principles are pure judgment calls that stay principles
+without strategies or guidelines. But when a principle can be made into a
+repeatable technique, the path is always principle → strategy → guideline.
 
 ## Language support
 

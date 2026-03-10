@@ -16,6 +16,14 @@ description: >
 
 Write, review, and refine strategies that bridge principles to guidelines.
 
+**Strategies are an authoring tool, not a runtime artifact.** They are consumed
+by guideline authors (human or AI) when creating language-specific guidelines —
+they are not loaded into projects. Their purpose is to help express abstractly
+*what the technique is* before getting pulled into the specifics of a target
+language or stack. This matters for growth: when you add a second or third
+language, the strategy ensures consistency across all guidelines derived from
+it. Every principle gets a strategy.
+
 Read `references/FORMAT.md` before proceeding. It defines the exact format and
 explains why each part matters. Read `references/DIVERGENCE.md` when reviewing
 a strategy or when evaluating whether steps are abstract enough for languages
@@ -40,8 +48,8 @@ OUTCOMES:
 
 MISAPPLICATION: [What it looks like when this strategy is applied badly
 or in the wrong context.]
-SKIP WHEN: [When this specific strategy adds no value — when the principle
-can be followed without this technique.]
+SKIP WHEN: [When this specific strategy adds no value — when a different
+strategy for the same principle is a better fit.]
 ```
 
 No exceptions. If the output doesn't match this structure, revise until it does.
@@ -94,7 +102,8 @@ they're separate tests.
 ```
 SKIP WHEN: Only one case exists. A single test function is fine.
 ```
-Genuinely common case where the strategy adds no value.
+Genuinely common case where a different strategy for the same principle
+is a better fit (or the strategy simply doesn't apply to the situation).
 
 ## Modes
 
@@ -239,8 +248,9 @@ wouldn't necessarily arrive here from the principle alone.
   body, or where each row requires fundamentally different setup."
 
 - **SKIP WHEN is present and honest.** It states when this specific strategy
-  adds no value — when the principle can be followed without this technique.
-  This prevents over-engineering.
+  is not the right fit — when a different strategy for the same principle
+  applies, or when the situation doesn't call for this technique. This helps
+  users choose between multiple strategies for the same principle.
   FAIL: (missing entirely)
   PASS: "Only one case exists. A single test function is fine."
 
@@ -250,10 +260,10 @@ Strategies exist in a four-layer system. Make sure the strategy is in the
 right layer.
 
 ```
-Principle    → WHY     One sentence + violations. Why something matters.
-Strategy     → HOW     Numbered steps + outcomes. Abstract technique.
-Guideline    → WHAT    Language-specific implementation. What to do in Go/Python/etc.
-Guard        → CHECK   Mechanical checks. Zero judgment. Linter rules, CI gates.
+Principle    → WHY     One sentence + violations. Why something matters.     ← loaded into project
+Strategy     → HOW     Numbered steps + outcomes. Abstract technique.        ← used when writing guidelines
+Guideline    → WHAT    Language-specific implementation. What to do in Go.   ← loaded into project
+Guard        → CHECK   Mechanical checks. Zero judgment. Linter rules.      ← loaded into project, runs automatically
 ```
 
 Check for these common misplacements:
@@ -310,11 +320,12 @@ These checks ensure the strategy hangs together as a whole.
    recognize.
 
 5. **Skip-when is honest.** It should describe a genuinely common case
-   where this specific strategy adds no value, not a rare edge case. If
-   the strategy always applies, say so — but that's unusual and worth
-   double-checking.
+   where this specific strategy is not the right fit — typically when a
+   different strategy for the same principle applies, or the situation
+   doesn't call for this technique. If the strategy is the only one for
+   its principle, skip-when describes when the technique doesn't apply.
    FAIL: "When you don't have any tests" — dodges the question instead
-   of describing when the strategy is unnecessary.
+   of describing when the strategy is the wrong choice.
 
 ## After approval
 
@@ -374,8 +385,8 @@ guideline for [Strategy Name]" and description that includes both the
 strategy and principle names. If they decline, do nothing — they can create
 it later.
 
-Not every strategy needs a guideline for every language. Some strategies
-are language-agnostic enough that guidelines add no value.
+Every strategy needs guidelines for each supported language. The guideline
+is where the abstract technique becomes concrete and actionable.
 
 ## Edge cases
 
