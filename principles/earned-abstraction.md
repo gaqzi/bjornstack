@@ -1,5 +1,5 @@
 # Earned Abstraction
-Abstractions must emerge from repeated concrete cases — only after solving the same problem multiple times can you distinguish the essential pattern from incidental similarity.
+Abstractions must be earned through repetition, not speculated from a single case.
 VIOLATION: An abstraction that takes a boolean or mode flag to handle a second use case, revealing it was built from one case and extended rather than extracted from understanding.
 WHY: Premature abstractions attract flags and modes because they don't understand their own boundaries — each new case warps the abstraction further from cohesion.
 
@@ -45,6 +45,15 @@ to refactor later when you understand the pattern. A wrong abstraction is
 subtle, viral (callers depend on it), and expensive to undo. When in doubt,
 keep the duplication.
 
+### What this is not
+
+Earned Abstraction doesn't mean never abstract. It means the abstraction
+should come from understanding, not from speculation. Once you've solved the
+same problem three times and can clearly see what varies and what's stable,
+that's earned — abstract with confidence. The principle targets the impulse to
+abstract on the first or second encounter, before the pattern is actually
+visible.
+
 ### Connection to other principles
 
 Earned Abstraction is upstream of Compute or Coordinate — if you abstract too
@@ -53,3 +62,12 @@ the abstraction doesn't understand its own role yet. It also connects to
 Consistent Beats Correct — sometimes the right call is to keep the duplication
 and stay consistent with the codebase's patterns rather than introduce an
 abstraction that might be wrong.
+
+Highlight the Difference says to extract shared setup so that only the
+variations are visible. This looks like it conflicts with Earned Abstraction —
+is extracting a test helper "premature"? No. Extracting repetition within a
+file (a local helper, a default builder) is not the same as creating a shared
+abstraction that multiple callers across the codebase depend on. The local
+helper has one consumer, is easy to change, and costs nothing to undo. The
+shared abstraction has many consumers, resists change, and is expensive to
+undo. Earned Abstraction governs the latter.
