@@ -19,7 +19,7 @@ repeatable steps.
 ## Format
 
 ```
-## [Strategy Name]
+# [Strategy Name]
 PRINCIPLE: [Principle name this strategy serves]
 
 1. [Step 1 — abstract, conceptual]
@@ -36,10 +36,35 @@ or in the wrong context.]
 SKIP WHEN: [When the principle is direct enough to go straight to guidelines.]
 ```
 
+### Rationale section (optional)
+
+When a strategy's reasoning needs more context — why certain steps exist,
+how the technique applies across languages, edge cases — add a rationale
+section below a `---` separator, matching the principle format:
+
+```
+---
+<!-- Rationale below — read when creating guidelines, reviewing, or
+questioning the strategy. Not needed for routine application. -->
+
+## Rationale
+
+### [Subsection as needed]
+
+[Why this technique works. Cross-language considerations. What the steps
+don't cover and why. Edge cases that guideline authors should understand.]
+```
+
+Guideline authors read the rationale when translating the strategy to a
+specific language. It's where language-agnostic reasoning meets the
+specifics of implementation — "tests reveal the surface" as a concept,
+before becoming "_test packages" in Go or "import from the public API" in
+Python.
+
 ## Example
 
 ```
-## Data-Driven Test Cases
+# Data-Driven Test Cases
 PRINCIPLE: No Conditional Test Logic
 
 1. Identify the variations — what changes between test cases?

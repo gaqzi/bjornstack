@@ -34,7 +34,7 @@ to follow or diverge from cleanly.
 Every strategy follows this exact structure:
 
 ```
-## [Strategy Name]
+# [Strategy Name]
 PRINCIPLE: [Principle name this strategy serves]
 
 1. [Step 1 — abstract, conceptual]
@@ -54,12 +54,44 @@ strategy for the same principle is a better fit.]
 
 No exceptions. If the output doesn't match this structure, revise until it does.
 
+### Rationale section
+
+When a strategy's reasoning needs more context — why certain steps exist,
+how the technique applies across languages, edge cases guideline authors
+should understand — add a rationale section below a `---` separator,
+matching the principle format:
+
+```
+---
+<!-- Rationale below — read when creating guidelines, reviewing, or
+questioning the strategy. Not needed for routine application. -->
+
+## Rationale
+
+### [Subsection as needed]
+
+[Why this technique works. Cross-language considerations. What the steps
+don't cover and why.]
+```
+
+Not every strategy needs a rationale. Add one when:
+- The strategy serves a principle in a non-obvious way (the connection
+  needs explaining)
+- The technique has cross-language implications that guideline authors
+  need to understand
+- Steps encode decisions that would otherwise require re-deriving the
+  reasoning each time
+
+The rationale is for guideline authors translating the strategy to a
+specific language. It bridges abstract technique to concrete implementation
+context.
+
 ### Annotated example
 
 This is what a complete strategy looks like and why each part works:
 
 ```
-## Data-Driven Test Cases
+# Data-Driven Test Cases
 ```
 Name: 3-word noun phrase. Works as shorthand.
 
@@ -362,7 +394,8 @@ acknowledgment.
 
 Write the strategy to `strategies/<kebab-name>.md` using the exact format.
 The filename uses the kebab-case version of the strategy name (e.g.,
-"Data-Driven Test Cases" → `data-driven-test-cases.md`).
+"Data-Driven Test Cases" → `data-driven-test-cases.md`). If a rationale
+was drafted, include it below the `---` separator.
 
 ### 4. Offer guideline handoff
 
