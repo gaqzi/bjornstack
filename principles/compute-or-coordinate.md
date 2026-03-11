@@ -46,6 +46,16 @@ test structure (you'd still mock the same collaborators), it's not computation.
 If the transform has conditionals, branches, or error cases of its own, extract
 it.
 
+### Where domain types live
+
+Domain types that flow between compute and coordination modules live at the
+boundary — typically the domain package root. If a coordinator owns the type,
+computation modules must import from coordination, violating the separation.
+If a computation module owns a type that coordinators pass around, the
+dependency direction is correct (coordinators naturally depend on the things
+they coordinate). When a type has no clear primary producer, it belongs at the
+package root as shared domain vocabulary.
+
 ### Why this enables everything else
 
 This principle is foundational because it determines your entire testing

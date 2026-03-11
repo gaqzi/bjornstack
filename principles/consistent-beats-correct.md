@@ -34,6 +34,17 @@ vague (BYN violation), improve it everywhere. CBC yields to other principles
 when the pattern itself is the problem. But you fix it *consistently* — don't
 fix it in one file and leave the old pattern in twenty others.
 
+### CBC in greenfield projects
+
+In greenfield projects, CBC inverts: instead of following existing patterns,
+you are establishing them. The first module isn't just a deliverable — it's a
+template. This transforms the first task from feature work into pattern-setting
+work, which requires deliberate review before the second module is built.
+Nothing in the principle block flags this transformation, so it catches teams
+off guard — they build task 1 casually and then discover everything must be
+consistent with whatever they happened to build. The "Thin Vertical Slice"
+strategy addresses this directly.
+
 ### The wrapping exception
 
 You can use a different approach internally if you wrap it behind the

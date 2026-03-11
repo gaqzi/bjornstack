@@ -54,6 +54,26 @@ that's earned — abstract with confidence. The principle targets the impulse to
 abstract on the first or second encounter, before the pattern is actually
 visible.
 
+### Dependencies are not abstractions
+
+Adopting a well-established library because it serves other principles (e.g.,
+an assertion library for better diffs and whole-object comparisons, or a
+battle-tested protocol library instead of a hand-rolled implementation) is a
+tool choice, not a premature abstraction. EA governs abstractions you create —
+your own interfaces, helpers, and generic frameworks — not dependencies you
+adopt. The question for dependencies is whether they genuinely serve the
+principles you live by, not whether you've seen three cases first. When a
+proven library exists for a problem, the default should be to use it —
+choosing to implement instead is the decision that needs justification.
+
+### Testability seams are not premature abstractions
+
+An interface defined to make a coordinator independently testable is earned by
+the testing need — there's a concrete consumer (the test) that requires it.
+This is not speculation from a single case; it's a response to a real
+constraint. The language-specific question of where the interface is defined
+(consumer-side vs provider-side) belongs in guidelines.
+
 ### Connection to other principles
 
 Earned Abstraction is upstream of Compute or Coordinate — if you abstract too

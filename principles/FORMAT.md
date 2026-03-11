@@ -98,6 +98,32 @@ breakers are not violations, how conditional test logic belongs here, etc.]
   paragraphs, it's probably two principles. (The rationale section can be as
   long as it needs to be.)
 
+## When principles conflict
+
+Most apparent principle conflicts dissolve on closer inspection. Three
+patterns:
+
+1. **Misidentified principle.** The decision isn't governed by the principle
+   you think it is. Choosing an assertion library isn't an Earned Abstraction
+   question (you're adopting a tool, not creating an abstraction) — it's a
+   guideline-level choice informed by whichever principles the tool serves.
+   Before declaring a conflict, verify each principle actually applies.
+
+2. **CBC yields when the pattern itself is the problem.** Already documented
+   in CBC's rationale. If the established pattern violates FEAL, BYN, or
+   another principle, fix the pattern everywhere rather than perpetuating it.
+
+3. **Genuine tension — use PBP.** When two principles genuinely pull in
+   opposite directions, Practicality Beats Purity governs: articulate the
+   tradeoff, convince at least one other person, document the decision. If
+   you're resolving the same tension repeatedly, the principles need a
+   strategy that encodes the resolution.
+
+There is no fixed hierarchy among principles. Context determines which
+constraint matters most. The process — identify which principles actually
+apply, check if CBC's yield rule resolves it, fall back to PBP — is the
+hierarchy.
+
 ## Source
 
 Informed by Steve Yegge's Gas Town/Beads approach: named principles (GUPP,
