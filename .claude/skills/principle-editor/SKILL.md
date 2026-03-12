@@ -175,6 +175,14 @@ If other principles exist, stress-test against the set:
 - **Novelty**: is this just an existing concept (screaming architecture, SRP,
   YAGNI) with a new name? If so, be honest about the relationship. Either
   acknowledge the lineage or genuinely differentiate.
+- **Agent-actionability**: can an agent use this principle to make decisions
+  about code? Can it detect violations in a changeset or codebase? If
+  detection requires infrastructure knowledge the agent won't have
+  (dashboards, deployment topology), is the principle still valuable as a
+  constraint the agent raises or as guidance for what the agent should
+  emit? Be honest about the difference — a principle that agents can
+  mechanically check is stronger than one they can only remind about, but
+  both are legitimate.
 
 #### Step 6: Present and wait
 
@@ -243,6 +251,14 @@ for one principle that hasn't been named yet.
    may reshape what reaches the next, and downstream editors' handoff
    workflows will carry valid ideas forward. Discoveries that don't
    survive the design chain were probably wrong.
+5. If it enriches an existing principle — a new framing, lineage
+   reference, edge case, or boundary clarification that strengthens
+   a rationale without changing the principle block — draft the
+   rationale addition and present it alongside new principles. Read
+   the existing rationale first to avoid duplication or contradiction.
+   When a rationale enrichment has a corresponding strategy, add a
+   forward reference ("The X strategy makes this operational") to
+   connect the layers.
 
 #### Step 4: Red team the set
 
