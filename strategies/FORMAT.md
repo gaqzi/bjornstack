@@ -144,6 +144,14 @@ SKIP WHEN: Only one case exists. A single test function is fine.
   fit — typically when a different strategy for the same principle applies, or
   when the situation doesn't call for this technique.
 
+## File naming
+
+Strategy files use kebab-case of the strategy name: "Data-Driven Test
+Cases" → `data-driven-test-cases.md`. When a strategy has sub-strategies,
+the parent uses a plain name (`testing.md`) and sub-strategies use double
+underscore: `testing__unit.md`, `testing__integration.md`. The `__` reads
+as "testing → unit" and keeps everything flat in `strategies/`.
+
 ## What strategies are NOT
 
 - **Principles.** If it can be said in one sentence and has a violation
