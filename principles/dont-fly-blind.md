@@ -30,28 +30,19 @@ observability.
 
 ### Emitting signals is the author's job
 
-DFB isn't just about dashboards and alerts — those consume signals. The
-code itself must emit them. The traditional separation of metrics, logs,
-and traces is dissolving. Modern observability treats each operation as a
-structured event carrying every dimension relevant to understanding its
-behavior — rich events that can be sliced, aggregated, and traced after
-the fact. The author's job is to make each event as wide as possible:
-attach every field that would help debug a problem.
+Dashboards and alerts consume signals — the code itself must emit them.
+The traditional separation of metrics, logs, and traces is dissolving.
+Modern observability treats each operation as a structured event carrying
+every dimension relevant to understanding its behavior — rich events that
+can be sliced, aggregated, and traced after the fact.
 
-When writing feature code, the author (human or agent) is responsible for
-emitting rich, structured events: what was the input, what flags were
-active, what decision was made, what was the outcome. Don't pre-decide
-which dimensions matter — make the event rich and let tooling answer
-questions later. If the code emits nothing, no amount of dashboarding
-helps. If the code emits only a status code, you can answer "did it fail?"
-but not "why did it fail for this user with these inputs?"
-
-For AI agents, this means DFB is directly actionable at the code level:
-every feature path should include the instrumentation that makes its
-behavior observable. "What would I need to see in an event to debug this?"
-is a question worth asking for every non-trivial code path. Even in CLI
-tools where there are no dashboards, structured events with rich context
-are more debuggable than scattered print statements.
+The author's job (human or agent) is to make each event as wide as
+possible: what was the input, what flags were active, what decision was
+made, what was the outcome. Don't pre-decide which dimensions matter —
+make the event rich and let tooling answer questions later. "What would I
+need to see in an event to debug this?" is the question for every
+non-trivial code path. This applies even to CLI tools where there are no
+dashboards — structured events with rich context beat scattered prints.
 
 ### Proportional signals
 
