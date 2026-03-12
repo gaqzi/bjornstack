@@ -43,6 +43,27 @@ organization, just made to be well-understood by agents too. And a stronger
 focus on mechanistic enforcement through agents or linters. Because the
 agent will follow the same steps time after time where a human loses focus.
 
+## What these principles serve
+
+The upfront work of writing principles, strategies, and guidelines exists so
+you don't have to re-derive the reasoning every time. When a decision needs
+revisiting, you trace back to the rationale and evaluate from first
+principles — not from memory, not from "we've always done it this way." As a
+colleague liked to say, "the job is to optimize for 'thanks, past self.'"
+
+The principles here all come from trying to achieve these outcomes:
+
+- **Deliver stable software, faster** — the right constraints and automation
+  help avoid mistakes, and having them in place lets you adapt when
+  circumstances change instead of being locked into long development cycles.
+
+- **Limit the impact of incidents** — when something goes wrong (and it will),
+  the blast radius is small, the signals are there, and the rollback is cheap.
+  Principles like [No Shared Fate](principles/no-shared-fate.md),
+  [Don't Fly Blind](principles/dont-fly-blind.md), and
+  [Many More Much Smaller Steps](principles/many-more-much-smaller-steps.md)
+  work together to make incidents survivable rather than catastrophic.
+
 ## The four layers
 
 ### Principles — WHY
