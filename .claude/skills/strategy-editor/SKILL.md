@@ -511,6 +511,25 @@ is where the abstract technique becomes concrete and actionable.
      aren't competing — they're parallel applications of the same WHY
      in different contexts. Each strategy should name its domain clearly.
 
+- **Meta-strategies.** A strategy whose job is selecting which sub-strategy
+  applies. Meta-strategies differ from regular strategies in three ways:
+
+  1. **Routing steps are valid.** A step that's a decision table ("select
+     the layer by what you're verifying") doesn't pass the usual "could you
+     pause and hand off?" test — it's a lookup, not a phase transition.
+     That's fine. Its job is directing to the right sub-strategy.
+  2. **Optional branches don't each need outcomes.** When a meta-strategy
+     describes per-project optional elements, outcomes should cover the
+     universal baseline, not the optional parts. The optional branches
+     exist as routing hooks — they're validated by their own sub-strategies.
+  3. **Broader language.** Meta-strategies span domains that sub-strategies
+     specialize in. Use the most general language that's accurate — "public
+     interface" rather than "API endpoint," "system" rather than "service"
+     — unless the strategy genuinely only applies to one domain.
+
+  Sub-strategies use `parent__child.md` naming (e.g., `testing__unit.md`).
+  See FORMAT.md for details.
+
 - **User wants to write a batch.** When converting a large document into
   strategies, work through them one at a time. Don't try to produce many
   strategies at once — quality drops. Present them in groups of 2-3 for
