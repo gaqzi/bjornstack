@@ -274,15 +274,21 @@ wouldn't necessarily arrive here from the principle alone.
   FAIL: "3. Use `t.Run(name, func(t *testing.T) { ... })` for each case."
   PASS: "3. Write a single test body that operates on one case."
 
-  Strategies typically have 3-7 steps. 1-2 steps suggests the content is
-  really a principle. 8+ steps suggests a tutorial or a strategy that should
-  be decomposed.
+  Flat strategies typically have 3-7 steps. 1-2 steps suggests the content
+  is really a principle. 8+ steps suggests a tutorial or a strategy that
+  should be decomposed. For forked strategies, count steps per path — each
+  path should independently be 2-5 steps. The classification step itself
+  doesn't count toward either path's total.
 
   Each step represents a distinct decision or phase transition. If two steps
   could be done simultaneously without choosing between them, collapse them.
   If one step requires making a choice and then acting on it, split it. The
   test: could you pause between steps and hand off to someone else? If yes,
   it's a real step boundary.
+
+  When referencing steps in rationale or reviews, use dotted notation for
+  nested steps (e.g., "step 3.2" for path 3, sub-step 2). This keeps
+  references unambiguous across flat and forked strategies.
 
   When a step involves a pattern that's hard to visualize abstractly, a
   brief inline example strengthens clarity without making it language-specific.
@@ -381,7 +387,9 @@ These checks ensure the strategy hangs together as a whole.
 3. **Every outcome traces to a step, every step contributes to an outcome.**
    If an outcome doesn't trace back to any step, a step is missing. If a
    step doesn't contribute to any outcome, the step doesn't belong or an
-   outcome is missing.
+   outcome is missing. For forked strategies, outcomes may map to steps in
+   one path only — that's expected. But each path should contribute to at
+   least one outcome.
 
 4. **Misapplication is realistic.** Someone reading the misapplication
    should think "yes, I've seen that" or "yes, I could imagine doing

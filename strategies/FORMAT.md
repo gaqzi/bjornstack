@@ -36,6 +36,39 @@ or in the wrong context.]
 SKIP WHEN: [When the principle is direct enough to go straight to guidelines.]
 ```
 
+### Forked strategies
+
+When a strategy's first step is a classification that leads to fundamentally
+different paths, use nested numbering. The top-level steps are the decision
+point and each path; sub-steps belong to their path:
+
+```
+# [Strategy Name]
+PRINCIPLE: [Principle name]
+
+1. [Classification step — how to determine which path applies.]
+   - [Path A condition]: continue at step 2.
+   - [Path B condition]: continue at step 3.
+2. [Path A label]:
+   1. [Path A step 1]
+   2. [Path A step 2]
+3. [Path B label]:
+   1. [Path B step 1]
+   2. [Path B step 2]
+   3. [Path B step 3]
+
+OUTCOMES:
+...
+```
+
+The paths can be asymmetric — if one path is genuinely simpler, it has fewer
+steps. Don't pad the shorter path to match. Reference nested steps with
+dotted notation (e.g., "step 3.2" means path B, sub-step 2).
+
+Use forks only when the classification creates genuinely different procedures.
+If the paths share most steps and differ in one or two, a flat strategy with
+a conditional note is clearer.
+
 ### Rationale section (optional)
 
 When a strategy's reasoning needs more context — why certain steps exist,
@@ -95,7 +128,10 @@ SKIP WHEN: Only one case exists. A single test function is fine.
 - The **numbered steps** are the core of the strategy. They describe an
   idealized procedure at a conceptual level — no language-specific details.
   This is what makes strategies *meta-procedural*: they explain how to think
-  about the problem, not how to type the solution.
+  about the problem, not how to type the solution. When a strategy starts
+  with a classification that creates divergent paths, nested numbering makes
+  the fork structural rather than relying on prose cues like "continue at
+  step N."
 - **OUTCOMES** are observable results that validate the strategy was applied
   correctly. These are the natural bridge to guards — when an outcome can be
   checked mechanically, it's a guard candidate. Guidelines can add more
