@@ -57,6 +57,34 @@ eight. If `ApplyDiscount` accidentally zeros out `TaxRate`, a check on
 `TotalPrice` and `Discount` won't notice. Whole-object comparison catches
 unintended side effects — it's the "fail loud" principle applied to assertions.
 
+### External boundary validation belongs here
+
+When data arrives from an external system — an API response, a message from
+a queue, a webhook payload — the temptation is to be "liberal in what you
+accept" (Postel's Law). In practice, liberal acceptance means silently
+absorbing garbage that poisons your core. An empty field that should have a
+value, amounts that don't sum up, enum values you've never seen — accepting
+these silently is the same failure mode as swallowing a null. The bug
+surfaces later, far from the point where you could have caught it.
+
+FEAL at system boundaries means: validate what you act on, ignore what you
+don't recognize. An unknown field in a response is safe to ignore — you're
+not making decisions based on it, and ignoring additions lets the upstream
+system grow (consistent with No Shared Fate's Grow Don't Break strategy).
+But an enum value you don't recognize in a field you *do* act on is unsafe —
+you'd be making decisions on something you don't understand. The line is:
+if your code branches on it, computes with it, or stores it as a fact,
+validate it. If it's just passing through or you don't use it, let it be.
+
+The goal is a tight core that only works with pristine objects — data that
+has passed all checks on the fields that matter before it enters your
+domain logic. This is the same idea as DDD's anti-corruption layer: your
+system's interior should never have to wonder whether the data it acts on
+is valid. It refines Postel's Law rather than rejecting it outright: be
+tolerant of additions you don't use, strict about values you depend on.
+
+The Scrub on Entry strategy makes this operational.
+
 ### Defaults that diverge from production belong here
 
 A test helper that defaults to an in-memory store when production uses

@@ -74,6 +74,22 @@ This is not speculation from a single case; it's a response to a real
 constraint. The language-specific question of where the interface is defined
 (consumer-side vs provider-side) belongs in guidelines.
 
+### Automation is earned abstraction of manual processes
+
+EA applies beyond code. A runbook is a manual process — concrete, specific,
+understood through repetition. Automation is the abstraction of that process.
+The same rule of three applies: don't automate a procedure you've only run
+once. The first time you follow the runbook, you discover what it missed.
+The second time, you learn what varies. The third time, you see the real
+pattern and can automate with confidence. Automating after the first run
+produces brittle scripts that handle the happy path of one specific incident
+and break on the next.
+
+This is two sides of the same coin: in code, EA prevents premature
+interfaces and generic frameworks. In operations, EA prevents premature
+automation. Both forms of premature abstraction share the same failure mode —
+they encode assumptions from too few cases and warp under real variation.
+
 ### Connection to other principles
 
 Earned Abstraction is upstream of Compute or Coordinate — if you abstract too

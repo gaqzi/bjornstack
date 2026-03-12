@@ -62,6 +62,31 @@ shared state trades short-term simplicity for long-term coupling, and the
 coupling cost grows with the number of things sharing the state. The math
 always catches up.
 
+### Growing, not breaking
+
+Rich Hickey's distinction between accretion and breakage applies directly.
+When you only make additive changes — new endpoints, new fields, new
+capabilities — consumers aren't affected. When you remove something, rename
+it, or go back on a previously stated fact, you break a dependency. The
+language of "growing" is useful because it's visceral: a system that grows
+is a system others can depend on. A system that breaks things is one that
+teaches its consumers to fear upgrades.
+
+At the API level, this means public contracts only expand. If a breaking
+change is genuinely necessary, semantic versioning (major = breaking)
+provides the mechanism — a new major version signals that the contract has
+changed and consumers must opt in. The Grow Don't Break strategy makes this
+operational.
+
+### Blast radius as a design question
+
+At design time, NSF manifests as a blast-radius question: if this component
+fails, what else fails with it? If the answer is "too much," the components
+have shared fate. This question applies at every level — from test isolation
+(one test's failure shouldn't affect another's result) to service boundaries
+(one service's outage shouldn't cascade) to deployment (one team's release
+shouldn't block another's rollback).
+
 ### Shared immutable state is fine
 
 This principle is about *mutable* state. Shared configuration, constants,
