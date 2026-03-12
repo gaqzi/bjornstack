@@ -54,6 +54,29 @@ strategy for the same principle is a better fit.]
 
 No exceptions. If the output doesn't match this structure, revise until it does.
 
+### Forked strategies
+
+When step 1 is a classification that leads to fundamentally different paths,
+use nested numbering instead of a flat list:
+
+```
+1. [Classification step.]
+   - [Path A condition]: continue at step 2.
+   - [Path B condition]: continue at step 3.
+2. [Path A label]:
+   1. [Path A step 1]
+   2. [Path A step 2]
+3. [Path B label]:
+   1. [Path B step 1]
+   2. [Path B step 2]
+   3. [Path B step 3]
+```
+
+The structure IS the control flow — no "stop" or "continue at step N" prose
+needed within paths. Paths can be asymmetric. Reference nested steps with
+dotted notation (e.g., "step 3.2"). Use forks only when the classification
+creates genuinely different procedures, not when paths share most steps.
+
 ### Rationale section
 
 When a strategy's reasoning needs more context — why certain steps exist,
@@ -261,10 +284,25 @@ wouldn't necessarily arrive here from the principle alone.
   test: could you pause between steps and hand off to someone else? If yes,
   it's a real step boundary.
 
+  When a step involves a pattern that's hard to visualize abstractly, a
+  brief inline example strengthens clarity without making it language-specific.
+  `mail.Message` over `mail.Mail` communicates a naming pattern faster than
+  a paragraph of description. Keep examples short and universal — if you
+  need language-specific syntax, it belongs in a guideline, not the step.
+
+  **Judgment-heavy steps need escalation paths.** When a step requires
+  judgment that an agent can't resolve mechanically, the step should include:
+  (a) a concrete question to ask, (b) what to do when the answer is clear,
+  (c) what analysis to do when unclear, and (d) how to present options to a
+  human. The pattern: "do X. When X is clear, Y. When unclear, analyze Z,
+  group findings, name the concept, present options." An agent saying "where
+  should this go?" is not acceptable — "these three types cluster around
+  pricing logic, I'd call this a `pricing` boundary" is.
+
 - **OUTCOMES are observable.** Each outcome is something you can check by
-  looking at the result — not a vague aspiration. 2-4 outcomes is typical.
+  looking at the result — not a vague aspiration. 2-5 outcomes is typical.
   One outcome suggests the strategy only does one thing — consider whether
-  it's really a strategy. Five or more suggests the strategy is doing too
+  it's really a strategy. Six or more suggests the strategy is doing too
   much or the outcomes aren't at the right level of abstraction.
   FAIL: "Tests are more maintainable."
   PASS: "Adding a new case requires only adding data, not changing code."
