@@ -61,5 +61,7 @@
 {"created_at":"2026-03-12T12:58:39Z","created_by":"Björn Andersson","depends_on_id":"bs-4e7","issue_id":"bs-v9e","type":"parent-child"}
 {"created_at":"2026-03-12T12:51:02Z","created_by":"Björn Andersson","depends_on_id":"bs-61m","issue_id":"bs-v9e","type":"blocks"}
 {"created_at":"2026-03-12T12:51:01Z","created_by":"Björn Andersson","depends_on_id":"bs-u06","issue_id":"bs-v9e","type":"blocks"}
+{"created_at":"2026-03-12T17:26:38Z","created_by":"Björn Andersson","depends_on_id":"bs-1uo","issue_id":"bs-w5k","type":"blocks"}
+{"created_at":"2026-03-12T17:26:37Z","created_by":"Björn Andersson","depends_on_id":"bs-vou","issue_id":"bs-w5k","type":"blocks"}
 {"created_at":"2026-03-12T12:33:07Z","created_by":"Björn Andersson","depends_on_id":"bs-9qz","issue_id":"bs-x0e","type":"parent-child"}
 {"created_at":"2026-03-12T12:31:14Z","created_by":"Björn Andersson","depends_on_id":"bs-b9n","issue_id":"bs-x0e","type":"blocks"}

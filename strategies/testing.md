@@ -16,7 +16,7 @@ PRINCIPLE: Don't Fly Blind
    - Logic and computation → unit test (per Unit Testing strategy).
    - Behavior as consumers see it → black box integration test. Test
      through the public interface (HTTP for an API, browser for a UI,
-     commands for a CLI). External dependencies are always stubbed —
+     commands for a CLI). Everything outside the service boundary is stubbed —
      this verifies our behavior, not theirs.
    - Agreements with external parties → contract test. Either validate
      a contract provided by an external party, or provide consumer-driven
@@ -40,7 +40,7 @@ OUTCOMES:
 - Every new feature has at least one black box integration test proving
   the path works before unit tests are written underneath.
 - Each test exists at the cheapest layer that can catch its failure class.
-- Black box integration tests stub all external dependencies.
+- Black box integration tests stub everything outside the service boundary.
 - Bug fixes include a test at the lowest layer that would have caught
   the bug.
 

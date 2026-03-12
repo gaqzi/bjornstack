@@ -284,7 +284,9 @@ wouldn't necessarily arrive here from the principle alone.
   could be done simultaneously without choosing between them, collapse them.
   If one step requires making a choice and then acting on it, split it. The
   test: could you pause between steps and hand off to someone else? If yes,
-  it's a real step boundary.
+  it's a real step boundary. Steps may use sub-bullets for edge case handling
+  or escalation paths within a single step — the main line is the action,
+  sub-bullets are "when it's not obvious, do this."
 
   When referencing steps in rationale or reviews, use dotted notation for
   nested steps (e.g., "step 3.2" for path 3, sub-step 2). This keeps
@@ -434,6 +436,11 @@ existing strategy, compare the name and principle link against the new one:
 - **Same principle, different technique** — This is fine. A single principle
   can have multiple strategies (independent and complementary approaches to
   solve the same WHY).
+
+For sub-strategies, check that key terms match the parent's language and
+meaning. If the sub-strategy refined a concept (e.g., "external
+dependencies" sharpened to "everything outside the service boundary"),
+propagate the refinement back to the parent.
 
 If no conflicts, proceed.
 
