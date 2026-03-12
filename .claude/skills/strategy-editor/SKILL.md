@@ -384,6 +384,19 @@ These checks ensure the strategy hangs together as a whole.
    FAIL: Outcomes mention "no branching in tests" but don't mention
    independent failure identification — the principle isn't fully satisfied.
 
+   **Each outcome traces to the primary principle.** If an outcome
+   primarily serves a different principle, reframe it to show how it
+   serves the primary, or move it to the rationale as a noted cross-cutting
+   benefit. An outcome can pass every other check — observable, traces to
+   a step — and still not belong if it's earning its keep for the wrong
+   principle.
+   FAIL: A strategy for "Fail Early and Loud" with outcome "existing
+   consumers continue working without changes" — that serves Grow Don't
+   Break, not FEAL. Reframe: "Errors surface at the new boundary before
+   reaching legacy paths."
+   PASS: Every outcome, read in isolation, answers "how do I know the
+   primary principle is being followed?"
+
 3. **Every outcome traces to a step, every step contributes to an outcome.**
    If an outcome doesn't trace back to any step, a step is missing. If a
    step doesn't contribute to any outcome, the step doesn't belong or an
