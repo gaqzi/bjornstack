@@ -13,7 +13,8 @@ PRINCIPLE: Don't Fly Blind
    real; if it's across a service boundary, it's stubbed.
 3. Scope each test's data for parallel execution. Each test creates its
    own isolated slice and operates entirely within it. Tests must not
-   assume an empty database or depend on data from other tests.
+   assume an empty database or depend on data from other tests. The
+   Isolated Test Execution strategy provides the full technique.
    - The natural scope is usually a user, tenant, or document — whatever
      the system already partitions by.
    - When no natural scoping identity exists (global configuration,
