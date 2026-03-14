@@ -60,7 +60,7 @@ nil-checks "just in case," no defensive coercions. If domain logic contains
 defensive checks for data that came through a boundary, either the boundary
 validation is incomplete or the domain doesn't trust it. Both are bugs.
 
-### Relationship to Coordinator Test Design
+### Relationship to Unit Testing
 
 In the Compute or Coordinate model, boundary validation is computation —
 pure input-to-result logic that can be tested without collaborators. The

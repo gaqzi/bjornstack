@@ -30,7 +30,7 @@ Other strategies assume packaging decisions are already made. Intentionally
 Public governs what a package exports — but that question only makes sense
 once you know what packages exist and what they own. Scrub on Entry places
 validation at package and service boundaries — but those boundaries must
-exist first. Coordinator Test Design classifies packages as compute or
+exist first. Unit Testing classifies packages as compute or
 coordinate — but the packages must be identified and scoped before
 classification applies.
 
