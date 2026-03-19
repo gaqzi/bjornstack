@@ -2,19 +2,22 @@
 
 My attempt at trusting the code AI agents produce.
 
-bjornstack is a layered system of coding standards, principles, implementation
-guidelines, and automated guards, that you can install into a project.
-It's an engineering manifesto with teeth. Readable by humans, executable by
-AI agents, guarded by linters.
+bjornstack is engineering judgment as code. It decomposes the standards you'd
+normally keep in your head into four layers, principles (WHY), strategies
+(HOW), guidelines (WHAT), and guards (CHECK), so AI agents follow them as
+protocols. The goal isn't removing human review, it's shrinking the review
+by making the output more cohesive and constrained from the start.
+
+Think engineering manifesto with teeth.
 
 I haven't solved trustworthy code. This is the experiment. The idea is that if
-I make my standards explicit and enforceable enough, I can stop re-reading
-everything agents write and start trusting the output. That's the theory,
-anyway.
+I make my standards explicit and enforceable enough, agents produce code that's
+closer to what I'd write myself, and the review becomes "does this look right?"
+instead of "what did it do and why?"
 
 This is how *I* build software. You'll probably disagree with some of it.
 That's the point, fork it, replace my opinions with yours, and you've got
-your own stack.
+your own stack. Mine is shortened to `bs` for a reason.
 
 ## Why this exists
 
