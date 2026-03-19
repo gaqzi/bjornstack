@@ -22,8 +22,10 @@ PRINCIPLE: Don't Fly Blind
      a contract provided by an external party, or provide consumer-driven
      contract tests for what we depend on. If we provide something for
      others, validate our integration per their contracts as well.
-   - Full flows through the real system → end-to-end test. Points at
-     prod or a staging/dev environment to verify it all works together.
+   - Full flows with all real dependencies → end-to-end test. Nothing
+     stubbed — the system talks to real services, real databases, real
+     third-party APIs. Runs against production or a non-prod environment
+     that mirrors production's dependency graph.
 4. Budget each layer differently. Black box integration tests: one happy
    path and one unhappy path per boundary — they're slow, so each must
    earn its place. Contract tests: cover what we actually use and depend
