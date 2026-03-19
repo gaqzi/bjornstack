@@ -59,7 +59,12 @@ The principles here all come from trying to achieve these outcomes:
 
 - **Limit the impact of incidents** — when something goes wrong (and it will),
   the blast radius is small, the signals are there, and the rollback is cheap.
-  Principles like [No Shared Fate](principles/no-shared-fate.md),
+  The litmus test: can an operator at 3am bring the system back to healthy
+  without remembering edge cases or reading source code? If the system is
+  clear enough to operate under pressure — names mean what they say, signals
+  show what's broken, recovery doesn't require heroics — then the design is
+  doing its job. Principles like
+  [No Shared Fate](principles/no-shared-fate.md),
   [Don't Fly Blind](principles/dont-fly-blind.md), and
   [Many More Much Smaller Steps](principles/many-more-much-smaller-steps.md)
   work together to make incidents survivable rather than catastrophic.

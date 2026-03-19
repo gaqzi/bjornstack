@@ -158,6 +158,19 @@ surface; GDB prevents it from shrinking without deliberate process. The
 distinction: IP operates within a package (code-level visibility), GDB
 operates at contract boundaries (evolution over time).
 
+### Relationship to Flag Your Changes
+
+GDB's "add alongside" — new endpoints, new versions, new fields — is
+inherently opt-in and needs no flag. Flag Your Changes picks up where
+GDB's additive approach runs out: when existing behavior must change for
+current users, and the change can't be offered as a new thing to opt
+into. GDB handles growth; FYC handles transition.
+
+Flags can also serve as the migration mechanism within GDB's
+grow-then-subtract cycle (step 4). New contract version behind a flag →
+migrate consumers → flag becomes default → remove old path. The flag
+makes the cycle visible and controllable.
+
 ### The semantic breaking trap
 
 A change can be additive in form but breaking in meaning. Adding a

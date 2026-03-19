@@ -307,6 +307,19 @@ wouldn't necessarily arrive here from the principle alone.
   should this go?" is not acceptable — "these three types cluster around
   pricing logic, I'd call this a `pricing` boundary" is.
 
+  **When step 1 is "whether to use this technique."** Some strategies
+  describe a technique that's the right choice only when simpler
+  alternatives don't work. Structure step 1 as a preference hierarchy:
+  list alternatives from simplest to most complex, with the strategy's
+  core technique as the last resort. Use sub-bullets for each level.
+  This prevents the strategy from being read as "always do this" when
+  the real message is "prefer simpler approaches, and when you can't,
+  here's the disciplined way." The MISAPPLICATION should include applying
+  the technique when a simpler alternative from the hierarchy would have
+  worked. The SKIP WHEN remains for cases where the entire strategy is
+  irrelevant — the preference hierarchy handles cases where the strategy
+  is relevant but a simpler level of the hierarchy is the right choice.
+
 - **OUTCOMES are observable.** Each outcome is something you can check by
   looking at the result — not a vague aspiration. 2-5 outcomes is typical.
   One outcome suggests the strategy only does one thing — consider whether
