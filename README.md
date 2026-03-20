@@ -180,3 +180,7 @@ bs install go
   accumulate errors)
 - **remembrall**, dynamic nudges for things that must change together
 - **typedecl**, keep type invariants true through changes
+
+## License
+
+This work is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
