@@ -4,8 +4,8 @@ My attempt at trusting the code AI agents produce.
 
 bjornstack is engineering judgment as code. It decomposes the standards you'd
 normally keep in your head into four layers, principles (WHY), strategies
-(HOW), guidelines (WHAT), and guards (CHECK), so AI agents follow them as
-protocols. The goal isn't removing human review, it's shrinking the review
+(HOW), guidelines (WHAT), and guards (CHECK), so both humans and AI agents
+can follow them as protocols. The goal isn't removing human review, it's shrinking the effort of review
 by making the output more cohesive and constrained from the start.
 
 Think engineering manifesto with teeth.
@@ -22,37 +22,30 @@ your own stack. Mine is shortened to `bs` for a reason.
 ## Why this exists
 
 AI agents write most of my code now. And I'm still reviewing the code because
-I don't trust it, and [the way to get there][vc] is to create constraints so
-they're likely to do what I want. Without explicit standards, I get
-code that works but that I *maybe* trust, and code I don't fully trust is code
+I don't trust it, and [constraints are the path to trust][vc], so I create them to give
+agents fewer options and therefore higher likelihood of doing what I want. Without explicit standards, I get
+code that works but I *maybe* trust, and code I don't fully trust is code
 I have to re-read, re-verify, and eventually rewrite.
 
 [vc]: https://bjorn.now/crumb/2026-02-26-how-steve-yegge-gets-quality-when-vibing/
 
 bjornstack makes my standards explicit, layered, and enforceable:
 
-- **Principles** — WHY: constrain and express how we design our system,
-  what is important to us, and why *(loaded into project)*
-- **Strategies** — HOW: the abstract, language-agnostic technique that makes
-  a principle actionable *(used by guideline authors, not loaded into projects)*
-- **Guidelines** — WHAT: derived from principles (via strategies) and give us
-  step-by-step instructions for implementation in a specific language
-  *(loaded into project)*
-- **Guards** — CHECK: flow from guidelines and block violations mechanically,
-  no judgment required *(loaded into project, runs automatically)*
+- **Principles** — WHY: what matters and why
+- **Strategies** — HOW: abstract, language-agnostic techniques
+- **Guidelines** — WHAT: language-specific implementation steps
+- **Guards** — CHECK: mechanical enforcement, no judgment required
 
-Think engineering manifesto, standards, tenets, etc. that you'd see in any
-organization, just made to be well-understood by agents too. And a stronger
-focus on mechanistic enforcement through agents or linters. Because the
-agent will follow the same steps time after time where a human loses focus.
-
-## What these principles serve
+The difference from a typical engineering standards doc is the focus on
+mechanical enforcement. An agent will follow the same steps time after time. A human won't.
 
 The upfront work of writing principles, strategies, and guidelines exists so
 you don't have to re-derive the reasoning every time. When a decision needs
 revisiting, you trace back to the rationale and evaluate from first
-principles — not from memory, not from "we've always done it this way." As a
+principles, not from memory, nor from "we've always done it this way." As a
 colleague liked to say, "the job is to optimize for 'thanks, past self.'"
+
+## What this is for
 
 The principles here all come from trying to achieve these outcomes:
 
@@ -89,7 +82,7 @@ See [principles/FORMAT.md](principles/FORMAT.md) for the full format spec.
 
 The abstract, language-agnostic technique that makes a principle actionable.
 Strategies describe a technique step-by-step in an idealized setting, without
-language-specific constraints.
+language-specific constraints. Most principles get one.
 
 **Strategies are an authoring tool, not a runtime artifact.** They are consumed
 by guideline authors (human or AI) when creating language-specific guidelines.
@@ -98,12 +91,6 @@ abstractly *what the technique is* before getting pulled into the specifics of
 a target language or stack. This matters for growth — when you add a second or
 third language, the strategy ensures consistency across all guidelines derived
 from it.
-
-Most principles get a strategy. The strategy is where you work out *how* to
-follow the principle at a conceptual level, so that guideline authors for any
-language can translate from a shared, well-thought-out technique rather than
-each independently inventing their own approach. The exception is pure-judgment
-principles where the technique can't be abstracted into repeatable steps.
 
 See [strategies/FORMAT.md](strategies/FORMAT.md) for the full format spec.
 
@@ -173,6 +160,7 @@ Installation tooling is planned. For now, copy what you need.
 bs install go
 ```
 
+<!--
 ## Planned guards (Go)
 
 - **testnoifs**, no `if` statements in test bodies
@@ -180,6 +168,7 @@ bs install go
   accumulate errors)
 - **remembrall**, dynamic nudges for things that must change together
 - **typedecl**, keep type invariants true through changes
+-->
 
 ## License
 
