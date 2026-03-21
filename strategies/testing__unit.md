@@ -120,3 +120,13 @@ coordinator likely contains decision logic that should be computation.
 - **Scrub on Entry**: See "Coordinators that scrub" above. A coordinator
   delegates scrubbing to a collaborator rather than performing it inline.
   The boundary validation is computation; the coordinator just wires it.
+- **Isolated Test Execution**: ITE governs test state setup when tests
+  share real infrastructure. Computation tests (no external state) and
+  coordinator tests (all collaborators mocked) don't need it — integration
+  tests that hit real databases or caches do.
+- **Earned Abstraction**: EA's configuration bloat check (step 4) is a
+  complementary detection signal — when an abstraction requires callers to
+  configure which behavior path to follow, the coordinator is mixing
+  computation into coordination. Collaborator count (step 3.1 here) and
+  configuration bloat (EA step 4) detect the same problem from different
+  angles.

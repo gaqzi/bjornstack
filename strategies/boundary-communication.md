@@ -182,3 +182,11 @@ consumers maintain local projections that tolerate owner downtime, at the
 cost of eventual consistency. The choice depends on failure tolerance:
 a checkout service needs the current price (synchronous); a recommendation
 service can work with slightly stale order history (asynchronous).
+
+### Relationship to Contract Testing
+
+This strategy defines contracts between units — ownership, explicit
+interfaces, no back doors. Contract Testing is the verification mechanism:
+it encodes the expectations from step 3's contracts as tests and catches
+drift before it becomes shared fate. This strategy creates the contracts;
+Contract Testing proves they hold.

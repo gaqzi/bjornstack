@@ -87,3 +87,13 @@ If you both consume service X and provide an API that service Y consumes,
 you have contracts in both directions. These are independent concerns —
 don't conflate them into one test suite. Consumer contracts verify your
 assumptions about X. Provider contracts verify Y's assumptions about you.
+
+### Relationship to Boundary Communication
+
+This strategy assumes boundaries with clear owners and explicit contracts
+already exist — Boundary Communication creates them. BC's step 2 assigns
+ownership and step 3 makes contracts explicit; those contracts are what
+consumer and provider tests encode. When ownership is unclear or contracts
+are implicit, fix that first (BC) before writing contract tests — testing
+an undefined contract produces tests that track implementation, not
+agreements.

@@ -103,6 +103,16 @@ interface that both domains implement against. This connects directly to
 the Compute or Coordinate principle: domain packages compute, and the
 layer above them coordinates.
 
+### Relationship to Earned Abstraction
+
+When wrapping external dependencies (step 6), search PATTERNS.md for an
+existing pattern family — multiple domain packages often wrap similar
+external concerns independently (HTTP clients, queue consumers,
+serialization adapters). EA's vocabulary tracks these pattern families so
+the third wrapper finds the first two instead of reinventing them. DFP
+decides where the wrapper lives; EA decides when similar wrappers have
+earned a shared abstraction.
+
 ### Relationship to Be Your Name
 
 Structure Is Intent is the primary principle — this strategy is fundamentally
