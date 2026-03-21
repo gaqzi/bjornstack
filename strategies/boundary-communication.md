@@ -190,3 +190,12 @@ interfaces, no back doors. Contract Testing is the verification mechanism:
 it encodes the expectations from step 3's contracts as tests and catches
 drift before it becomes shared fate. This strategy creates the contracts;
 Contract Testing proves they hold.
+
+### Cross-references
+
+- **Grow Don't Break**: GDB governs how BC's contracts evolve over time —
+  changes are additive, not breaking. BC creates the boundary; GDB keeps
+  it stable as the system changes.
+- **Flag Your Changes**: FYC's flags live within BC's ownership model —
+  a pricing flag lives in the pricing boundary. Flags don't create new
+  boundaries; they sit within existing ones.

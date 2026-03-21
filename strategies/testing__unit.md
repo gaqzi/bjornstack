@@ -130,3 +130,13 @@ coordinator likely contains decision logic that should be computation.
   computation into coordination. Collaborator count (step 3.1 here) and
   configuration bloat (EA step 4) detect the same problem from different
   angles.
+- **Public API Surface Testing**: PAST determines testing posture — test
+  through the public surface. UT classifies code as computation or
+  coordination; PAST says to exercise it through the public API. The two
+  compose: classify, then test through the public surface.
+- **Compliance Test Suites**: CTS verifies interface implementations
+  using the boundary interfaces that UT's compute/coordinate classification
+  creates. The trust chain runs through UT's test doubles.
+- **Parameterized Test Structure**: PTS provides the table-driven
+  structure for computation tests. UT classifies code as computation; PTS
+  structures the resulting test cases into input/expected/assertion rows.

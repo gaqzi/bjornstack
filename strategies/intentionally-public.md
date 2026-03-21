@@ -67,3 +67,14 @@ Step 5 exists because real-world export lists grow organically. Each
 individual export was justified at the time. But the aggregate surface drifts
 from coherent to accidental. Periodically reading your exports as a list —
 would a newcomer understand what this package is for? — catches the drift.
+
+### Cross-references
+
+- **Public API Surface Testing**: PAST validates the surface IP shapes —
+  is it sufficient for tests to exercise behavior through exports? IP asks
+  "does this symbol belong in the contract?" from the design side; PAST
+  asks the same question from the testing side.
+- **Grow Don't Break**: GDB governs what happens after IP's export
+  decision — once something is public, it can't be removed without a
+  version boundary or tracked migration. IP decides the surface; GDB
+  prevents it from shrinking.

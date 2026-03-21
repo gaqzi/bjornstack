@@ -97,3 +97,9 @@ consumer and provider tests encode. When ownership is unclear or contracts
 are implicit, fix that first (BC) before writing contract tests — testing
 an undefined contract produces tests that track implementation, not
 agreements.
+
+### Cross-references
+
+- **Compliance Test Suites**: CTS verifies implementations of internal
+  interfaces. Contract Testing verifies agreements with external parties.
+  Both prevent shared fate, at different boundaries.

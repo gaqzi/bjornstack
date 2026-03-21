@@ -101,3 +101,10 @@ tidying first would make the change easier. GeePaw Hill's MMMSS provides
 the broader frame: the tidy/change split is one technique for achieving
 many more much smaller steps. The strategy makes Beck's question into a
 plannable sequence rather than a per-line judgment call.
+
+### Cross-references
+
+- **Flag Your Changes**: FYC strengthens the tidy-first workflow — a
+  structural changeset can introduce new code behind a flag that defaults
+  to OFF, ensuring "structural" truly means "no behavior changes." The
+  behavioral activation comes in a later changeset.

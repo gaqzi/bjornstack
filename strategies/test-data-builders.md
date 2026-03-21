@@ -160,17 +160,16 @@ needs a related object (step 3), it delegates to that object's
 builder. Shared construction patterns across types are a recurring
 concept, not a reason for a shared base class.
 
-### Downstream strategies
-
-- **Whole-Object Assertion** builds on step 6 — asserting against
-  the full builder output catches unintended side effects.
-- **Parameterized Test Structure** uses builders to create the
-  varying inputs in each test case row.
-- **Compliance Test Suites** uses builders to construct the state
-  needed for compliance verification across implementations.
-
 ### Cross-references
 
+- **Whole-Object Assertion** (downstream): Builds on step 6 —
+  asserting against the full builder output catches unintended
+  side effects.
+- **Parameterized Test Structure** (downstream): Uses builders to
+  create the varying inputs in each test case row.
+- **Compliance Test Suites** (downstream): Uses builders to
+  construct the state needed for compliance verification across
+  implementations.
 - **Isolated Test Execution**: ITE steps 2-3 prescribe factories
   with deterministic, realistic data. This strategy provides the
   structural pattern for those factories.

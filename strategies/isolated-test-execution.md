@@ -155,16 +155,6 @@ different level — it covers how test state is set up:
   primary domain). Black Box Integration Testing step 3 references this
   strategy.
 
-### Downstream strategies
-
-This strategy establishes the concepts of test factories and scoped
-isolation. Downstream strategies build on these:
-
-- **Test Data Builders** provides the pattern for how factories are
-  structured — composable, override-friendly, maintainable.
-- **Compliance Test Suites** uses factories to set up the state needed
-  for compliance verification.
-
 ### Scaling
 
 As test suites grow, isolation becomes critical. A small suite can
@@ -174,3 +164,16 @@ the isolation investment so that adding tests doesn't increase pain.
 When every test scopes its own data, the hundredth test is as safe to
 add as the first. Parallel execution comes for free because isolation
 was the design, not an afterthought.
+
+### Cross-references
+
+- **Test Data Builders** (downstream): Provides the pattern for how
+  factories are structured — composable, override-friendly, maintainable.
+- **Compliance Test Suites** (downstream): Uses factories to set up the
+  state needed for compliance verification.
+- **Parameterized Test Structure**: PTS step 4's uniform body ensures
+  independent case execution; ITE provides the data-level isolation
+  that makes parallel test execution safe.
+- **Whole-Object Assertion**: WOA extends ITE's determinism principle
+  from setup to assertions — deterministic factories for test inputs
+  pair with deterministic expected values.

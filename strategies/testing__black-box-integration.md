@@ -166,3 +166,9 @@ bullet: "Behavior as consumers see it → black box integration test." The
 meta-strategy selects when to use black box integration tests; this strategy
 explains how to write them. The meta-strategy's step 5 (push bugs to the
 cheapest layer) applies to all test layers and isn't repeated here.
+
+### Cross-references
+
+- **Public API Surface Testing**: PAST tests at the package boundary;
+  this strategy tests at the system boundary (HTTP, CLI). Different scope,
+  same posture — exercise through the public interface only.

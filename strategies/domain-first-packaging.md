@@ -123,3 +123,16 @@ something the package path doesn't. In languages where the package is always
 part of the qualified name (Go, Python), this is a packaging concern as much
 as a naming concern, which is why it belongs in this strategy rather than a
 separate naming strategy.
+
+### Cross-references
+
+- **Boundary Communication**: BC determines how units communicate across
+  the boundaries DFP creates. DFP establishes structure; BC keeps
+  communication honest across that structure.
+- **Unit Testing**: UT's coordinators pass domain types between
+  collaborators — those types live at DFP's domain boundary, not owned
+  by either side.
+- **Test Data Builders**: TDB's cross-domain builders live in the owning
+  domain, consistent with DFP's boundary design.
+- **Scrub on Entry**: SOE's boundary validation belongs at the package
+  boundary DFP establishes — the entry point that external callers use.
