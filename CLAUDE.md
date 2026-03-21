@@ -46,3 +46,7 @@ bd close <id>         # Complete work
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
 <!-- END BEADS INTEGRATION -->
+
+## Sandbox Workarounds
+
+- Always run `bd` commands with `dangerouslyDisableSandbox: true` — Dolt needs raw TCP to localhost:3308 which the sandbox blocks (`excludedCommands` has upstream bugs)

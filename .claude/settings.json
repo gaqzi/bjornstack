@@ -12,7 +12,7 @@
     "allowUnixSockets": [".git/fsmonitor--daemon.ipc"],
     "allowLocalBinding": true,
     "excludedCommands": [
-      "Bash(bd:*)"
+      "bd"
     ]
   },
   "hooks": {
