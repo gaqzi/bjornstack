@@ -34,6 +34,18 @@ trace through code. An exception with a stack trace is loud. A log line buried
 in verbose output is not. A test that fails with a clear message pointing at
 the problem is loud. A test that passes but tested the wrong path is silent.
 
+### Assertion messages are the "loud" in test failures
+
+A test that fails with "expected true, got false" went boom — but it didn't
+tell you anything. Some frameworks don't even report which assertion in a test
+body failed, just that the test failed — you end up debugging the wrong line
+because nothing told you which one triggered it. A loud assertion message says
+what was expected, what actually happened, and in what context, without
+requiring the developer to open the test source. The concrete mechanism varies
+by language and framework (diff output, format strings, custom matchers), but
+the principle is universal: if a failure message requires reading code to
+understand what went wrong, it isn't loud enough.
+
 ### Explicit fallbacks are not violations
 
 Circuit breakers, graceful degradation, cached responses when an API is down —
