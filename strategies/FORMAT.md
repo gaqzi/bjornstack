@@ -103,6 +103,18 @@ relationship needs multiple paragraphs — ownership boundaries, handoff
 points, composition logic — promote it to its own
 `### Relationship to [Name]` subsection above the cross-references list.
 
+Optional parenthetical tags can follow the strategy name to clarify the
+nature of the connection:
+
+- `(downstream)` — the referenced strategy builds on this one. Clarifies
+  directionality when both strategies cross-reference each other.
+- `(PRINCIPLE)` — a principle abbreviation like `(FEAL)`, `(NSF)`, `(CoC)`,
+  `(HTD)`. Indicates which principle the connection primarily serves.
+  Use when the link exists because of a specific principle, not just
+  proximity.
+
+Format: `- **Strategy Name** (tag): explanation.`
+
 **Meta-strategy exception:** A meta-strategy (e.g., `testing.md`) dispatches
 to sub-strategies in its steps — those inline references *are* the
 cross-references. A separate `### Cross-references` section listing the same

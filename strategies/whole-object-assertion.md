@@ -158,7 +158,7 @@ arbitrary test data).
 - **Test Data Builders**: Step 6 provides the builder mechanism for
   expected values. WOA provides the FEAL motivation and the assertion
   technique.
-- **Parameterized Test Structure** (future): Each row in a
+- **Parameterized Test Structure**: Each row in a
   parameterized test uses whole-object assertion — the expected value
   per row is a builder with case-specific overrides.
 - **Isolated Test Execution**: ITE step 3 prescribes deterministic
