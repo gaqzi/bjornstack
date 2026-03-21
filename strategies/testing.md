@@ -56,7 +56,7 @@ unit tests are the only layer that applies, and the Unit Testing strategy
 covers it directly.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale
@@ -112,11 +112,11 @@ organized by what the system does (features, user flows) rather than
 by how the code is structured (packages, modules). The physical
 organization reinforces the black box constraint — when tests can't
 reach internals, they can't accidentally test them. Language-specific
-guidelines determine where these tests live in the filesystem.
+protocols determine where these tests live in the filesystem.
 
 ### Budget is judgment, not formula
 
-Step 4 gives heuristics, not rules. The "2 per boundary" guideline for
+Step 4 gives heuristics, not rules. The "2 per boundary" heuristic for
 BB integration tests is a starting point. Contract test coverage follows
 from what we actually depend on. E2e test count follows from risk
 assessment — the payment flow gets more coverage than the settings page.

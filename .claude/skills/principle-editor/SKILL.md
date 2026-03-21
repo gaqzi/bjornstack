@@ -5,7 +5,7 @@ description: >
   optimized for both humans and AI agents. Use this skill whenever the user
   wants to create a new principle, review or improve an existing principle,
   convert prose rules or ideas into principles, or check whether something
-  qualifies as a principle vs. a strategy, guideline, or guard. Also trigger when the
+  qualifies as a principle vs. a strategy, protocol, or guard. Also trigger when the
   user mentions AGENTS.md principles, CLAUDE.md principles, engineering
   tenets, or asks "is this a good principle?" — even if they don't use the
   word "principle" explicitly.
@@ -127,7 +127,7 @@ usually a symptom of a broader principle.
 - Ask: "What goes wrong when this is violated?" The answer reveals the
   definition and WHY.
 - Ask: "What other things share this same WHY?" If multiple candidates share
-  a WHY, they're strategies/guidelines for one principle, not separate
+  a WHY, they're strategies/protocols for one principle, not separate
   principles. Zoom out.
 - If the answer to "what goes wrong" is "everything" or "it's just bad,"
   help decompose into something observable.
@@ -202,7 +202,7 @@ just say "this could be improved" — show the improved version.
 ### Update
 
 User wants to revise an existing principle — because a strategy revealed the
-definition is too narrow, a guideline showed a violation doesn't cover a real
+definition is too narrow, a protocol showed a violation doesn't cover a real
 case, or experience proved the WHY is wrong. Read the existing principle file.
 Diff the proposed change against the quality checks. Grep `strategies/*.md`
 for strategies that reference this principle — for each, check whether their
@@ -217,7 +217,7 @@ User provides prose rules, a document, or a list of ideas.
 
 Don't jump to formal drafts. Present your initial read of the material:
 - Which concepts look like principles (and why)
-- Which look like strategies, guidelines, or guards (and why)
+- Which look like strategies, protocols, or guards (and why)
 - Where you suspect the real principle is broader than any single rule
 
 Discuss with the user. Encourage them to share stories and frustrations
@@ -227,12 +227,12 @@ that the written rule was approximating.
 #### Step 2: Zoom out
 
 For each candidate principle, ask "what other rules in this document share
-the same WHY?" Group them. Often 3-4 written rules are strategies/guidelines
+the same WHY?" Group them. Often 3-4 written rules are strategies/protocols
 for one principle that hasn't been named yet.
 
 #### Step 3: For each distinct principle
 
-1. Decide if it's actually a principle (vs. strategy, guideline, guard, or
+1. Decide if it's actually a principle (vs. strategy, protocol, guard, or
    aspiration)
 2. If it's a principle, produce it in the format and run quality checks
 3. If it's an aspiration, reject it — explain why it's not actionable and
@@ -242,8 +242,8 @@ for one principle that hasn't been named yet.
    to the highest missing layer in the design chain for the relevant
    principle. Check what exists:
    - No strategy yet → bead for strategy-editor
-   - Strategy exists, no guideline → bead for guidelines-editor
-   - Strategy and guideline exist → bead for guard-designer
+   - Strategy exists, no protocol → bead for protocol generation
+   - Strategy and protocol exist → bead for guard-designer
 
    Group all discoveries for the same principle into one bead. Include
    downstream discoveries as context in the bead description — a guard
@@ -333,7 +333,7 @@ Ask two questions:
 
 2. **Can the violation be avoided by changing a specific behavior?**
    There must be at least one concrete thing you could do differently.
-   Not necessarily spelled out in the principle — that's what guidelines
+   Not necessarily spelled out in the principle — that's what protocols
    are for — but the principle must point toward action, not just toward
    wishing.
 
@@ -364,21 +364,21 @@ right layer.
 - **Principles** — WHY: high-level, language-agnostic constraints that encode
   *why* something matters. Loaded into projects.
 - **Strategies** — HOW: abstract, language-agnostic techniques that make a
-  principle actionable. Used by guideline authors (human or AI) when creating
-  guidelines — not loaded into projects.
-- **Guidelines** — WHAT: tactical, language-specific implementation steps.
+  principle actionable. Used by protocol authors (human or AI) when creating
+  protocols — not loaded into projects.
+- **Protocols** — WHAT: tactical, language-specific implementation steps.
   Loaded into projects.
 - **Guards** — CHECK: mechanical checks with zero judgment — linter rules,
   CI gates. Loaded into projects, run automatically.
 
 Check for these common misplacements:
 
-1. **Guideline disguised as principle.** If it prescribes specific steps
-   or references a specific language/framework, it's a guideline. Nudge
+1. **Protocol disguised as principle.** If it prescribes specific steps
+   or references a specific language/framework, it's a protocol. Nudge
    the user to promote the *why* behind it into the principle.
    FAIL: "Use table-driven tests when you have multiple input cases."
    FIX: The principle is "Fail Early and Loud." The table-driven approach
-   is a guideline that implements it via the "Parameterized Test Structure"
+   is a protocol that implements it via the "Parameterized Test Structure"
    strategy.
 
 2. **Strategy disguised as principle.** If it describes a multi-step
@@ -400,7 +400,7 @@ Check for these common misplacements:
 4. **Language-specific principle.** Principles are language-agnostic. If
    the principle references Go interfaces, TypeScript generics, or any
    language-specific construct, abstract up. Language-specific
-   implementation belongs in guidelines.
+   implementation belongs in protocols.
    FAIL: "All Go interfaces must be defined by the consumer."
    FIX: "Consumer-Defined Contracts" — Abstractions are defined by the
    code that depends on them, not the code that implements them.
@@ -453,20 +453,20 @@ When writing multiple principles at once, write all files in parallel.
 ### 3. Offer strategy handoff
 
 Most principles need a strategy. The strategy is where the abstract technique
-gets worked out before language-specific guidelines are written. This ensures
-consistency across languages and prevents guideline authors from each
+gets worked out before language-specific protocols are written. This ensures
+consistency across languages and prevents protocol authors from each
 independently inventing their own approach.
 
 The exception is pure-judgment principles — principles where the technique
 can't be abstracted into repeatable steps. These stay principles without
-strategies or guidelines.
+strategies or protocols.
 
 For principles that do get strategies, create a bead with type `task`,
 priority `3`, title "Create strategy for [Principle Name]", and description
 that includes:
 - Which principle(s) the strategy serves
-- Expected guidelines underneath (language-specific implementation steps)
-- Guard candidates (mechanical checks that could enforce guideline steps)
+- Expected protocols underneath (language-specific implementation steps)
+- Guard candidates (mechanical checks that could enforce protocol steps)
 - Cross-references to related strategies
 
 If the layer check caught a multi-step technique disguised as a principle,
@@ -476,7 +476,7 @@ for the strategy-editor.
 ## Edge cases
 
 - **Principle requires judgment and that's fine.** Not every principle needs
-  a strategy or guidelines. Some principles are pure judgment calls that
+  a strategy or protocols. Some principles are pure judgment calls that
   stay principles forever because the technique can't be abstracted into
   repeatable steps. That's legitimate. The test is actionability, not
   mechanizability.

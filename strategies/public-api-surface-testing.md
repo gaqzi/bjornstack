@@ -35,7 +35,7 @@ SKIP WHEN: The package is itself an internal sub-module — it exists
 specifically to be directly testable by its parent's tests.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale

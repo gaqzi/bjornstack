@@ -86,7 +86,7 @@ second file needs it or it's needed cross-domain, inline construction
 is sufficient.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale

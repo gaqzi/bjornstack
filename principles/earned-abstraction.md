@@ -72,7 +72,7 @@ An interface defined to make a coordinator independently testable is earned by
 the testing need — there's a concrete consumer (the test) that requires it.
 This is not speculation from a single case; it's a response to a real
 constraint. The language-specific question of where the interface is defined
-(consumer-side vs provider-side) belongs in guidelines.
+(consumer-side vs provider-side) belongs in protocols.
 
 ### Automation is earned abstraction of manual processes
 

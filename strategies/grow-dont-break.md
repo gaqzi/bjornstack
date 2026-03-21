@@ -69,7 +69,7 @@ Also: purely internal changes within a single package with no callers
 beyond it — there's no contract to grow or break.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale

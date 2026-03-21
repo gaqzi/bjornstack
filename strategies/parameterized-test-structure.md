@@ -52,7 +52,7 @@ failure — the Unit Testing strategy's N+1 pattern gives these their
 own structure.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale
@@ -77,7 +77,7 @@ this project's use of "strategy" for the HOW layer.
 The `if/switch` prohibition in test bodies is a direct consequence of
 this pattern. When every case carries its own assertion function, there
 is no reason for the body to branch. This is enforceable as a lint
-rule — a guard candidate for any language guideline derived from this
+rule — a guard candidate for any language protocol derived from this
 strategy.
 
 ### Why all fields explicit

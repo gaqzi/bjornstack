@@ -72,7 +72,7 @@ or Change) — structural changes don't alter behavior and don't need a
 flag to be safe.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale

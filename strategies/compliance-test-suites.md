@@ -70,7 +70,7 @@ concrete second implementation planned. The Unit Testing strategy
 covers direct testing without the indirection of a shared suite.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale

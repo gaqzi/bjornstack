@@ -19,7 +19,7 @@ MISAPPLICATION: Splitting into so many domain packages that each contains only o
 SKIP WHEN: The system genuinely has one domain (a small CLI tool, a single-purpose library). Forcing domain decomposition on a single-concept codebase adds structure that communicates nothing.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale
@@ -36,7 +36,7 @@ classification applies.
 
 The vocabulary established here — domain names, package boundaries,
 dependency direction — propagates into every downstream strategy and
-guideline. Getting this wrong doesn't just affect packaging; it distorts
+protocol. Getting this wrong doesn't just affect packaging; it distorts
 every decision built on top of it.
 
 ### How to identify domains

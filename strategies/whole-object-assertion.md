@@ -61,7 +61,7 @@ is clearer. Or when only 1-2 fields exist on the type — there's
 nothing to silently miss.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale

@@ -42,7 +42,7 @@ team, same deploy pipeline) — a black box integration test covers the
 boundary directly without needing a contract layer.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale

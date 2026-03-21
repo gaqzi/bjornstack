@@ -59,7 +59,7 @@ SKIP WHEN: The code is a pure library with no integration boundaries —
 unit tests via the Unit Testing strategy are the only layer that applies.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale
@@ -131,7 +131,7 @@ When tests can only reach the public interface, they naturally organize
 around what the system does (features) rather than how the code is
 structured (packages). This is self-reinforcing: feature-organized tests
 don't break when you refactor internals, and the inability to import
-internals prevents accidental coupling. Language-specific guidelines
+internals prevents accidental coupling. Language-specific protocols
 determine where these tests live in the filesystem, but the organizational
 principle is the same everywhere.
 

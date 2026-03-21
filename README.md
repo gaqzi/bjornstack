@@ -4,7 +4,7 @@ My attempt at trusting the code AI agents produce.
 
 bjornstack is engineering judgment as code. It decomposes the standards you'd
 normally keep in your head into four layers, principles (WHY), strategies
-(HOW), guidelines (WHAT), and guards (CHECK), so both humans and AI agents
+(HOW), protocols (WHAT), and guards (CHECK), so both humans and AI agents
 can follow them as protocols. The goal isn't removing human review, it's shrinking the effort of review
 by making the output more cohesive and constrained from the start.
 
@@ -33,13 +33,13 @@ bjornstack makes my standards explicit, layered, and enforceable:
 
 - **Principles** — WHY: what matters and why
 - **Strategies** — HOW: abstract, language-agnostic techniques
-- **Guidelines** — WHAT: language-specific implementation steps
+- **Protocols** — WHAT: stage-based workflows, generated and language-specific
 - **Guards** — CHECK: mechanical enforcement, no judgment required
 
 The difference from a typical engineering standards doc is the focus on
 mechanical enforcement. An agent will follow the same steps time after time. A human won't.
 
-The upfront work of writing principles, strategies, and guidelines exists so
+The upfront work of writing principles, strategies, and protocols exists so
 you don't have to re-derive the reasoning every time. When a decision needs
 revisiting, you trace back to the rationale and evaluate from first
 principles, not from memory, nor from "we've always done it this way." As a
@@ -84,30 +84,30 @@ The abstract, language-agnostic technique that makes a principle actionable.
 Strategies describe a technique step-by-step in an idealized setting, without
 language-specific constraints. Most principles get one.
 
-**Strategies are an authoring tool, not a runtime artifact.** They are consumed
-by guideline authors (human or AI) when creating language-specific guidelines.
-They are not loaded into projects. Their purpose is to help you express
+**Strategies are primarily an authoring tool.** They are consumed when
+generating language-specific protocols and are available as reference material
+when a generated protocol needs disambiguation. Their purpose is to express
 abstractly *what the technique is* before getting pulled into the specifics of
 a target language or stack. This matters for growth — when you add a second or
-third language, the strategy ensures consistency across all guidelines derived
+third language, the strategy ensures consistency across all protocols derived
 from it.
 
 See [strategies/FORMAT.md](strategies/FORMAT.md) for the full format spec.
 
-### Guidelines — WHAT
+### Protocols — WHAT
 
-Tactical implementation steps for when principles alone aren't enough to act on.
-Guidelines are language-specific, the same principle (and strategy) looks
-different in Go vs. TypeScript.
+Generated, stage-based workflows that compose principles and strategies into
+concrete steps for a specific language. Instead of one document per strategy
+per language, protocols are organized by workflow stage — design,
+implementation, and review — each pulling in the relevant strategies as a
+coherent decision tree.
 
-Procedural steps to achieve a principle. Not necessarily the _only way_ but a
-way. Usually followed without thought as the "golden path" until a better
-approach is tested and validated. If there are multiple known valid ways,
-a rubric exists to decide approach first.
+Protocols are compiled from the layers above plus language configuration.
+When inputs change (a strategy is refined, a principle is added), protocols
+are regenerated. This keeps the intellectual work in the input layers where
+it belongs and avoids a combinatorial maintenance burden across languages.
 
-When a guideline can't follow a strategy due to language limitations or
-ecosystem conventions, it documents the divergence. See
-[strategies/DIVERGENCE.md](strategies/DIVERGENCE.md).
+See [docs/WORKFLOW.md](docs/WORKFLOW.md) for the full protocol architecture.
 
 ### Guards — CHECK
 
@@ -125,22 +125,23 @@ automated checks over time.
 ## How things move between layers
 
 Principles are discovered first. When a principle needs an abstract technique
-to be actionable, it becomes a strategy. When a strategy needs language-specific
-steps, it becomes a guideline. When a guideline can be checked with zero human
-judgment, it becomes a guard.
+to be actionable, it becomes a strategy. When strategies need language-specific
+steps, they are composed into protocols. When a protocol step can be checked
+with zero human judgment, it becomes a guard.
 
 ```
 Principle    → WHY     "Tests must not contain conditional logic"        ← loaded into project
-Strategy     → HOW     Data-Driven Test Cases (the abstract technique)   ← used when writing guidelines
-Guideline    → WHAT    Go: table-driven tests with t.Run subtests        ← loaded into project
+Strategy     → HOW     Data-Driven Test Cases (the abstract technique)   ← input to protocol generation
+Protocol     → WHAT    Go: table-driven tests with t.Run subtests        ← generated, loaded into project
 Guard        → CHECK   testnoifs linter: rejects if/switch in tests      ← loaded into project, runs automatically
 ```
 
-Principles flow through strategies to guidelines for each target language. Not
-everything reaches the guard layer — some guidelines require judgment and can't
-be mechanized. And some principles are pure judgment calls that stay principles
-without strategies or guidelines. But when a principle can be made into a
-repeatable technique, the path is always principle → strategy → guideline.
+Principles flow through strategies to protocols for each target language.
+Protocols are generated from the layers above — they compose multiple
+strategies into stage-based workflows (design, implementation, review) for
+each language. Not everything reaches the guard layer — some protocol steps
+require judgment and can't be mechanized. And some principles are pure
+judgment calls that stay principles without strategies or protocols.
 
 ## Language support
 
@@ -148,7 +149,7 @@ repeatable technique, the path is always principle → strategy → guideline.
 |------------|-------------|
 | Go         | In progress |
 
-Principles and strategies are shared across all languages. Guidelines and
+Principles and strategies are shared across all languages. Protocols and
 guards are language-specific.
 
 ## Installation

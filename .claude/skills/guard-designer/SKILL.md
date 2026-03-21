@@ -1,18 +1,18 @@
 ---
 name: guard-designer
 description: >
-  Design guards — the CHECK layer that mechanically enforces guideline steps
+  Design guards — the CHECK layer that mechanically enforces protocol steps
   with zero judgment. Use this skill whenever someone picks up a "Design guard"
-  bead from guidelines-editor, wants to design a linter rule or CI gate for a
-  guideline step, asks "can we enforce this automatically?", "how do we check
+  bead from protocol generation, wants to design a linter rule or CI gate for a
+  protocol step, asks "can we enforce this automatically?", "how do we check
   this mechanically?", or mentions the guard layer or CHECK layer — even if they
   don't use the word "guard" explicitly. Also trigger when handed off from
-  guidelines-editor.
+  protocol generation.
 ---
 
 # Guard Designer
 
-Design guards that mechanically enforce guideline steps with zero human
+Design guards that mechanically enforce protocol steps with zero human
 judgment.
 
 A guard is a tool — a linter rule, AST check, CI gate, or script — that
@@ -28,18 +28,18 @@ user if any are missing.
    principle name. If it doesn't exist, stop — tell the user to create it first
    with principle-editor.
 
-2. **A strategy exists.** Glob `strategies/*.md` (excluding FORMAT.md and
-   DIVERGENCE.md) for a strategy that serves the principle. If none exists,
-   stop — tell the user to create one first with strategy-editor.
+2. **A strategy exists.** Glob `strategies/*.md` (excluding FORMAT.md) for a
+   strategy that serves the principle. If none exists, stop — tell the user to
+   create one first with strategy-editor.
 
-3. **A guideline exists with a guard candidate.** Check
-   `implementation/<lang>/<strategy-name>/guidelines.md` for the guideline that
+3. **A protocol exists with a guard candidate.** Check
+   `implementation/<lang>/<strategy-name>/protocol.md` for the protocol that
    identified this guard candidate. The GUARD CANDIDATES section must reference
-   the step you're designing for. If no guideline exists, stop — tell the user
-   to create one first with guidelines-editor.
+   the step you're designing for. If no protocol exists, stop — tell the user
+   to create one first with protocol-editor.
 
 4. **A target language is known.** The guard candidate comes from a
-   language-specific guideline, so the language is implicit. Confirm it with the
+   language-specific protocol, so the language is implicit. Confirm it with the
    user if unclear.
 
 ## What you produce
@@ -54,7 +54,7 @@ linter rule IDs and nolint directives (e.g., `//nolint:require-in-subtests`).
 
 ```
 ## [guard-name]
-GUIDELINE: [Guideline file path] → Step [N] (or Step [N], [M] for multi-step)
+PROTOCOL: [Protocol file path] → Step [N] (or Step [N], [M] for multi-step)
 STRATEGY: [Strategy name]
 PRINCIPLE: [Principle name]
 LANGUAGE: [Target language]
@@ -92,12 +92,12 @@ Name: lowercase, hyphenated, names the check. Works as a linter rule ID or
 CI step name. Short enough to use in `//nolint:require-in-subtests`.
 
 ```
-GUIDELINE: implementation/go/data-driven-test-cases/guidelines.md → Step 6
+PROTOCOL: implementation/go/data-driven-test-cases/protocol.md → Step 6
 STRATEGY: Data-Driven Test Cases
 PRINCIPLE: No Conditional Test Logic
 LANGUAGE: Go
 ```
-Full traceability chain. Four links: guideline step → strategy → principle →
+Full traceability chain. Four links: protocol step → strategy → principle →
 language. Anyone reading the guard can trace back to *why* it exists.
 
 ```
@@ -183,11 +183,11 @@ is sufficient.
 
 ### Design
 
-The primary mode. Takes a guard candidate from a guideline and designs the
+The primary mode. Takes a guard candidate from a protocol and designs the
 full guard. Design includes assessment as step 3 — you don't need to run
 Assess mode separately.
 
-1. Read the guideline file and locate the guard candidate
+1. Read the protocol file and locate the guard candidate
 2. Read the strategy and principle for context
 3. Assess whether the candidate is truly mechanizable (see Assess mode
    criteria). If not, explain why and stop.
@@ -216,7 +216,7 @@ Then for each failure, show the failing element, explain what's wrong, and
 provide a concrete fix.
 
 Also check:
-- Is the guard still aligned with the current guideline? (guideline may have
+- Is the guard still aligned with the current protocol? (protocol may have
   been updated since the guard was designed)
 - Does the rejection logic match the REJECTS description?
 - Are false positive scenarios realistic and complete?
@@ -253,12 +253,12 @@ Three criteria must ALL be true:
 
 If all three criteria are met, the candidate is ready for Design mode.
 If not, explain which criterion fails and why. The candidate stays in the
-guideline's GUARD CANDIDATES section as documentation — not every candidate
+protocol's GUARD CANDIDATES section as documentation — not every candidate
 becomes a guard.
 
 ### Update
 
-User wants to revise an existing guard design — because the guideline step
+User wants to revise an existing guard design — because the protocol step
 changed, the tool evolved, or false positive experience showed the design was
 wrong. Read the existing guard design file. Diff the proposed change against
 the quality checks. Flag if the change breaks traceability. After approval,
@@ -267,12 +267,12 @@ update the file in place.
 If the guard has already been implemented, note that the implementation may
 also need updating — create a bead for the implementation change.
 
-### When triggered from guidelines-editor
+### When triggered from protocol generation
 
-The bead created by guidelines-editor has a title of the form "Design
+The bead created by protocol generation has a title of the form "Design
 [language] guard: [check description]" and a description that references the
-strategy name, guideline step number, CHECK description, and the guideline
-file path. Read the bead with `bd show`, then read the guideline file to
+strategy name, protocol step number, CHECK description, and the protocol
+file path. Read the bead with `bd show`, then read the protocol file to
 locate the guard candidate. Proceed with Design mode.
 
 ## Quality checks
@@ -287,7 +287,7 @@ mechanically.
 
 The test: could two different instances of the tool, given the same input,
 always produce the same result? If the answer depends on context, intent,
-or taste, it's not a guard — it's a guideline.
+or taste, it's not a guard — it's a protocol step.
 
 FAIL: A guard that flags "complex functions" — complexity is subjective.
 PASS: A guard that flags functions over 50 lines — line count is objective.
@@ -302,15 +302,15 @@ the pattern is mechanical.
 Every guard must trace back through all four layers:
 
 ```
-Guard → Guideline step → Strategy → Principle
+Guard → Protocol step → Strategy → Principle
 ```
 
 The design document must include all four links. If any link is broken
-(e.g., the guideline step was removed, the strategy was updated), the
+(e.g., the protocol step was removed, the strategy was updated), the
 guard design is stale.
 
-FAIL: A guard with no GUIDELINE reference.
-PASS: A guard that links to a specific guideline step number, strategy name,
+FAIL: A guard with no PROTOCOL reference.
+PASS: A guard that links to a specific protocol step number, strategy name,
 and principle name.
 
 ### False positive check
@@ -325,7 +325,7 @@ assess their overall frequency.
   more. Document each scenario clearly.
 - **Common** — The guard would flag a pattern that's frequently legitimate.
   The guard is not ready. Either narrow the rejection logic or demote back
-  to a guideline (human-enforced).
+  to a protocol step (human-enforced).
 
 FAIL: "No false positives" — this is almost never true and suggests the
 designer didn't think hard enough.
@@ -350,7 +350,7 @@ PASS: A scoped nolint directive with documented justification requirements.
 The REJECTS and ACCEPTS descriptions must be precise enough for an
 implementer to write the check without guessing.
 
-The test: could a developer who has never seen the guideline implement the
+The test: could a developer who has never seen the protocol implement the
 guard from the REJECTS and ACCEPTS descriptions alone? If they'd need to
 ask clarifying questions, the descriptions aren't precise enough.
 
@@ -366,24 +366,24 @@ PASS: "Rejects CallExpr nodes where the function selector matches
 
 Guards exist in the CHECK layer. Check for these common misplacements:
 
-1. **Guideline disguised as guard.** If the "check" requires understanding
-   why code was written a certain way, it's a guideline (human review), not
+1. **Protocol step disguised as guard.** If the "check" requires understanding
+   why code was written a certain way, it's a protocol step (human review), not
    a guard (mechanical check).
    FAIL: "Flag functions that mix coordination and logic." (Requires
    understanding what counts as coordination vs. logic.)
-   FIX: This is a guideline. The guard might be narrower: "Flag structs
+   FIX: This is a protocol step. The guard might be narrower: "Flag structs
    that both implement an interface AND have methods with more than N
    dependencies injected."
 
 2. **Style preference disguised as guard.** If the check enforces a
-   preference that doesn't trace back to a principle through a guideline,
+   preference that doesn't trace back to a principle through a protocol,
    it's not a guard — it's a style rule. Guards must trace to principles.
    FAIL: "Enforce alphabetical import ordering." (No principle backing it.)
    PASS: "Enforce require over assert in t.Run callbacks." (Traces to
    No Conditional Test Logic.)
 
 3. **Overly broad guard.** If the guard catches a wide pattern when only a
-   narrow subset is actually a violation, it belongs in a guideline until
+   narrow subset is actually a violation, it belongs in a protocol until
    the rejection can be narrowed.
    FAIL: "Flag all assert usage." (assert is fine outside subtests.)
    FIX: Narrow to "assert inside t.Run callbacks" — the actual violation.
@@ -397,7 +397,7 @@ Once the user approves the guard design, complete these steps in order.
 Confirm all four files exist:
 - `principles/<principle-name>.md`
 - `strategies/<strategy-name>.md`
-- `implementation/<lang>/<strategy-name>/guidelines.md`
+- `implementation/<lang>/<strategy-name>/protocol.md`
 
 If any are missing, stop and tell the user.
 
@@ -410,7 +410,7 @@ new one:
 - **Overlap** — Different name but checks the same thing or a superset.
   Show both to the user and ask: merge, differentiate, or abort?
 - **Complementary** — Different guards for different steps of the same
-  guideline. This is fine and expected.
+  protocol. This is fine and expected.
 
 ### 3. Create the guards directory
 
@@ -423,7 +423,7 @@ Write the guard design to `guards/<lang>/<guard-name>.md`.
 ### 5. Close the originating bead
 
 If this design was triggered by a "Design guard" bead from
-guidelines-editor, close it with `bd close <id>`. If there is no
+protocol generation, close it with `bd close <id>`. If there is no
 originating bead (e.g., the user requested the design directly), skip
 this step.
 
@@ -453,20 +453,20 @@ If this is the first guard for a language, add a guards section to
 
 - **Implement now?** If the guard is simple enough, offer to implement it
   in the current session.
-- **More guards?** If the guideline has other guard candidates, offer to
+- **More guards?** If the protocol has other guard candidates, offer to
   design the next one.
-- **Different language?** If the same guideline step has guards in other
+- **Different language?** If the same protocol step has guards in other
   languages, offer to design those too.
 
 ## Edge cases
 
 - **Guard candidate fails the assess.** Not every guard candidate becomes a
   guard. If assessment shows the check requires judgment, isn't mechanizable,
-  or has too many false positives, the candidate stays in the guideline's
+  or has too many false positives, the candidate stays in the protocol's
   GUARD CANDIDATES section as documentation. Don't force it into a guard.
 
 - **Upper layer needs refinement.** During guard design, you may discover
-  the guideline step is too vague to produce a precise REJECTS description,
+  the protocol step is too vague to produce a precise REJECTS description,
   the strategy step is too abstract, or the principle is too broad to
   mechanize. Don't force a vague guard. Instead: create a bead for the
   appropriate editor describing what needs refinement. Add the new bead as a
@@ -497,8 +497,8 @@ If this is the first guard for a language, add a guards section to
   there's a reason not to.
 
 - **Multi-step guard candidate.** A single mechanical check may enforce
-  two or more related guideline steps. Use comma-separated step references:
-  `GUIDELINE: ... → Step 4, 6`. Design the guard holistically — the REJECTS
+  two or more related protocol steps. Use comma-separated step references:
+  `PROTOCOL: ... → Step 4, 6`. Design the guard holistically — the REJECTS
   and ACCEPTS should cover the combined scope. Don't create two nearly
   identical guard designs when one check handles both.
 
@@ -508,10 +508,10 @@ If this is the first guard for a language, add a guards section to
   categorize violations (fix vs. suppress), and handle them before
   enabling the guard as a blocking check.
 
-- **Guard becomes obsolete.** When a guideline step changes or is removed,
+- **Guard becomes obsolete.** When a protocol step changes or is removed,
   the guard may no longer apply. The guard design document should be updated
   or archived. Don't leave stale guards checking for patterns that are no
-  longer part of the guidelines.
+  longer part of the protocols.
 
 - **Cross-language guards.** Some checks are conceptually the same across
   languages but implemented differently. Design each language's guard
@@ -520,6 +520,6 @@ If this is the first guard for a language, add a guards section to
   "universal" guard.
 
 - **User wants to batch-design guards.** When designing guards for multiple
-  candidates from the same guideline, work through them one at a time.
+  candidates from the same protocol, work through them one at a time.
   Each guard has its own false positive profile and tool considerations.
   Present them individually for review.

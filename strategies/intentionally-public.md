@@ -23,7 +23,7 @@ need most of what's inside. Also during early prototyping when boundaries
 are still being discovered — but revisit before the design stabilizes.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale

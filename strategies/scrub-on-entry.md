@@ -17,7 +17,7 @@ MISAPPLICATION: Validating everything — including fields you don't use — tur
 SKIP WHEN: Data you validated on entry to this service and haven't re-read from an external source since. Also skip when your code genuinely doesn't act on any field in the payload — but if you act on even one, scrub it.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale

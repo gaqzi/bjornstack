@@ -2,7 +2,7 @@
 name: strategy-editor
 description: >
   Write, review, and refine strategies — the HOW layer that bridges principles
-  (WHY) to guidelines (WHAT). Use this skill whenever the user wants to create
+  (WHY) to protocols (WHAT). Use this skill whenever the user wants to create
   a new strategy, review or improve an existing strategy, convert a technique
   or best practice into a strategy, or check whether something belongs in the
   strategy layer vs. another layer. Also trigger when handed off from
@@ -14,20 +14,18 @@ description: >
 
 # Strategy Editor
 
-Write, review, and refine strategies that bridge principles to guidelines.
+Write, review, and refine strategies that bridge principles to protocols.
 
-**Strategies are an authoring tool, not a runtime artifact.** They are consumed
-by guideline authors (human or AI) when creating language-specific guidelines —
-they are not loaded into projects. Their purpose is to help express abstractly
-*what the technique is* before getting pulled into the specifics of a target
-language or stack. This matters for growth: when you add a second or third
-language, the strategy ensures consistency across all guidelines derived from
-it. Every principle gets a strategy.
+**Strategies are primarily an authoring tool.** They are consumed when
+generating language-specific protocols and are available as reference material
+when a generated protocol needs disambiguation. Their purpose is to help
+express abstractly *what the technique is* before getting pulled into the
+specifics of a target language or stack. This matters for growth: when you add
+a second or third language, the strategy ensures consistency across all
+protocols derived from it. Every principle gets a strategy.
 
 Read `references/FORMAT.md` before proceeding. It defines the exact format and
-explains why each part matters. Read `references/DIVERGENCE.md` when reviewing
-a strategy or when evaluating whether steps are abstract enough for languages
-to follow or diverge from cleanly.
+explains why each part matters.
 
 ## What you produce
 
@@ -80,13 +78,13 @@ creates genuinely different procedures, not when paths share most steps.
 ### Rationale section
 
 When a strategy's reasoning needs more context — why certain steps exist,
-how the technique applies across languages, edge cases guideline authors
+how the technique applies across languages, edge cases protocol authors
 should understand — add a rationale section below a `---` separator,
 matching the principle format:
 
 ```
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale
@@ -100,12 +98,12 @@ don't cover and why.]
 Not every strategy needs a rationale. Add one when:
 - The strategy serves a principle in a non-obvious way (the connection
   needs explaining)
-- The technique has cross-language implications that guideline authors
+- The technique has cross-language implications that protocol authors
   need to understand
 - Steps encode decisions that would otherwise require re-deriving the
   reasoning each time
 
-The rationale is for guideline authors translating the strategy to a
+The rationale is for protocol authors translating the strategy to a
 specific language. It bridges abstract technique to concrete implementation
 context.
 
@@ -172,8 +170,8 @@ This isn't a strategy yet, it's raw material. Your job is to find the
 technique hiding in it. Ask: "What's the sequence? When you follow this
 principle well, what do you do first, then next?" The answers reveal the
 steps. If the ideas don't form a sequence — they're just a list of tips —
-they might be multiple strategies, or they might be guidelines rather than
-a strategy.
+they might be multiple strategies, or they might be protocol steps rather
+than a strategy.
 
 1. Shape the raw material into a technique (see above)
 2. Draft the strategy in the exact format
@@ -197,16 +195,16 @@ an outcome), call out the ripple explicitly.
 User provides prose docs, best practices, or technical descriptions. For each
 distinct technique:
 
-1. Decide if it's actually a strategy (vs. principle, guideline, or guard)
+1. Decide if it's actually a strategy (vs. principle, protocol, or guard)
 2. If it's a strategy, produce it in the format
 3. If it's not, say what it is and why — suggest where it belongs instead.
    For principles, create a bead for principle-editor to handle separately.
-   For guidelines, note which strategy they'd implement.
+   For protocol steps, note which strategy they'd implement.
 
 ### Update
 
 User wants to revise an existing strategy — because the principle evolved, a
-guideline revealed a step doesn't translate, or experience showed a step is
+protocol revealed a step doesn't translate, or experience showed a step is
 wrong. Read the existing strategy file. Diff the proposed change against the
 quality and coherence checks. Flag if the change breaks step-outcome tracing
 or introduces language-specific content. After approval, update the file in
@@ -270,7 +268,7 @@ wouldn't necessarily arrive here from the principle alone.
 - **Steps are numbered, abstract, and language-agnostic.** Steps describe
   a conceptual procedure, not language-specific code. No function names,
   no framework APIs, no syntax examples. If someone needs to know Go or
-  Python to understand a step, it belongs in a guideline.
+  Python to understand a step, it belongs in a protocol.
   FAIL: "3. Use `t.Run(name, func(t *testing.T) { ... })` for each case."
   PASS: "3. Write a single test body that operates on one case."
 
@@ -296,7 +294,7 @@ wouldn't necessarily arrive here from the principle alone.
   brief inline example strengthens clarity without making it language-specific.
   `mail.Message` over `mail.Mail` communicates a naming pattern faster than
   a paragraph of description. Keep examples short and universal — if you
-  need language-specific syntax, it belongs in a guideline, not the step.
+  need language-specific syntax, it belongs in a protocol, not the step.
 
   **Judgment-heavy steps need escalation paths.** When a step requires
   judgment that an agent can't resolve mechanically, the step should include:
@@ -352,8 +350,8 @@ right layer.
 
 ```
 Principle    → WHY     One sentence + violations. Why something matters.     ← loaded into project
-Strategy     → HOW     Numbered steps + outcomes. Abstract technique.        ← used when writing guidelines
-Guideline    → WHAT    Language-specific implementation. What to do in Go.   ← loaded into project
+Strategy     → HOW     Numbered steps + outcomes. Abstract technique.        ← input to protocol generation
+Protocol     → WHAT    Stage-based workflows. Generated, language-specific.  ← loaded into project
 Guard        → CHECK   Mechanical checks. Zero judgment. Linter rules.      ← loaded into project, runs automatically
 ```
 
@@ -366,12 +364,12 @@ Check for these common misplacements:
    FIX: Extract the one-sentence rule as a principle. The strategy is the
    technique for how to avoid it.
 
-2. **Guideline disguised as strategy.** If any step references a specific
-   language, framework, or tool, it's a guideline. Strategies are
+2. **Protocol step disguised as strategy.** If any step references a specific
+   language, framework, or tool, it's a protocol step. Strategies are
    language-agnostic.
    FAIL: "4. Use `t.Run` to create subtests for each row."
    FIX: The strategy step is "Have the framework iterate the data through
-   that body." The `t.Run` detail belongs in a Go guideline.
+   that body." The `t.Run` detail belongs in a Go protocol.
 
 3. **Tutorial disguised as strategy.** If it includes background reading,
    motivation beyond the PRINCIPLE link, or learning context, it's a
@@ -447,7 +445,7 @@ Once the user approves the strategy, complete these steps in order.
 
 ### 1. Uniqueness check
 
-Glob `strategies/*.md` (excluding FORMAT.md and DIVERGENCE.md). For each
+Glob `strategies/*.md` (excluding FORMAT.md). For each
 existing strategy, compare the name and principle link against the new one:
 
 - **Name collision** — Same or nearly identical name. Resolve before writing.
@@ -515,29 +513,20 @@ file using the naming convention (e.g., "Unit Testing" →
 In review mode, list missing mirrors and provide the drafted fixes
 but don't modify files without user approval.
 
-### 5. Offer guideline handoff
+### 5. Offer protocol regeneration
 
-Check whether the strategy would benefit from a language-specific guideline.
-Two signals:
-
-1. **"How do I do this in Go/Python/etc?"** — The strategy's steps could be
-   implemented differently per language. That implementation is a guideline.
-2. **OUTCOMES suggest language-specific checks.** — An outcome like "each
-   case runs in isolation" might map to `t.Run` in Go but `@parametrize`
-   in Python.
+If generated protocols exist for any supported language, this strategy
+change may affect them.
 
 **Always offer, never force.** Say something like:
 
-> "This strategy could benefit from a guideline for [language]. Want to
-> create one?"
+> "This strategy change may affect generated protocols. Want me to create
+> a bead to track regeneration?"
 
-If the user accepts, create a beads task with title "Create [language]
-guideline for [Strategy Name]" and description that includes both the
-strategy and principle names. If they decline, do nothing — they can create
-it later.
-
-Every strategy needs guidelines for each supported language. The guideline
-is where the abstract technique becomes concrete and actionable.
+If the user accepts, create a beads task with title "Regenerate [language]
+protocols after [Strategy Name] update" and a description noting what
+changed and why protocols may need updating. If no protocols have been
+generated yet, skip this step.
 
 ## Edge cases
 

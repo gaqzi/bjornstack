@@ -1,20 +1,20 @@
 # How to Write Strategies
 
 Strategies are the HOW layer — the abstract, language-agnostic approach that
-bridges a principle (WHY) to a guideline (WHAT in language X).
+bridges a principle (WHY) to a protocol (WHAT in language X).
 
 A principle says *why something matters*. A strategy says *how to achieve it*
-as an abstract recipe. A guideline says *what to do concretely* in a specific
+as an abstract recipe. A protocol says *what to do concretely* in a specific
 language or framework.
 
-**Strategies are an authoring tool, not a runtime artifact.** They are consumed
-by guideline authors (human or AI) when creating language-specific guidelines —
-they are not loaded into projects. Their purpose is to help express abstractly
-*what the technique is* before getting pulled into the specifics of a target
-language or stack. When a principle can be made into a repeatable technique,
-the path is always principle → strategy → guideline. The exception is
-pure-judgment principles where the technique can't be abstracted into
-repeatable steps.
+**Strategies are primarily an authoring tool.** They are consumed when
+generating language-specific protocols and are available as reference material
+when a generated protocol needs disambiguation. Their purpose is to help
+express abstractly *what the technique is* before getting pulled into the
+specifics of a target language or stack. When a principle can be made into a
+repeatable technique, the path is always principle → strategy → protocol. The
+exception is pure-judgment principles where the technique can't be abstracted
+into repeatable steps.
 
 ## Format
 
@@ -33,7 +33,7 @@ OUTCOMES:
 
 MISAPPLICATION: [What it looks like when this strategy is applied badly
 or in the wrong context.]
-SKIP WHEN: [When the principle is direct enough to go straight to guidelines.]
+SKIP WHEN: [When this strategy doesn't apply — the situation doesn't call for this technique.]
 ```
 
 ### Forked strategies
@@ -77,7 +77,7 @@ section below a `---` separator, matching the principle format:
 
 ```
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale
@@ -85,7 +85,7 @@ questioning the strategy. Not needed for routine application. -->
 ### [Subsection as needed]
 
 [Why this technique works. Cross-language considerations. What the steps
-don't cover and why. Edge cases that guideline authors should understand.]
+don't cover and why. Edge cases that protocol authors should understand.]
 ```
 
 Guideline authors read the rationale when translating the strategy to a
@@ -185,8 +185,8 @@ as "testing → unit" and keeps everything flat in `strategies/`.
 
 - **Principles.** If it can be said in one sentence and has a violation
   example, it's a principle. Strategies need space to describe a technique.
-- **Guidelines.** If it references a specific language, framework, or tool,
-  it's a guideline. Strategies are language-agnostic.
+- **Protocols.** If it references a specific language, framework, or tool,
+  it's a protocol step. Strategies are language-agnostic.
 - **Tutorials.** Strategies describe *what to do conceptually*, not *how to
   learn it*. No background reading, no motivation beyond the PRINCIPLE link.
 
@@ -194,12 +194,12 @@ as "testing → unit" and keeps everything flat in `strategies/`.
 
 ```
 Principle    → WHY     "Tests must not contain conditional logic"        ← loaded into project
-Strategy     → HOW     Data-Driven Test Cases (the abstract technique)   ← used when writing guidelines
-Guideline    → WHAT    Go: table-driven tests with t.Run subtests        ← loaded into project
+Strategy     → HOW     Data-Driven Test Cases (the abstract technique)   ← input to protocol generation
+Protocol     → WHAT    Go: table-driven tests with t.Run subtests        ← generated, loaded into project
 Guard        → CHECK   testnoifs linter: rejects if/switch in tests      ← loaded into project, runs automatically
 ```
 
 A single principle may have multiple strategies (different approaches to the
-same WHY). A single strategy may have multiple guidelines (same approach
-adapted per language). Not every guideline produces guards — some require
+same WHY). A single strategy may have multiple protocols (same approach
+adapted per language). Not every protocol step produces guards — some require
 judgment that can't be mechanized.

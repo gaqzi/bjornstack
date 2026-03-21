@@ -64,7 +64,7 @@ when tests share real infrastructure — databases, caches, queues — and
 need data-level isolation.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale

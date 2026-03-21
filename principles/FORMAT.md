@@ -91,7 +91,7 @@ breakers are not violations, how conditional test logic belongs here, etc.]
 ## What principles are NOT
 
 - Tactical implementation rules (e.g. "use `require` over `assert`") — these
-  belong in guidelines or guards, not principles.
+  belong in protocols or guards, not principles.
 - Tutorials or background reading — agents don't need context, they need
   constraints.
 - Long prose — length is not depth. If the principle block needs three
@@ -106,7 +106,7 @@ patterns:
 1. **Misidentified principle.** The decision isn't governed by the principle
    you think it is. Choosing an assertion library isn't an Earned Abstraction
    question (you're adopting a tool, not creating an abstraction) — it's a
-   guideline-level choice informed by whichever principles the tool serves.
+   protocol-level choice informed by whichever principles the tool serves.
    Before declaring a conflict, verify each principle actually applies.
 
 2. **CBC yields when the pattern itself is the problem.** Already documented

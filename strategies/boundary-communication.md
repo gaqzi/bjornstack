@@ -61,7 +61,7 @@ not two. Domain-First Packaging determines whether things belong together;
 this strategy governs how they communicate once they don't.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale

@@ -35,7 +35,7 @@ needs no structural preparation and no structural cleanup. Splitting would
 produce two changesets with less clarity than one.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale

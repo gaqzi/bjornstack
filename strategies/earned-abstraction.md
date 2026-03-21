@@ -88,7 +88,7 @@ serves Highlight the Difference — it's not the kind of cross-consumer
 abstraction this strategy governs.
 
 ---
-<!-- Rationale below — read when creating guidelines, reviewing, or
+<!-- Rationale below — read when creating protocols, reviewing, or
 questioning the strategy. Not needed for routine application. -->
 
 ## Rationale
