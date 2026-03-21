@@ -71,6 +71,18 @@ in isolation but aren't wired correctly is a system that doesn't work.
 Unit tests fill in underneath: once the path is proven, push detail tests
 down to the cheapest layer.
 
+### The outside-in development loop
+
+Steps 1 and 2 compose into a development cycle. The integration test is
+written first and fails — the feature doesn't exist yet. That failing test
+defines "done." Development proceeds inward: unit tests drive the logic
+the integration test needs to pass, each one a small step (MMMSS) toward
+making the outer test green. When it passes, the feature works end-to-end.
+
+This is the BDD outside-in cycle emerging naturally from the strategy's
+steps. The integration test isn't just verification — it's a goal-setting
+mechanism that gives the team a concrete completion signal.
+
 ### Why Don't Fly Blind, not No Shared Fate
 
 The strategy is about *having signals at each level* — knowing when
