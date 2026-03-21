@@ -94,6 +94,15 @@ specifics of implementation — "tests reveal the surface" as a concept,
 before becoming "_test packages" in Go or "import from the public API" in
 Python.
 
+### Cross-references in rationale
+
+Cross-references go in a `### Cross-references` bulleted list at the end of
+the rationale. Each bullet starts with the strategy name in bold, then
+explains the connection: `- **Strategy Name**: explanation.` When a
+relationship needs multiple paragraphs — ownership boundaries, handoff
+points, composition logic — promote it to its own
+`### Relationship to [Name]` subsection above the cross-references list.
+
 ## Example
 
 ```
