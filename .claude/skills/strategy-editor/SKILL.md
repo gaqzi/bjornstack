@@ -433,6 +433,14 @@ These checks ensure the strategy hangs together as a whole.
    FAIL: "When you don't have any tests" — dodges the question instead
    of describing when the strategy is the wrong choice.
 
+### Cross-reference check
+
+1. **Cross-references is the last subsection.** If the rationale has a
+   `### Cross-references` section, no other `###` heading may follow it.
+   `### Relationship to [Name]` subsections go above it.
+   FAIL: A `### Scaling` subsection after `### Cross-references`.
+   FIX: Move `### Cross-references` to the end of the rationale.
+
 ## After approval
 
 Once the user approves the strategy, complete these steps in order.
@@ -476,7 +484,38 @@ The filename uses the kebab-case version of the strategy name (e.g.,
 "Data-Driven Test Cases" → `data-driven-test-cases.md`). If a rationale
 was drafted, include it below the `---` separator.
 
-### 4. Offer guideline handoff
+### 4. Verify mirror cross-references
+
+For every strategy named in `### Cross-references` bullets or
+`### Relationship to [Name]` subsections, resolve the name to its
+file using the naming convention (e.g., "Unit Testing" →
+`testing__unit.md`). Grep that file for the current strategy's name.
+
+- **Mirror exists** — no action needed.
+- **Mirror missing** — draft a bullet from the other strategy's
+  perspective and add it to that file's `### Cross-references`.
+  If the file has no `### Cross-references` section, create one
+  as the last `###` in the rationale.
+
+  Example — DFP references BC:
+  `- **Boundary Communication**: BC determines how units communicate
+  across the boundaries DFP creates.`
+  Mirror in BC's file:
+  `- **Domain-First Packaging**: DFP establishes the boundaries that
+  BC's contracts govern.`
+
+  Same relationship, described from the other strategy's vantage point.
+
+- **Referenced file doesn't exist** — flag for the user; don't
+  create cross-references to nonexistent strategies.
+- **Referenced file has no `## Rationale`** — flag for the user.
+  Creating a rationale section is a design decision, not a mechanical
+  fix.
+
+In review mode, list missing mirrors and provide the drafted fixes
+but don't modify files without user approval.
+
+### 5. Offer guideline handoff
 
 Check whether the strategy would benefit from a language-specific guideline.
 Two signals:
