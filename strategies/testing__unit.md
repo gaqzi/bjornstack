@@ -111,6 +111,15 @@ proves the wiring handles it. The happy path proves the wiring works when
 nothing fails. If you find yourself needing significantly more tests, the
 coordinator likely contains decision logic that should be computation.
 
+### Relationship to the meta-strategy
+
+This sub-strategy provides the technique for the meta-strategy's step 3
+bullet: "Logic and computation → unit test." The meta-strategy selects when
+to use unit tests; this strategy explains how to write them by classifying
+code as computation or coordination. The meta-strategy's SKIP WHEN also
+delegates directly here — when no integration boundaries exist, unit tests
+are the only layer and this strategy covers it.
+
 ### Cross-references
 
 - **Domain-First Packaging**: Where domain types live between compute and

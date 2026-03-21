@@ -98,6 +98,13 @@ are implicit, fix that first (BC) before writing contract tests — testing
 an undefined contract produces tests that track implementation, not
 agreements.
 
+### Relationship to the meta-strategy
+
+This sub-strategy provides the technique for the meta-strategy's step 3
+bullet: "Agreements with external parties → contract test." The meta-strategy
+selects when to use contract tests; this strategy explains how to write them
+by classifying the boundary as consumer or provider.
+
 ### Cross-references
 
 - **Compliance Test Suites**: CTS verifies implementations of internal
