@@ -56,12 +56,15 @@ questioning the strategy. Not needed for routine application. -->
 ### Foundation vocabulary
 
 This strategy establishes the compute/coordinate testing vocabulary that
-downstream strategies reference. "Isolated Test Execution" assumes you've
-already classified code to know what to isolate. "Public API Surface
-Testing" assumes you know which side of the split you're testing. "Earned
-Abstraction" uses collaborator count as an extraction signal. Changes to
-the vocabulary here propagate everywhere — hold this strategy to a higher
-coherence bar than most.
+downstream strategies reference. The classification descends from Jay
+Fields' solitary vs. sociable unit tests (*Working Effectively with Unit
+Tests*) via Justin Searls' compute-or-collaborate framing — which we adopt
+because it names what the code *does* rather than how the test *behaves*.
+"Isolated Test Execution" assumes you've already classified code to know
+what to isolate. "Public API Surface Testing" assumes you know which side
+of the split you're testing. "Earned Abstraction" uses collaborator count
+as an extraction signal. Changes to the vocabulary here propagate
+everywhere — hold this strategy to a higher coherence bar than most.
 
 ### Why all-or-none serves Consistent Beats Correct
 
