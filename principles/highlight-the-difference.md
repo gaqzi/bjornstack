@@ -54,3 +54,15 @@ Code review is where buried differences cause the most damage. A reviewer
 scanning five similar test cases that each repeat everything will miss the one
 meaningful change. When the shared parts are extracted and only the differences
 are visible, the reviewer sees exactly what matters.
+
+### Cross-references
+
+- **Earned Abstraction** (complementary): HTD extracts shared setup so
+  variations are visible — but local extraction (one consumer, easy to undo)
+  is not shared abstraction (many consumers, expensive to undo). HTD governs
+  local extraction; EA governs shared abstraction. They complement rather
+  than conflict.
+- **Many More Much Smaller Steps** (complementary): HTD says "make differences
+  visible in code." MMMSS says "make differences visible in changes." A PR
+  that separates structural from behavioral work is MMMSS applied through
+  HTD's lens.

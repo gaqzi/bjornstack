@@ -66,3 +66,12 @@ strategy. Once you classify code, you know:
 - What a failure means (wiring problem vs. logic problem)
 
 Every other testing principle builds on this classification.
+
+### Cross-references
+
+- **Structure Is Intent** (complementary): the directory tree should reflect
+  the compute/coordinate classification — structure makes the roles visible
+  without reading implementations.
+- **Earned Abstraction** (upstream): premature abstractions produce objects
+  that both compute and coordinate because the abstraction doesn't understand
+  its own role yet. CoC's classification is downstream of EA's discipline.

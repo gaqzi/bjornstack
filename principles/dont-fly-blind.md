@@ -76,14 +76,6 @@ should be invoked with extreme reluctance. The tradeoff is asymmetric: the
 cost of adding signals is known and modest, the cost of not having them is
 unknown and potentially severe.
 
-### Connection to Many More Much Smaller Steps
-
-MMMSS makes changes small so they're cheap to revert. DFB ensures you know
-when to revert. Together they form a delivery loop: make a small change,
-make sure you can see if it's broken, ship it, repeat. Neither is sufficient
-alone — small blind steps are still blind, and observable giant releases are
-still giant.
-
 ### Strategies are contextual
 
 The techniques for observability — what to instrument, how to set up
@@ -91,3 +83,13 @@ alerting, what dashboards to build — are highly context-dependent. The
 principle is valuable as a constraint even when the strategies are less
 prescriptive than those for code design principles. Over time, patterns will
 emerge, but the constraint stands on its own: don't ship what you can't see.
+
+### Cross-references
+
+- **Fail Early and Loud** (complementary): FEAL surfaces errors at the code
+  level; DFB surfaces them at the system level. Same philosophy — make
+  failures visible — operating at different altitudes.
+- **Many More Much Smaller Steps** (complementary): MMMSS makes changes small
+  so they're cheap to revert. DFB ensures you know when to revert. Together
+  they form a delivery loop: small change → verify signals → ship → repeat.
+  Neither is sufficient alone.

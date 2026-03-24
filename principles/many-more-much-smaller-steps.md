@@ -59,29 +59,24 @@ and ensures that the codebase reflects the team's actual progress. In the
 age of AI-assisted development, the cadence argument matters less, but the
 "everyone sees main" argument is timeless.
 
-### Connection to other principles
+### Cross-references
 
-**Highlight the Difference**: HtD says "make differences visible in code."
-MMMSS says "make differences visible in changes." A PR that separates
-structural from behavioral work is MMMSS applied through HtD's lens — each
-PR highlights one kind of difference.
-
-**Don't Fly Blind**: MMMSS makes changes small so they're cheap to revert.
-DFB ensures you know when to revert. Together they form a delivery loop:
-make a small change, make sure you can see if it's broken, ship it, repeat.
-Neither is sufficient alone — small blind steps are still blind, and
-observable giant releases are still giant.
-
-**Consistent Beats Correct**: If the established pattern is large releases,
-MMMSS says stop. CBC yields here — the pattern itself is the problem, per
-CBC's own rationale.
-
-**Earned Abstraction**: Shipping small steps is not the same as creating
-abstractions. A walking skeleton is wiring — coordination, per Compute or
-Coordinate — not abstraction. MMMSS governs the delivery of work, EA
-governs the design of abstractions. Ship small steps using concrete
-implementations, then earn the abstraction later when the pattern is
-visible.
+- **Highlight the Difference** (complementary): HTD says "make differences
+  visible in code." MMMSS says "make differences visible in changes." A PR
+  that separates structural from behavioral work is MMMSS applied through
+  HTD's lens — each PR highlights one kind of difference.
+- **Don't Fly Blind** (complementary): MMMSS makes changes small so they're
+  cheap to revert. DFB ensures you know when to revert. Together they form a
+  delivery loop: small change → verify signals → ship → repeat. Neither is
+  sufficient alone — small blind steps are still blind, and observable giant
+  releases are still giant.
+- **Consistent Beats Correct** (tension): if the established pattern is large
+  releases, MMMSS says stop. CBC yields here — the pattern itself is the
+  problem, per CBC's own rationale.
+- **Earned Abstraction** (complementary): shipping small steps is not
+  abstracting. A walking skeleton is coordination wiring, not abstraction.
+  MMMSS governs delivery; EA governs design. Ship concrete implementations
+  first, earn the abstraction later when the pattern is visible.
 
 ### Lineage
 

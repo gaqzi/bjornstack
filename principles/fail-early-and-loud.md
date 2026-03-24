@@ -104,3 +104,17 @@ PostgreSQL is an implicit fallback. You think you're testing production
 behavior, but you're testing a convenient fiction. If you must have defaults,
 they should match what production uses. Development and staging environments
 pick different options explicitly.
+
+### Cross-references
+
+- **Don't Fly Blind** (complementary): FEAL surfaces errors at the code level;
+  DFB surfaces them at the system level. Same philosophy — make failures
+  visible — operating at different altitudes. A function that swallows an
+  error is a FEAL violation; a feature that ships without alerts is a DFB
+  violation.
+- **No Shared Fate** (complementary): NSF establishes isolation boundaries;
+  FEAL ensures data crossing those boundaries is validated on entry. Together
+  they prevent garbage from flowing between independent units.
+- **Consistent Beats Correct** (yields to FEAL): when the established pattern
+  silently swallows errors, CBC defers — fix the pattern everywhere rather
+  than perpetuating a FEAL violation.

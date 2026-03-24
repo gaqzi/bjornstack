@@ -46,11 +46,12 @@ A package named `utils` promises nothing and delivers less. A package named
 `cart` or `pricing` or `notifications` tells you what domain it owns. You know
 what belongs in it and — just as importantly — what doesn't.
 
-### Related to Structure Is Intent
+### Cross-references
 
-Be Your Name covers naming — what you call things. Structure Is Intent covers
-organization — where you put things. Together they ensure that both the labels
-and the layout communicate purpose. You can have good names in bad structure
-(well-named functions in a chaotic flat directory) or bad names in good
-structure (a clear package layout with vague function names inside). Both
-principles are needed.
+- **Structure Is Intent** (complementary): SII covers organization — where you
+  put things. BYN covers naming — what you call them. Together they ensure both
+  labels and layout communicate purpose. Good names in bad structure or bad
+  names in good structure are each half-failures.
+- **Consistent Beats Correct** (yields to BYN): when the established naming
+  convention is vague or misleading, CBC defers — fix the names everywhere
+  rather than perpetuating a pattern that violates BYN.

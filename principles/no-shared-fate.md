@@ -93,3 +93,11 @@ This principle is about *mutable* state. Shared configuration, constants,
 and read-only reference data are not violations — they can't cause one unit's
 change to break another because they don't change. The moment the shared state
 becomes writable, No Shared Fate applies.
+
+### Cross-references
+
+- **Fail Early and Loud** (complementary): NSF establishes isolation boundaries;
+  FEAL ensures that data crossing those boundaries is validated on entry.
+  Isolation without validation lets garbage flow through the boundary contract.
+  Validation without isolation means the validated data can still be corrupted
+  by shared mutable state.

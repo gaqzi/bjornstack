@@ -46,6 +46,36 @@ listing principles, quick violation checks). The rationale is for deeper work:
 creating strategies, reviewing principles, resolving ambiguous cases, or
 onboarding new contributors.
 
+### Cross-references in rationale
+
+Cross-references go in a `### Cross-references` bulleted list at the end of
+the rationale. Each bullet starts with the principle name in bold, then
+explains the connection: `- **Principle Name** (tag): explanation.`
+
+Tags clarify the nature of the relationship:
+
+- `(complementary)` — two halves of the same concern, both needed together.
+- `(upstream)` — this principle's outputs feed the referenced principle's
+  inputs.
+- `(tension)` — genuine pull in opposite directions; the resolution is
+  documented in the explanation.
+- `(yields to)` — this principle defers when the referenced principle applies.
+
+Format: `- **Principle Name** (tag): explanation.`
+
+**Mirror policy:** if principle A references principle B, principle B must
+reference principle A. The explanations differ per direction — A explains the
+relationship from A's perspective, B from B's. Symmetric presence, asymmetric
+explanation.
+
+Cross-references are principle-to-principle only. Strategies reference their
+principle via the `PRINCIPLE:` line; principles do not formally cross-reference
+the strategy layer. Strategy mentions may appear naturally in rationale prose
+but do not belong in the `### Cross-references` list.
+
+For the full relationship graph and family placement, see
+[RELATIONSHIPS.md](RELATIONSHIPS.md).
+
 ## Example
 
 ```

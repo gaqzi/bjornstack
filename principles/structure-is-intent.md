@@ -41,10 +41,13 @@ place. When everything is in `pkg/`, nothing is out of place because there are
 no boundaries to violate. Structure Is Intent means the organization actively
 guides developers toward putting things in the right place.
 
-### Related to Be Your Name
+### Cross-references
 
-Be Your Name covers naming — what you call things. Structure Is Intent covers
-organization — where you put things. A well-named function in a chaotic package
-is a BYN success and an SII failure. A clear package layout with vague function
-names is an SII success and a BYN failure. Both principles are needed for code
-that communicates fully.
+- **Be Your Name** (complementary): BYN covers naming — what you call things.
+  SII covers organization — where you put things. A well-named function in a
+  chaotic package is a BYN success and an SII failure. Both principles are
+  needed for code that communicates fully.
+- **Compute or Coordinate** (complementary): the directory tree should reflect
+  the compute/coordinate classification — computation modules and coordinators
+  are structurally distinct, and the layout makes that distinction visible
+  without reading implementations.

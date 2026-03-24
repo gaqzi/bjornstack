@@ -67,3 +67,22 @@ from an established pattern, the process is: convince yourself it's not just
 convenience, convince at least one other person, and document the tradeoff. If
 you find yourself earning exceptions frequently for the same pattern, the
 pattern needs updating — consistently.
+
+### Cross-references
+
+- **Fail Early and Loud** (yields to FEAL): when the established pattern
+  silently swallows errors, CBC defers — fix the pattern everywhere rather
+  than perpetuating a FEAL violation.
+- **Be Your Name** (yields to BYN): when the established naming convention
+  is vague or misleading, CBC defers — improve the names everywhere rather
+  than perpetuating a BYN violation.
+- **Earned Abstraction** (tension): EA says abstract when you've seen three
+  cases. CBC says follow established patterns. Resolution: if the duplication
+  is genuinely three cases deep and the pattern is visible, EA wins —
+  abstract and update everywhere (per CBC's own yield rule).
+- **Many More Much Smaller Steps** (tension): if the established pattern is
+  large releases, MMMSS says stop. CBC yields — the pattern itself is the
+  problem.
+- **Practicality Beats Purity** (complementary): PBP governs the exception
+  process when CBC's pattern genuinely doesn't serve the situation. CBC
+  provides the default; PBP provides the escape valve.

@@ -17,7 +17,9 @@ Write, review, and refine engineering principles that are clear to both humans
 and AI agents.
 
 Read `references/FORMAT.md` before proceeding. It defines the exact format and
-explains why each part matters.
+explains why each part matters. Read `references/RELATIONSHIPS.md` when
+creating or updating principles — it shows how all principles relate and where
+they sit in the architectural/delivery landscape.
 
 ## What you produce
 
@@ -165,10 +167,15 @@ Run every quality check (see below).
 
 If other principles exist, stress-test against the set:
 - **Tensions**: does this principle conflict with any existing one? If so,
-  which yields and why? Resolve in the rationale.
+  which yields and why? Resolve in the rationale and add a `(tension)` or
+  `(yields to)` cross-reference.
 - **Overlaps**: does this principle cover the same constraint as an existing
   one with different words? If so, merge, differentiate, or abort.
 - **Gaps**: does adding this principle reveal something missing from the set?
+- **Relationships**: which existing principles does this one relate to?
+  Draft cross-reference entries with appropriate tags. Check
+  `references/RELATIONSHIPS.md` for the existing graph — where does this
+  principle fit in the architectural/delivery landscape?
 - **Ambiguous terms**: read every word in the definition. Could any term be
   misread? ("immediately" could mean "stop at the first error."
   "objects" could sound OO-specific.) Stress-test and tighten.
@@ -206,8 +213,11 @@ definition is too narrow, a protocol showed a violation doesn't cover a real
 case, or experience proved the WHY is wrong. Read the existing principle file.
 Diff the proposed change against the quality checks. Grep `strategies/*.md`
 for strategies that reference this principle — for each, check whether their
-steps still serve the updated definition and WHY. Flag any that don't. After
-approval, update the file in place.
+steps still serve the updated definition and WHY. Flag any that don't. Also
+check cross-references: grep sibling principles for `**[This Principle]**` —
+if the definition or WHY changed, the explanation text in those cross-references
+may need updating. After approval, update the file in place and update any
+stale cross-reference explanations in sibling principles.
 
 ### Extract
 
@@ -417,9 +427,20 @@ After writing the rationale section, verify it covers:
   violations).
 - **Tensions resolved.** If this principle can conflict with another, the
   rationale says which yields and why.
-- **Sibling cross-references.** If this principle was split from another or
-  shares a clear boundary with one, the rationale links them and explains
-  the boundary.
+- **Cross-references present.** Every principle that relates to another must
+  have a `### Cross-references` bulleted list at the end of the rationale.
+  Format: `- **Principle Name** (tag): explanation.` Tags:
+  - `(complementary)` — two halves of the same concern, both needed together.
+  - `(upstream)` — this principle's outputs feed the referenced one's inputs.
+  - `(tension)` — genuine pull in opposite directions; resolution documented.
+  - `(yields to)` — this principle defers when the referenced one applies.
+  Mirror policy: if A references B, B must reference A. Symmetric presence,
+  asymmetric explanation — each side explains from its own perspective.
+  Cross-references are principle-to-principle only — do not reference
+  strategies in the formal list (strategy mentions can appear in rationale
+  prose).
+  See `references/RELATIONSHIPS.md` for the full relationship graph and
+  architectural/delivery family placement.
 - **No first-person.** The rationale should make sense if someone copies it
   who doesn't know the author.
 - **Lineage acknowledged.** If the principle builds on an existing concept
@@ -450,7 +471,23 @@ the kebab-case version of the principle name (e.g., "Fail Early and Loud" →
 
 When writing multiple principles at once, write all files in parallel.
 
-### 3. Offer strategy handoff
+### 3. Update cross-references
+
+The new principle likely relates to existing ones. For each relationship:
+
+1. Add a cross-reference entry in the new principle's `### Cross-references`
+   list with the appropriate tag and explanation.
+2. Add the mirror entry in the related principle's `### Cross-references`
+   list — same tag, explanation from the other principle's perspective.
+3. Update `principles/RELATIONSHIPS.md` — add the new principle to the
+   Mermaid graph and the architectural/delivery family placement diagram.
+
+If no clear relationships exist yet, that's fine — cross-references can be
+added later as the relationship becomes apparent through use. But check: a
+principle with zero cross-references to any of the 10 existing principles
+is unusual and worth a second look.
+
+### 4. Offer strategy handoff
 
 Most principles need a strategy. The strategy is where the abstract technique
 gets worked out before language-specific protocols are written. This ensures

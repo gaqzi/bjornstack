@@ -41,8 +41,8 @@ This principle is not meant to be easy to invoke. The process is:
 Frequent exceptions to the same principle are a signal. Either the principle
 is too strict, the codebase has a structural problem that makes the principle
 impractical, or the team doesn't actually agree with the principle. All three
-are worth addressing directly. Use Consistent Beats Correct: fix the pattern
-everywhere or change the principle, don't accumulate exceptions.
+are worth addressing directly. Fix the pattern everywhere or change the
+principle, don't accumulate exceptions.
 
 ### You can't PBP out of PBP
 
@@ -61,3 +61,11 @@ a rule for good reasons. PBP exists to make the spirit explicit: we care about
 the outcomes these principles produce, not about mechanical compliance. When
 mechanical compliance doesn't produce the outcome, adapt — deliberately,
 visibly, with agreement.
+
+### Cross-references
+
+- **Consistent Beats Correct** (complementary): CBC provides the default —
+  follow established patterns. PBP provides the escape valve — when following
+  the pattern costs more than breaking it. Together they form the tension
+  management system: CBC says "stay consistent," PBP says "unless the cost is
+  genuine and documented."

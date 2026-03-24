@@ -90,20 +90,22 @@ interfaces and generic frameworks. In operations, EA prevents premature
 automation. Both forms of premature abstraction share the same failure mode —
 they encode assumptions from too few cases and warp under real variation.
 
-### Connection to other principles
+### Cross-references
 
-Earned Abstraction is upstream of Compute or Coordinate — if you abstract too
-early, you end up with mixed objects that both coordinate and compute because
-the abstraction doesn't understand its own role yet. It also connects to
-Consistent Beats Correct — sometimes the right call is to keep the duplication
-and stay consistent with the codebase's patterns rather than introduce an
-abstraction that might be wrong.
-
-Highlight the Difference says to extract shared setup so that only the
-variations are visible. This looks like it conflicts with Earned Abstraction —
-is extracting a test helper "premature"? No. Extracting repetition within a
-file (a local helper, a default builder) is not the same as creating a shared
-abstraction that multiple callers across the codebase depend on. The local
-helper has one consumer, is easy to change, and costs nothing to undo. The
-shared abstraction has many consumers, resists change, and is expensive to
-undo. Earned Abstraction governs the latter.
+- **Compute or Coordinate** (upstream): premature abstractions produce mixed
+  objects that both compute and coordinate because the abstraction doesn't
+  understand its own role yet. EA's discipline keeps CoC's classification clean.
+- **Consistent Beats Correct** (tension): sometimes the right call is to keep
+  duplication and stay consistent rather than introduce an abstraction that
+  might be wrong. Resolution: if the duplication is genuinely three cases deep
+  and the pattern is visible, EA wins — abstract and update the pattern
+  everywhere (per CBC's own yield rule).
+- **Highlight the Difference** (complementary): HTD extracts shared setup so
+  variations are visible. This looks like it conflicts with EA — is a test
+  helper "premature"? No. Local extraction (one consumer, easy to change) is
+  not shared abstraction (many consumers, expensive to undo). EA governs the
+  latter; HTD governs the former.
+- **Many More Much Smaller Steps** (complementary): shipping small steps is
+  not abstracting. A walking skeleton is coordination wiring, not abstraction.
+  MMMSS governs delivery; EA governs design. Ship concrete implementations
+  first, earn the abstraction later.
