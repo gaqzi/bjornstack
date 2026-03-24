@@ -23,6 +23,12 @@ PRINCIPLE: Compute or Coordinate
       never a subset.
    4. Write N+1 tests: one error-path test per collaborator that can
       fail, plus one happy-path test where all collaborators succeed.
+      Each error-path test verifies that this coordinator's own error
+      interface is consistent — callers should not need to know which
+      internal collaborator failed. User-facing coordinators deliver
+      errors appropriately for their context (HTTP status codes,
+      user-safe messages), either directly or via a formatting
+      collaborator.
    5. If the test count significantly exceeds N+1, or the coordinator
       contains conditionals beyond error checks, it's likely mixing
       computation into coordination — extract the logic.
@@ -108,11 +114,19 @@ gets passed along.
 
 ### Why N+1
 
-Each collaborator error path is independent — the coordinator's job is to
-propagate the failure, not to recover from it. One test per failure mode
-proves the wiring handles it. The happy path proves the wiring works when
-nothing fails. If you find yourself needing significantly more tests, the
-coordinator likely contains decision logic that should be computation.
+Each collaborator error path is independent — the coordinator's job is
+to present a consistent error interface to its callers, not to recover
+from failures. One test per failure mode proves the coordinator handles
+it and that callers don't need to know which collaborator failed. The
+happy path proves the wiring works when nothing fails. If you find
+yourself needing significantly more tests, the coordinator likely
+contains decision logic that should be computation.
+
+This consistent error interface is what makes one unhappy path
+integration test enough at the layer above (see Outside-In Development
+Loop). Because each coordinator's N+1 error tests verify consistent
+handling per collaborator, the integration test only needs to prove the
+error path is wired end-to-end — it doesn't re-test each failure mode.
 
 ### Relationship to the meta-strategy
 
@@ -152,3 +166,8 @@ are the only layer and this strategy covers it.
 - **Parameterized Test Structure**: PTS provides the table-driven
   structure for computation tests. UT classifies code as computation; PTS
   structures the resulting test cases into input/expected/assertion rows.
+- **Outside-In Development Loop**: Determines the order in which
+  coordinator and computation tests are written. Coordinator tests come
+  first (defining interfaces via mocks), computation tests second
+  (satisfying them). The consistent error interface from step 3.4 is
+  what makes one unhappy path integration test sufficient.
