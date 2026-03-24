@@ -120,8 +120,8 @@ preference:
 2. **Shared contract package.** When no single unit owns the type — an
    event that flows between units, a message format, a shared identifier —
    it lives in a small, stable package both sides import. This package
-   contains only boundary types, not logic. Think of it as a narrower
-   core: it exists solely to define what crosses boundaries. The package
+   contains only boundary types, not logic. Think of it as a shared
+   contract layer: it exists solely to define what crosses boundaries. The package
    has a specific, named purpose — `events` or `contracts/pricing` — not
    `common` or `shared`. If it grows to contain types from unrelated
    boundaries, it's becoming a grab-bag; split it by boundary.

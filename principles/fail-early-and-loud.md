@@ -74,7 +74,7 @@ unintended side effects — it's the "fail loud" principle applied to assertions
 When data arrives from an external system — an API response, a message from
 a queue, a webhook payload — the temptation is to be "liberal in what you
 accept" (Postel's Law). In practice, liberal acceptance means silently
-absorbing garbage that poisons your core. An empty field that should have a
+absorbing garbage that poisons your domain interior. An empty field that should have a
 value, amounts that don't sum up, enum values you've never seen — accepting
 these silently is the same failure mode as swallowing a null. The bug
 surfaces later, far from the point where you could have caught it.
@@ -88,7 +88,7 @@ you'd be making decisions on something you don't understand. The line is:
 if your code branches on it, computes with it, or stores it as a fact,
 validate it. If it's just passing through or you don't use it, let it be.
 
-The goal is a tight core that only works with pristine objects — data that
+The goal is a tight domain interior that only works with pristine objects — data that
 has passed all checks on the fields that matter before it enters your
 domain logic. This is the same idea as DDD's anti-corruption layer: your
 system's interior should never have to wonder whether the data it acts on

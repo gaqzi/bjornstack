@@ -30,8 +30,8 @@ painful because you have to cover the cross-product of modes.
 
 ### What it actually is when it has modes
 
-An abstraction with mode flags is usually a shared core that needs different
-harnesses, or a shared harness that needs a switchable core. Both call for a
+An abstraction with mode flags is usually a shared engine that needs different
+harnesses, or a shared harness that needs a switchable engine. Both call for a
 strategy — a named collaborator that encapsulates the varying behavior. The
 caller is named after the specific case it serves and coordinates the shared
 part with the strategy. This is Compute or Coordinate applied to abstraction
