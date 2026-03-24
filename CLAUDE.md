@@ -47,6 +47,12 @@ bd close <id>         # Complete work
 - If push fails, resolve and retry until it succeeds
 <!-- END BEADS INTEGRATION -->
 
+## Git Conventions
+
+- Tag commits with the bead ID at the end of the subject line when the commit delivers work for that bead: `Short description (bs-xxx)`
+- When a commit addresses multiple beads, list them: `Short description (bs-xxx, bs-yyy)`
+- Omit the tag when a commit is not tied to any bead (e.g., repo-wide conventions, config changes)
+
 ## Sandbox Workarounds
 
 - Always run `bd` commands with `dangerouslyDisableSandbox: true` — Dolt needs raw TCP to localhost:3308 which the sandbox blocks (`excludedCommands` has upstream bugs)
