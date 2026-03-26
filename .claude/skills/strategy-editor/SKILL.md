@@ -44,8 +44,10 @@ OUTCOMES:
 - [Observable result 1 — something you can check]
 - [Observable result 2]
 
-MISAPPLICATION: [What it looks like when this strategy is applied badly
-or in the wrong context.]
+MISAPPLICATIONS:
+- [What it looks like when this strategy is applied in the wrong context.]
+- [What it looks like when this strategy is applied too aggressively.]
+
 SKIP WHEN: [When this specific strategy adds no value — when a different
 strategy for the same principle is a better fit.]
 ```
@@ -145,12 +147,15 @@ OUTCOMES:
 back to the steps. Together they satisfy the principle.
 
 ```
-MISAPPLICATION: A "table" that still contains conditional logic inside
-the loop body, or where each row requires fundamentally different setup.
-If the cases don't share a single code path, they aren't one strategy —
-they're separate tests.
+MISAPPLICATIONS:
+- A "table" that still contains conditional logic inside the loop body —
+  the structure looks data-driven but the execution isn't.
+- Each row requires fundamentally different setup. If the cases don't share
+  a single code path, they aren't one strategy — they're separate tests.
 ```
-2 sentences. Specific enough to recognize in real code.
+Two distinct misapplication modes. The first is wrong execution (looks right,
+isn't). The second is wrong context (the technique doesn't fit). Each is
+specific enough to recognize in real code.
 
 ```
 SKIP WHEN: Only one case exists. A single test function is fine.
@@ -312,7 +317,7 @@ wouldn't necessarily arrive here from the principle alone.
   core technique as the last resort. Use sub-bullets for each level.
   This prevents the strategy from being read as "always do this" when
   the real message is "prefer simpler approaches, and when you can't,
-  here's the disciplined way." The MISAPPLICATION should include applying
+  here's the disciplined way." MISAPPLICATIONS should include applying
   the technique when a simpler alternative from the hierarchy would have
   worked. The SKIP WHEN remains for cases where the entire strategy is
   irrelevant — the preference hierarchy handles cases where the strategy
@@ -326,15 +331,17 @@ wouldn't necessarily arrive here from the principle alone.
   FAIL: "Tests are more maintainable."
   PASS: "Adding a new case requires only adding data, not changing code."
 
-- **MISAPPLICATION is realistic.** It describes what actually goes wrong
-  when the strategy is applied badly or in the wrong context. Not a
-  hypothetical — a pattern someone would recognize in real code. Unlike
-  VIOLATION in principles (breaking a rule), MISAPPLICATION describes
-  applying the strategy where it doesn't fit or over-engineering with it.
-  1-3 sentences. Specific enough to recognize, concise enough to scan.
+- **Each misapplication is a distinct, realistic failure mode.** Not a
+  hypothetical — a pattern someone would recognize in real code. Cover both
+  wrong-context application (using the strategy where it doesn't fit) and
+  over-application (applying it too rigidly). Before adding a misapplication,
+  check whether rewording an existing one would cover the same ground. When
+  a failure mode benefits from concrete instances, use `Examples:` sub-bullets
+  — illustrative, not exhaustive. (The term "misapplication" is deliberate —
+  see strategies/FORMAT.md for why it differs from "violation.")
   FAIL: "Someone might use this wrong."
   PASS: "A 'table' that still contains conditional logic inside the loop
-  body, or where each row requires fundamentally different setup."
+  body — the structure looks data-driven but the execution isn't."
 
 - **SKIP WHEN is present and honest.** It states when this specific strategy
   is not the right fit — when a different strategy for the same principle
@@ -417,7 +424,7 @@ These checks ensure the strategy hangs together as a whole.
    one path only — that's expected. But each path should contribute to at
    least one outcome.
 
-4. **Misapplication is realistic.** Someone reading the misapplication
+4. **Each misapplication is realistic.** Someone reading a misapplication
    should think "yes, I've seen that" or "yes, I could imagine doing
    that." If it's contrived, rewrite it.
    FAIL: "Someone uses this for the wrong language" — too vague to

@@ -2,10 +2,10 @@
 
 Principles are the WHY layer — high-level, language-agnostic constraints that
 encode *why* something matters. They sit at the top of a four-layer system:
-Principle (WHY) → Strategy (HOW) → Guideline (WHAT) → Guard (CHECK).
+Principle (WHY) → Strategy (HOW) → Protocol (WHAT) → Guard (CHECK).
 
 Principles are not prose rules or tutorials. They are named concepts with a
-tight definition, a violation example, and a one-line why.
+tight definition, violations, and a one-line why.
 
 ## Format
 
@@ -17,8 +17,15 @@ Every principle file has two parts: a tight **principle block** and a
 ```
 # [Principle Name]
 [One constraint, clearly stated.]
-VIOLATION: [Concrete example of what wrong looks like.]
-VIOLATION: [Optional — a second example that clarifies a borderline case.]
+
+VIOLATIONS:
+- [Failure mode — concrete, recognizable, language-agnostic.]
+  Examples:
+  - [A specific instance that makes this failure mode recognizable.]
+  - [Another instance — illustrative, not exhaustive.]
+- [Additional failure modes as needed — especially subtle ones agents are
+  likely to produce without realizing it.]
+
 WHY: [One sentence: the mechanism, what goes wrong without it.]
 ```
 
@@ -82,11 +89,19 @@ For the full relationship graph and family placement, see
 # Fail Early and Loud
 Code must surface problems visibly and early rather than absorbing them into
 implicit defaults, silent fallbacks, or hidden paths.
-VIOLATION: A hashmap lookup returns null, a downstream null-check substitutes
-a default, and the bug surfaces three layers later as wrong data in production.
-VIOLATION: A parameterized test uses `if tc.expectError` to branch between
-error and success assertions, hiding which path actually executed when the
-test fails.
+
+VIOLATIONS:
+- Silent data corruption through default substitution
+  Examples:
+  - A hashmap lookup returns null, a downstream null-check substitutes a
+    default, and the bug surfaces three layers later as wrong data in
+    production.
+  - A missing config key falls through to a hardcoded default, creating a
+    working-but-wrong system that passes all tests.
+- Hidden control flow in tests — a parameterized test uses
+  `if tc.expectError` to branch between error and success assertions,
+  hiding which path actually executed when the test fails.
+
 WHY: Every silent failure is a bug that compounds — the distance between cause
 and discovery is the cost.
 
@@ -109,14 +124,41 @@ breakers are not violations, how conditional test logic belongs here, etc.]
 - The **definition** states one constraint clearly. If you can't say it in one
   sentence (with qualifying clauses as needed), you don't understand the
   principle yet — or you have two principles hiding in one.
-- The **violation example** is the most important part. It gives the agent a
-  pattern to recognize, not just a rule to memorize. Violations must be
-  language-agnostic: "object" not "struct", "hashmap" not "hash".
+- The **violations** are the most important part. They give the agent failure
+  modes to recognize, not just a rule to memorize. Violations must be
+  language-agnostic: "object" not "struct", "hashmap" not "hash". See
+  "The case for violations only" below for the design theory.
 - The **why** encodes the mechanism, so agents can apply the principle in novel
   situations rather than just pattern-matching on familiar ones.
 - The **rationale** captures the thinking for future editors: how ambiguous
   terms should be interpreted, what doesn't count as a violation, how this
   principle relates to others. It's institutional memory.
+
+## The case for violations only
+
+The violation-only format is a guiding theory we're testing: constraining by
+defining the boundary works better than prescribing the interior. See
+[WORKFLOW.md](../docs/WORKFLOW.md#design-theory-boundary-based-constraints) for
+the full system-level theory. This section covers what it means for writing
+violations.
+
+**Good takes many forms.** Showing examples of correct code risks implying
+only those forms are valid. Violations define what's prohibited and leave the
+solution space open — everything that doesn't violate a principle is allowed.
+
+**Each violation must be a distinct failure mode.** Before adding a violation,
+check whether rewording an existing one would cover the same ground — if so,
+reword instead of adding. When a failure mode benefits from concrete instances,
+use an `Examples:` block with sub-bullets — the label reinforces that these
+are illustrative, not exhaustive.
+
+**Subtle violations are the highest value.** The obvious failure mode is easy —
+agents catch it themselves. The subtle violations, where code technically
+follows the letter of the principle but violates its spirit, are the ones
+that slip through. Prioritize documenting those.
+
+**If two violations need different WHYs, split the principle.** All violations
+for one principle share the same mechanism of harm.
 
 ## What principles are NOT
 

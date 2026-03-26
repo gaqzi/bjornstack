@@ -15,9 +15,9 @@ Guard        → CHECK   testnoifs linter: rejects if in test bodies
 Each layer has a different purpose:
 
 - **Principles** (WHY) — High-level, language-agnostic constraints. One
-  sentence, a violation example, a why. They encode *why* something matters.
+  sentence, violations, a why. They encode *why* something matters.
 - **Strategies** (HOW) — Abstract, language-agnostic techniques. Numbered
-  steps, observable outcomes, misapplication notes. They bridge a principle
+  steps, observable outcomes, misapplications. They bridge a principle
   to actionable technique without referencing any language.
 - **Protocols** (WHAT) — Stage-based workflows that compose principles and
   strategies into step-by-step decision trees for design, implementation,
@@ -29,6 +29,56 @@ Each layer has a different purpose:
 Not everything moves through all four layers. Some principles stay
 principles because they require judgment. Some protocol steps never become
 guards because the check can't be mechanized.
+
+## Design theory: boundary-based constraints
+
+The system is built on a guiding theory we're testing: constraining by
+defining what's wrong works better than prescribing what's right.
+
+**Violations define the boundary, not the interior.** Good implementations
+take many forms — the system doesn't enumerate them. Instead, principles list
+failure modes (VIOLATIONS) and strategies list misuse patterns
+(MISAPPLICATIONS). Everything that doesn't cross those boundaries is allowed.
+This is a laws-not-prescriptions model: define what's prohibited, leave the
+rest open.
+
+**Three components work together:**
+
+- **Violations / misapplications** — the boundary. Pattern-recognition
+  targets that an agent scanning code should recognize: "that is the
+  violation." Each must be a distinct failure mode. When a failure mode
+  benefits from concrete instances, sub-bullets under an `Examples:` label
+  make it recognizable without being exhaustive.
+- **WHY mechanism** — the generalization. Encodes the causal reasoning so
+  agents can apply the principle to situations no violation example
+  anticipated. Violations calibrate the boundary; WHY generalizes beyond it.
+- **Strategies and protocols** — the thinking process. Strategy steps and
+  protocol decision trees guide how to approach the problem, not what the
+  output should look like. An agent following "identify variations, extract
+  to data, write one body, iterate" will arrive at different implementations
+  depending on language and context. The technique is prescribed; the
+  artifact is not. An agent that finds a novel approach violating no
+  principles is free to take it.
+
+**Why not positive examples?** Positive examples prescribe output — "make it
+look like this." The system deliberately avoids that. Strategies and protocols
+prescribe technique and thinking process — "approach it this way" — which
+guides without constraining the solution space. An agent given examples of
+"good code" tends to interpolate between them rather than reasoning from the
+constraint. An agent given a thinking process derives its own solutions.
+
+**Why "misapplications" in strategies, not "violations"?** You *violate* a
+principle — you broke a constraint. You *misapply* a strategy — you used a
+technique badly or in the wrong context. The terms reflect the different
+relationship: principles are laws, strategies are tools. The format is
+consistent (both use bulleted lists); the naming is deliberately different.
+
+This is a theory, not proven truth. We believe boundary-based constraints
+combined with structured thinking processes leave agents more room to find
+novel solutions than output-based guidance would. Protocols haven't been
+generated yet — strategy steps and outcomes currently carry the
+thinking-process layer. If we discover the theory doesn't hold, the format
+evolves.
 
 ## How protocols work
 

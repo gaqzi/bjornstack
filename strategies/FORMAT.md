@@ -31,8 +31,12 @@ OUTCOMES:
 - [Observable result 1 — something you can check]
 - [Observable result 2]
 
-MISAPPLICATION: [What it looks like when this strategy is applied badly
-or in the wrong context.]
+MISAPPLICATIONS:
+- [What it looks like when this strategy is applied in the wrong context.]
+  Examples:
+  - [A specific instance that makes this misapplication recognizable.]
+- [What it looks like when this strategy is applied too aggressively.]
+
 SKIP WHEN: [When this strategy doesn't apply — the situation doesn't call for this technique.]
 ```
 
@@ -148,10 +152,12 @@ OUTCOMES:
 - The test body contains no branching logic.
 - Adding a new case requires only adding data, not changing code.
 
-MISAPPLICATION: A "table" that still contains conditional logic inside
-the loop body, or where each row requires fundamentally different setup.
-If the cases don't share a single code path, they aren't one strategy —
-they're separate tests.
+MISAPPLICATIONS:
+- A "table" that still contains conditional logic inside the loop body —
+  the structure looks data-driven but the execution isn't.
+- Each row requires fundamentally different setup. If the cases don't share
+  a single code path, they aren't one strategy — they're separate tests.
+
 SKIP WHEN: Only one case exists. A single test function is fine.
 ```
 
@@ -170,15 +176,34 @@ SKIP WHEN: Only one case exists. A single test function is fine.
   step N."
 - **OUTCOMES** are observable results that validate the strategy was applied
   correctly. These are the natural bridge to guards — when an outcome can be
-  checked mechanically, it's a guard candidate. Guidelines can add more
+  checked mechanically, it's a guard candidate. Protocols can add more
   language-specific outcomes on top.
-- **MISAPPLICATION** instead of VIOLATION. Strategies can be applied badly
-  (over-engineering, wrong context) rather than simply violated. This field
-  shows what the strategy looks like when it goes wrong — a pattern to
-  recognize and correct.
+- **MISAPPLICATIONS** instead of VIOLATIONS — strategies can be misapplied
+  (over-engineering, wrong context), not simply violated. See "The case for
+  misapplications over positive examples" below for why. Each misapplication
+  is a distinct failure mode; use `Examples:` sub-bullets when a failure mode
+  benefits from concrete instances.
 - **SKIP WHEN** makes it explicit when this specific strategy is not the right
   fit — typically when a different strategy for the same principle applies, or
   when the situation doesn't call for this technique.
+
+## The case for misapplications over positive examples
+
+The same boundary-based theory behind VIOLATIONS in principles applies here.
+See [WORKFLOW.md](../docs/WORKFLOW.md#design-theory-boundary-based-constraints)
+for the full system-level reasoning.
+
+**Why "misapplications" instead of "violations."** You *violate* a principle —
+you broke a constraint. You *misapply* a strategy — you used a technique where
+it doesn't fit or used it badly. A principle is a law, a strategy is a tool.
+The format (bulleted list) matches VIOLATIONS: for consistency, but the name
+reflects the different relationship.
+
+**Strategies already guide the thinking process.** The numbered steps describe
+how to approach the problem; OUTCOMES describe what to check. MISAPPLICATIONS
+complement them by showing what the technique looks like when it goes wrong.
+Each misapplication should be a distinct failure mode covering wrong-context
+use and over-application.
 
 ## File naming
 

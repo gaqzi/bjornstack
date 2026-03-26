@@ -31,8 +31,14 @@ match against, and a **rationale section** that captures the thinking.
 ```
 # [Principle Name]
 [One constraint, clearly stated.]
-VIOLATION: [Concrete example of what wrong looks like.]
-VIOLATION: [Optional — a second example that clarifies a borderline case.]
+
+VIOLATIONS:
+- [Failure mode — concrete, recognizable, language-agnostic.]
+  Examples:
+  - [A specific instance that makes this failure mode recognizable.]
+- [Additional failure modes as needed — especially subtle ones agents are
+  likely to produce without realizing it.]
+
 WHY: [One sentence: the mechanism — what goes wrong without it.]
 ```
 
@@ -77,12 +83,26 @@ clause can be removed and the principle still makes sense, the clause belongs
 in the rationale instead.
 
 ```
-VIOLATION: A hashmap lookup returns null, a downstream null-check substitutes
-a default, and the bug surfaces three layers later as wrong data in production.
+VIOLATIONS:
+- Silent data corruption through default substitution
+  Examples:
+  - A hashmap lookup returns null, a downstream null-check substitutes a
+    default, and the bug surfaces three layers later as wrong data in
+    production.
+  - A missing config key falls through to a hardcoded default, creating a
+    working-but-wrong system that passes all tests.
+- Hidden control flow in tests — a parameterized test uses
+  `if tc.expectError` to branch between error and success assertions,
+  hiding which path actually executed when the test fails.
 ```
-Concrete, recognizable, language-agnostic. Uses "hashmap" not "hash" (Ruby) or
-"map" (Go). Uses "object" not "struct." Someone looking at real code should be
-able to point at it and say "that — that's the violation."
+Two distinct failure modes. The first names the failure mode ("silent data
+corruption through default substitution") and uses `Examples:` sub-bullets to
+show specific instances — illustrative, not exhaustive. The second is concrete
+enough to stand alone without sub-bullets. Both are language-agnostic: "hashmap"
+not "hash" (Ruby) or "map" (Go), "object" not "struct." Someone looking at real
+code should be able to point at it and say "that — that's the violation." The
+ordering is intentional: the first is the obvious failure mode, the second is
+subtler (conditional test logic that looks normal until the test fails).
 
 ```
 WHY: Every silent failure is a bug that compounds — the distance between cause
@@ -305,19 +325,24 @@ optional.
   PASS: "Code must surface problems visibly and early rather than absorbing
   them into implicit defaults, silent fallbacks, or hidden paths."
 
-- **Violation is a concrete, recognizable, language-agnostic example.**
+- **Each violation is a distinct, concrete, language-agnostic failure mode.**
   Not abstract. Someone looking at real code or a real design should be able
-  to point at it and say "that — that's the violation." 1-2 sentences. Use
-  language-agnostic terms: "object" not "struct", "hashmap" not "hash",
-  "parameterized test" not "table test". Most principles need one violation.
-  Use a second only when it draws a boundary that reasonable people would
-  argue about — it encodes the designer's judgment about where the line sits.
-  If the two violations describe genuinely different failure modes (each
-  needing its own WHY), you have two principles — split them.
+  to point at it and say "that — that's the violation." Use language-agnostic
+  terms: "object" not "struct", "hashmap" not "hash", "parameterized test"
+  not "table test".
+  Cover the failure modes you understand — especially the subtle ones agents
+  are likely to produce without realizing it. Before adding a violation, check
+  whether rewording an existing one would cover the same ground — if so,
+  reword instead of adding. The goal is the fewest violations that cover the
+  failure modes you understand, not the most examples you can think of.
+  When a failure mode benefits from concrete instances, use an `Examples:`
+  block with sub-bullets — the label reinforces that these are illustrative,
+  not exhaustive.
+  If two violations need genuinely different WHY explanations, you have two
+  principles — split them.
   FAIL: "Code that doesn't follow the principle."
-  PASS: "A hashmap lookup returns null, a downstream null-check substitutes
-  a default, and the bug surfaces three layers later as wrong data in
-  production."
+  PASS: "Silent data corruption through default substitution" with
+  `Examples:` sub-bullets showing specific instances.
 
 - **Why states the mechanism.** It explains what breaks and how — not just
   that something is "bad" or restates the rule in different words. One
@@ -518,8 +543,13 @@ for the strategy-editor.
   repeatable steps. That's legitimate. The test is actionability, not
   mechanizability.
 
-- **Boundary-clarifying violations.** See the violation format check for
-  when to use a second violation and when to split into two principles.
+- **Curating violations over time.** Violations are living documentation.
+  As you discover new failure modes — especially subtle ones that slip
+  through review — add them. But always check first: can an existing
+  violation be reworded to cover this? If so, reword instead of adding.
+  When a failure mode has multiple concrete instances, use `Examples:`
+  sub-bullets rather than separate violations. If two violations need
+  different WHY explanations, the principle should be split.
 
 - **User wants to write a batch.** When converting a large document into
   principles, work through the exploration and zoom-out steps first. Present
