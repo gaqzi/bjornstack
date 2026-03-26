@@ -132,7 +132,8 @@ separate naming strategy.
 - **Unit Testing**: UT's coordinators pass domain types between
   collaborators — those types live at DFP's domain boundary, not owned
   by either side.
-- **Test Data Builders**: TDB's cross-domain builders live in the owning
-  domain, consistent with DFP's boundary design.
+- **Test Data Builders**: TDB's builders live in a shared package
+  with a single entry point — they construct DFP's domain types but
+  don't live within domain boundaries.
 - **Scrub on Entry**: SOE's boundary validation belongs at the package
   boundary DFP establishes — the entry point that external callers use.

@@ -177,5 +177,6 @@ concept, not a reason for a shared base class.
   builders — see threshold discussion above.
 - **Be Your Name**: State method naming is BYN applied to test
   helpers.
-- **Domain-First Packaging**: Cross-domain builders live in the
-  owning domain, consistent with DFP's boundary design.
+- **Domain-First Packaging**: Builders live in a shared package
+  (step 2), not per-domain. DFP governs the domain types builders
+  construct, not where builders themselves live.
