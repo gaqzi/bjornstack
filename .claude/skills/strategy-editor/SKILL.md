@@ -482,18 +482,26 @@ The filename uses the kebab-case version of the strategy name (e.g.,
 "Data-Driven Test Cases" → `data-driven-test-cases.md`). If a rationale
 was drafted, include it below the `---` separator.
 
-### 4. Verify mirror cross-references
+### 4. Check cross-references and consider mirrors
 
 For every strategy named in `### Cross-references` bullets or
 `### Relationship to [Name]` subsections, resolve the name to its
 file using the naming convention (e.g., "Unit Testing" →
-`testing__unit.md`). Grep that file for the current strategy's name.
+`testing__unit.md`).
 
-- **Mirror exists** — no action needed.
-- **Mirror missing** — draft a bullet from the other strategy's
-  perspective and add it to that file's `### Cross-references`.
-  If the file has no `### Cross-references` section, create one
-  as the last `###` in the rationale.
+Apply the mirroring policy from FORMAT.md. For each cross-reference,
+classify the relationship:
+
+- **Mutual composition** (they work together, each side benefits from
+  knowing about the other) → mirror. E.g., Whole-Object Assertion ↔
+  Test Data Builders.
+- **One-directional dependency** (A uses B as an input, but B is
+  broadly applicable and doesn't need to enumerate consumers) → no
+  mirror. E.g., Unit Testing → Earned Abstraction.
+- **Shared boundary** (both govern different facets of the same
+  concern) → mirror. E.g., Boundary Communication ↔ Grow Don't Break.
+
+When mirroring, draft the bullet from the other strategy's perspective:
 
   Example — DFP references BC:
   `- **Boundary Communication**: BC determines how units communicate
@@ -502,18 +510,34 @@ file using the naming convention (e.g., "Unit Testing" →
   `- **Domain-First Packaging**: DFP establishes the boundaries that
   BC's contracts govern.`
 
-  Same relationship, described from the other strategy's vantage point.
+Additional checks:
 
 - **Referenced file doesn't exist** — flag for the user; don't
   create cross-references to nonexistent strategies.
 - **Referenced file has no `## Rationale`** — flag for the user.
   Creating a rationale section is a design decision, not a mechanical
   fix.
+- **Mirror would be useful but file has no `### Cross-references`
+  section** — create one as the last `###` in the rationale.
 
-In review mode, list missing mirrors and provide the drafted fixes
-but don't modify files without user approval.
+In review mode, list cross-references, note which ones warrant
+mirrors and which don't (with reasoning), and provide drafted fixes.
+Don't modify files without user approval.
 
-### 5. Offer protocol regeneration
+### 5. Update RELATIONSHIPS.md
+
+If the new or updated strategy changes the relationship graph — new
+cross-references, removed cross-references, or a new strategy that
+belongs in a family — update `strategies/RELATIONSHIPS.md`:
+
+- **Mermaid graph**: add or remove edges. Only show architecturally
+  significant connections, not every cross-reference.
+- **Family placement**: add the strategy to the correct family in the
+  ASCII diagram. If it straddles families, add it to the straddle list.
+- **Entry points**: update if the new strategy changes the recommended
+  starting point for a family.
+
+### 6. Offer protocol regeneration
 
 If generated protocols exist for any supported language, this strategy
 change may affect them.

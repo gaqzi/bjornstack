@@ -115,13 +115,20 @@ nature of the connection:
 
 Format: `- **Strategy Name** (tag): explanation.`
 
+**Mirroring policy:** A reference from A→B does not require B→A. When adding
+a cross-reference, ask: "Would someone reading B benefit from knowing about
+A?" If yes, add a mirror from B's perspective. If no, leave it
+one-directional.
+
 **Meta-strategy exception:** A meta-strategy (e.g., `testing.md`) dispatches
 to sub-strategies in its steps — those inline references *are* the
 cross-references. A separate `### Cross-references` section listing the same
 sub-strategies would be redundant. Sub-strategies should still reference the
 meta-strategy back (via `### Relationship to the meta-strategy` or inline),
 but the meta→sub direction is covered structurally by the steps themselves.
-Mirror-check tooling should skip meta→sub references.
+
+For the full relationship graph and family placement, see
+[RELATIONSHIPS.md](RELATIONSHIPS.md).
 
 ## Example
 

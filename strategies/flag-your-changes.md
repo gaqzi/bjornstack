@@ -271,10 +271,9 @@ grow-then-subtract cycle. New contract version behind a flag → migrate
 consumers → flag becomes default → remove old path. The flag makes
 GDB's cycle visible and controllable.
 
-### Relationship to Boundary Communication
+### Cross-references
 
-Flags live in the unit that owns the behavior — the same ownership
-model as Boundary Communication. A pricing flag lives in the pricing
-boundary. A flag controlling how two services communicate lives in the
-service that initiates the interaction. Flags don't create new
-boundaries; they sit within existing ones.
+- **Boundary Communication**: Flags live in the unit that owns the
+  behavior — the same ownership model as BC. A pricing flag lives in
+  the pricing boundary. Flags don't create new boundaries; they sit
+  within existing ones.
