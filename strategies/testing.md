@@ -46,11 +46,12 @@ OUTCOMES:
 - Bug fixes include a test at the lowest layer that would have caught
   the bug.
 
-MISAPPLICATION: Writing only unit tests with no integration test proving
-the path is wired — all the parts work in isolation but the system doesn't
-work. Or the inverse: testing everything through integration tests because
-"it's more realistic," leading to a slow, brittle suite where failures
-don't localize.
+MISAPPLICATIONS:
+- Unit tests only, no black box integration test proving the wiring —
+  all the parts work in isolation but the system doesn't work.
+- BB integration tests for everything because "it's more realistic" —
+  a slow, brittle suite where failures don't localize and every
+  investigation starts with "which layer broke?"
 SKIP WHEN: The code is a pure library with no integration boundaries —
 unit tests are the only layer that applies, and the Unit Testing strategy
 covers it directly.

@@ -1,9 +1,22 @@
 # Don't Fly Blind
 A change is not released until there are signals — tests, metrics, alerts —
 that will show when it's not working.
-VIOLATION: A payment processing change ships with no dashboard showing
-success rates — the team discovers it's broken when customers complain
-three hours later.
+VIOLATIONS:
+- Shipping a change with no failure signals
+  Examples:
+  - A payment processing change ships with no dashboard showing
+    success rates — the team discovers it's broken when customers
+    complain three hours later.
+- Vanity metrics that measure activity instead of health — signals
+  exist but track the wrong thing, so the dashboard looks green while
+  the system degrades.
+  Examples:
+  - A queue dashboard shows total messages processed (growing!) while
+    processing latency climbs unnoticed because nothing measures
+    time-to-completion.
+  - A service tracks request count instead of error rate — traffic
+    looks healthy while a subset of users gets silent failures.
+
 WHY: Without failure signals, the distance between an incident starting
 and a human noticing is determined by user pain, not by engineering.
 

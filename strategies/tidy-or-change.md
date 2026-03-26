@@ -26,10 +26,14 @@ OUTCOMES:
 - Rolling back a behavioral change does not undo a structural improvement,
   and vice versa.
 
-MISAPPLICATION: A "structural" PR that sneaks in a behavioral fix "while
-I'm in here," or a "behavioral" PR with extensive renaming that makes the
-actual change invisible in the diff. Also: planning so many tidy steps
-that the sequence becomes a refactoring project that delays the actual goal.
+MISAPPLICATIONS:
+- Sneaking behavior into a structural changeset — a "tidy" PR that
+  includes a behavioral fix "while I'm in here."
+- Burying behavior under structure — a behavioral PR with extensive
+  renaming that makes the actual change invisible in the diff.
+- The refactoring trap — planning so many tidy steps that the
+  sequence becomes a refactoring project that delays the actual
+  goal.
 SKIP WHEN: The change is trivially small — a one-line behavioral fix that
 needs no structural preparation and no structural cleanup. Splitting would
 produce two changesets with less clarity than one.

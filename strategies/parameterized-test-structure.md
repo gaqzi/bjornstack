@@ -39,12 +39,16 @@ OUTCOMES:
 - Each case failure is independently identifiable by its scenario name.
 - Adding a new case requires only adding data, not changing code.
 
-MISAPPLICATION: A table where the test body still branches on case
-fields — `if tc.expectError` hiding which path executed. Or cases
-with fundamentally different setup crammed into one table, hiding
-complexity behind shared structure instead of highlighting differences.
-Or fields omitted via language defaults, making cases look identical
-when they differ.
+MISAPPLICATIONS:
+- Conditional logic in the test body — a table where the body still
+  branches on case fields. `if tc.expectError` or `switch tc.mode`
+  hiding which path executed.
+- Cramming dissimilar cases into one table — cases with
+  fundamentally different setup forced into shared structure, hiding
+  complexity instead of highlighting differences.
+- Omitted fields via language defaults — cases that look identical
+  when they differ because zero-value defaults hide meaningful
+  distinctions.
 SKIP WHEN: 1-2 cases — individual test functions are clearer. Cases
 that don't share a single code path — they're separate tests.
 Coordinator tests where each case tests a different collaborator's

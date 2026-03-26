@@ -1,7 +1,12 @@
 # Practicality Beats Purity
 When following a principle costs more than violating it, break the principle deliberately — but only after convincing yourself and at least one other person, and documenting the tradeoff.
-VIOLATION: Breaking a principle without documentation because "it was faster" or "it's just this once."
-VIOLATION: Documenting a deviation that nobody else reviewed — self-approval isn't approval.
+VIOLATIONS:
+- Undocumented deviation — breaking a principle without documenting
+  the tradeoff because "it was faster" or "it's just this once."
+- Self-approved deviation — documenting the tradeoff but skipping
+  peer review, so the exception was never stress-tested by someone
+  who could push back.
+
 WHY: Undocumented deviations become precedent — the next person sees the exception and assumes it's the rule.
 
 ---

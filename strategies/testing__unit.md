@@ -43,12 +43,19 @@ OUTCOMES:
 - Coordinator test failures indicate wiring problems, not logic problems.
 - No coordinator has more than four direct collaborators.
 
-MISAPPLICATION: Mocking transitive dependencies (a collaborator's own
-dependencies) instead of only direct ones, creating brittle tests coupled
-to internal wiring two layers deep. Or treating the collaborator-count
-heuristic as a hard limit — sometimes a coordinator legitimately
-orchestrates five services in a pipeline, and splitting would create two
-coordinators that must run in sequence.
+MISAPPLICATIONS:
+- Mocking transitive dependencies — replacing a collaborator's own
+  dependencies instead of only direct ones, creating brittle tests
+  coupled to internal wiring two layers deep.
+- Mixing mocked and real collaborators — replacing some but not all
+  direct collaborators with test doubles, making failures
+  uninterpretable (wiring problem vs. logic change in the real
+  dependency).
+- Splitting a coordinator to hit the collaborator-count heuristic
+  when no cohesive domain concept unifies a subset — if all
+  collaborators serve the same purpose, bundling them under an
+  artificial boundary just moves wiring around without clarifying
+  anything.
 SKIP WHEN: The code is a thin wrapper or trivial accessor where
 classification adds ceremony without insight — the test is obvious from
 reading the function signature.
@@ -74,14 +81,14 @@ everywhere — hold this strategy to a higher coherence bar than most.
 
 ### Why all-or-none serves Consistent Beats Correct
 
-Step 3.3's all-or-none rule exists because of CBC's second violation:
-"Mocking some collaborators with real implementations and others with test
-doubles in the same test because 'this one is simple enough to use
-directly.'" When a coordinator test mixes real and mock dependencies, a
-failure could be a wiring problem *or* a behavior change in the real
-dependency. The all-or-none rule eliminates that ambiguity — every
-coordinator test failure means wiring, every computation test failure means
-logic. The consistency makes failures interpretable without investigation.
+Step 3.3's all-or-none rule exists because mixing mocked and real
+collaborators makes failures uninterpretable — a failure could be a
+wiring problem *or* a behavior change in the real dependency. The
+all-or-none rule eliminates that ambiguity: every coordinator test
+failure means wiring, every computation test failure means logic.
+The consistency makes failures interpretable without investigation.
+This is also why it's listed as a MISAPPLICATION above — it's the
+most common way the strategy goes wrong in practice.
 
 ### The trivial-transform edge case
 

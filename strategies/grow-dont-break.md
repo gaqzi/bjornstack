@@ -57,12 +57,14 @@ OUTCOMES:
 - Deprecated elements have a documented replacement and a removal timeline
   before they disappear.
 
-MISAPPLICATION: Maintaining backward compatibility within your own codebase
-as if internal callers were external consumers — deprecation periods and
-version management for code you control add overhead without value. Also:
-treating an external API as internal ("we'll just tell them to update") and
-breaking consumers without a version boundary. And: accumulating deprecated
-features forever without a plan — growth without pruning becomes bloat.
+MISAPPLICATIONS:
+- Treating internal callers as external consumers — deprecation
+  periods and version management for code you control. Internal
+  contracts use grow-then-subtract: add, migrate, remove.
+- Treating external consumers as internal — "we'll just tell them
+  to update" — breaking consumers without a version boundary.
+- Accumulating deprecated features forever without a removal plan —
+  growth without pruning becomes bloat.
 SKIP WHEN: Early prototyping before any consumer depends on the contract —
 internal or external. Once a consumer exists, the contract is a promise.
 Also: purely internal changes within a single package with no callers

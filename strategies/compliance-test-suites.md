@@ -59,12 +59,17 @@ OUTCOMES:
   production implementations — coordinator test results don't
   depend on double fidelity.
 
-MISAPPLICATION: A compliance suite that tests storage details (row
-counts, query plans, cache hit rates) rather than behavioral contract
-(what goes in, what comes out). Or a compliance suite for a
-single-implementation interface with no test double — the technique
-earns its keep through shared verification. Or a suite so exhaustive
-it duplicates tests that belong in the implementation's own file.
+MISAPPLICATIONS:
+- Testing storage details instead of behavioral contract — row
+  counts, query plans, cache hit rates. The suite tests what goes
+  in and what comes out, not how.
+- A compliance suite for a single-implementation interface with no
+  test double — the technique earns its keep through shared
+  verification.
+- A suite so exhaustive it duplicates tests that belong in the
+  implementation's own file — implementation-specific behavior
+  tested in the compliance suite couples all implementations to
+  one's details.
 SKIP WHEN: Only one implementation exists with no test double and no
 concrete second implementation planned. The Unit Testing strategy
 covers direct testing without the indirection of a shared suite.

@@ -15,7 +15,12 @@ OUTCOMES:
 - External library types don't appear in domain package signatures.
 - The import graph between domain packages reflects actual business domain dependencies.
 
-MISAPPLICATION: Splitting into so many domain packages that each contains only one or two files, or creating domain packages that mirror the org chart rather than the system's actual concept boundaries. Over-packaging fragments cohesive logic across boundaries that exist on paper but not in the code.
+MISAPPLICATIONS:
+- Over-packaging — splitting into so many domain packages that each
+  contains only one or two files, fragmenting cohesive logic across
+  boundaries that exist on paper but not in the code.
+- Org-chart packaging — creating domain packages that mirror team
+  structure rather than the system's actual concept boundaries.
 SKIP WHEN: The system genuinely has one domain (a small CLI tool, a single-purpose library). Forcing domain decomposition on a single-concept codebase adds structure that communicates nothing.
 
 ---

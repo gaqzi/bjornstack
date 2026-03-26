@@ -32,11 +32,13 @@ OUTCOMES:
 - Provider-side changes that would break consumers are caught before
   release.
 
-MISAPPLICATION: Contract tests that mirror the external service's full
-API surface instead of covering only what you actually use — these become
-a maintenance burden that tracks their API, not your needs. Or treating
-contracts as a substitute for integration tests — contracts verify
-agreements hold, not that your code handles the responses correctly.
+MISAPPLICATIONS:
+- Mirroring the external service's full API surface instead of
+  covering only what you actually use — a maintenance burden that
+  tracks their API evolution, not your needs.
+- Treating contracts as a substitute for BB integration tests —
+  contracts verify agreements hold, not that your code handles the
+  responses correctly.
 SKIP WHEN: The external dependency is fully under your control (same
 team, same deploy pipeline) — a black box integration test covers the
 boundary directly without needing a contract layer.
@@ -87,6 +89,36 @@ If you both consume service X and provide an API that service Y consumes,
 you have contracts in both directions. These are independent concerns —
 don't conflate them into one test suite. Consumer contracts verify your
 assumptions about X. Provider contracts verify Y's assumptions about you.
+
+### When to use contracts vs. BB integration
+
+The clearest framing: BB integration tests verify that *we* don't change
+our behavior unintentionally. Contract tests verify that *they* don't
+change theirs.
+
+The value of contract tests depends on who defines the contract:
+
+- **Consumer-defined contracts** (outside-in): we define our expectations
+  as a runnable artifact and hand it to the provider. This is the
+  strongest form — the provider runs our contracts in their CI and
+  catches breaks before release. The contract is a collaboration tool.
+- **Provider-defined contracts** (schema, spec): we validate our
+  assumptions against their published artifact. This is useful but less
+  powerful — their spec may not cover the behaviors we actually depend
+  on, and spec changes may lag behind implementation changes.
+- **No formal contract**: neither party publishes a contract artifact.
+  We write consumer-side expectations (step 2) as the living spec, then
+  build a provider-side runner ourselves that executes those expectations
+  against the provider's real staging or production environment. We're
+  implementing both sides — faking the collaboration the provider hasn't
+  opted into — to get early warning when they change something that
+  breaks our flow. The tests verify our assumptions in our test
+  environment; the runner verifies they hold in theirs.
+
+When neither party defines a contract and BB integration tests already
+stub the external service, this self-built runner is the cheapest way
+to discover that a provider changed something before it hits your
+integration or production environment.
 
 ### Relationship to Boundary Communication
 

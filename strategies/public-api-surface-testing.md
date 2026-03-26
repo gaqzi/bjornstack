@@ -25,12 +25,14 @@ OUTCOMES:
 - Tests exercise the package's behavior without reaching past its
   exports — the surface is sufficient to validate what the package does.
 
-MISAPPLICATION: Testing externally but routing around API gaps by
-exporting internals solely for tests — `ExportedForTest` functions or
-test-only flags that pollute the public surface. Conversely, refusing
-the internal sub-module escape hatch when complex internals genuinely
-need direct testing, leading to circuitous tests that exercise internals
-through awkward public paths.
+MISAPPLICATIONS:
+- Exporting internals solely for tests — `ExportedForTest` functions
+  or test-only flags that pollute the public surface to route around
+  API gaps.
+- Refusing the internal sub-module escape hatch — when complex
+  internals genuinely need direct testing, forcing circuitous tests
+  that exercise them through awkward public paths instead of
+  extracting a testable sub-module.
 SKIP WHEN: The package is itself an internal sub-module — it exists
 specifically to be directly testable by its parent's tests.
 

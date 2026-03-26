@@ -13,11 +13,12 @@ OUTCOMES:
 - No exported symbol exists without a current external caller.
 - Adding internal functionality does not change the public surface.
 
-MISAPPLICATION: Making everything private and then exporting piecemeal on
-demand, without shaping the surface. You end up with a minimal but incoherent
-API — five unrelated functions that happen to be needed, rather than a
-surface that communicates what the package is for. Minimality without
-coherence is step 2 without step 5.
+MISAPPLICATIONS:
+- Minimality without coherence — making everything private and
+  exporting piecemeal on demand, without shaping the surface. Five
+  unrelated functions that happen to be needed, rather than an API
+  that communicates what the package is for. This is step 2 without
+  step 5.
 SKIP WHEN: The package is a leaf with a single consumer that will always
 need most of what's inside. Also during early prototyping when boundaries
 are still being discovered — but revisit before the design stabilizes.

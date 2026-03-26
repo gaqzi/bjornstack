@@ -13,7 +13,16 @@ OUTCOMES:
 - Rejections identify every invalid field and the constraint it violated — a single response surfaces the full picture.
 - Fields you don't act on are excluded from validation — rejections only fire on things that would actually cause failures.
 
-MISAPPLICATION: Validating everything — including fields you don't use — turning the boundary into a brittle schema check that breaks whenever upstream adds a field. Validating at the boundary but then passing the raw input to domain logic instead of the constructed domain object — you scrubbed but used the dirty version. Or re-validating deep inside domain logic "just to be safe," which means you don't trust the boundary and haven't actually scrubbed.
+MISAPPLICATIONS:
+- Validating everything — including fields you don't use, turning
+  the boundary into a brittle schema check that breaks whenever
+  upstream adds a field.
+- Scrubbing but using the dirty version — validating at the boundary
+  but then passing the raw input to domain logic instead of the
+  constructed domain object.
+- Re-validating deep inside domain logic "just to be safe" — if
+  domain code contains defensive checks for data that crossed a
+  boundary, the boundary isn't trusted and hasn't actually scrubbed.
 SKIP WHEN: Data you validated on entry to this service and haven't re-read from an external source since. Also skip when your code genuinely doesn't act on any field in the payload — but if you act on even one, scrub it.
 
 ---

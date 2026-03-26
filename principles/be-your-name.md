@@ -1,7 +1,21 @@
 # Be Your Name
 Code declares its behavior through names so that understanding comes from reading signatures, not implementations.
-VIOLATION: A function named `process` that parses CSV, validates rows, and writes to a database — discoverable only by reading the body.
-VIOLATION: A test named "TestService_HappyPath" that doesn't describe what scenario is being tested or what outcome is expected.
+VIOLATIONS:
+- Overloaded names hiding multiple responsibilities — a name that
+  covers several unrelated operations, discoverable only by reading
+  the implementation.
+  Examples:
+  - A function named `process` that parses CSV, validates rows, and
+    writes to a database.
+  - A package named `common` or `helpers` that accumulates unrelated
+    functions grouped only by not fitting elsewhere.
+- Vague test names that don't specify behavior — a test name that
+  describes implementation structure rather than the scenario and
+  expected outcome.
+  Examples:
+  - "TestService_HappyPath" — doesn't say what scenario is being
+    tested or what outcome is expected.
+
 WHY: A bad name is a lie that every caller pays for — each reader must re-derive what the author already knew.
 
 ---

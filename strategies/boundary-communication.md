@@ -48,13 +48,15 @@ OUTCOMES:
   internal structure) without any consumer noticing.
 - A failure or change in one unit cannot silently corrupt data in another.
 
-MISAPPLICATION: Creating separate databases but still sharing type
-definitions or ORM models between services — the coupling moved from
-runtime to build time. Or splitting every piece of data into its own
-service, creating network overhead and complexity for data that belongs
-together. Also: defining a public API but with consumers still importing
-internal types "for convenience" — the contract exists on paper but the
-code couples through the back door.
+MISAPPLICATIONS:
+- Build-time coupling disguised as separation — separate databases
+  but shared type definitions or ORM models between services. The
+  coupling moved from runtime to build time.
+- Over-splitting — every piece of data in its own service, creating
+  network overhead and complexity for data that belongs together.
+- Paper-only contracts — a public API exists but consumers still
+  import internal types "for convenience," coupling through the back
+  door the contract was supposed to close.
 SKIP WHEN: The units genuinely belong together — they validate the same
 data with the same rules and always change in lockstep. That's one unit,
 not two. Domain-First Packaging determines whether things belong together;

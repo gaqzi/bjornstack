@@ -50,13 +50,15 @@ OUTCOMES:
 - Tests pass regardless of execution order, in parallel, on a database
   with existing data.
 
-MISAPPLICATION: A factory that creates "isolated" state but relies on a
-clean database to avoid collisions — the isolation is through
-infrastructure (empty DB per test), not data scoping (unique identity on
-shared infrastructure). Or factories that use random data for variation —
-non-deterministic data introduces non-deterministic failures, and every
-debugging session starts with "what data did the factory produce this
-time?" instead of "what did my code change?"
+MISAPPLICATIONS:
+- Infrastructure isolation instead of data scoping — a factory that
+  creates "isolated" state but relies on a clean database to avoid
+  collisions. The isolation is through infrastructure (empty DB per
+  test), not data scoping (unique identity on shared infrastructure).
+- Random data for variation — non-deterministic factory data
+  introduces non-deterministic failures, and every debugging session
+  starts with "what data did the factory produce this time?" instead
+  of "what did my code change?"
 SKIP WHEN: Tests that don't share mutable infrastructure. Computation
 tests have no external state; coordinator tests replace all collaborators
 with per-test doubles (see Unit Testing strategy). This strategy applies

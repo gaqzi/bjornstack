@@ -1,7 +1,17 @@
 # Highlight the Difference
 When things are similar, structure them so the differences are instantly visible — the reader should never scan boilerplate to find what actually changed.
-VIOLATION: Five test cases that each repeat 12 lines of setup, differing only in the third argument and the expected result.
-VIOLATION: Three API endpoint handlers that each contain 40 lines of identical middleware setup, differing only in the route and the inner handler — instead of extracting the shared setup and making only the varying parts visible.
+VIOLATIONS:
+- Buried variations in repeated boilerplate — similar code blocks
+  repeat shared structure so that the meaningful differences are
+  invisible without line-by-line comparison.
+  Examples:
+  - Five test cases that each repeat 12 lines of setup, differing
+    only in the 5th function call's 3rd argument and the expected
+    result.
+  - Three API endpoint handlers that each contain 40 lines of
+    identical middleware setup, differing only in the route and the
+    inner handler.
+
 WHY: Buried differences get missed in review, misread during debugging, and accidentally erased during refactoring.
 
 ---

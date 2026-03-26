@@ -1,12 +1,19 @@
 # Many More Much Smaller Steps
 Changes to production must be small enough that each can be understood,
 reviewed, and reversed independently.
-VIOLATION: A release bundles three features where rolling back one means
-rolling back all three — debugging requires untangling which change caused
-the incident.
-VIOLATION: A PR mixes a behavioral change with a structural refactor, so
-the reviewer can't tell which differences are intentional new behavior and
-which are reorganization.
+VIOLATIONS:
+- Bundled changes with shared rollback fate — a release or deploy
+  combines multiple concerns so that reversing one means reversing
+  all, and debugging requires untangling which change caused the
+  incident.
+  Examples:
+  - A deploy bundles a payment refactor and a notification feature —
+    rolling back the notification bug also reverts the payment fix.
+- Mixed structural and behavioral changes — a PR combines
+  reorganization with new or modified functionality, so the reviewer
+  can't tell which differences are intentional new behavior and
+  which are reorganization.
+
 WHY: The cost of understanding, reviewing, and reverting a change grows
 nonlinearly with its size — small steps make each decision cheap to undo.
 

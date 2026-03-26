@@ -1,6 +1,20 @@
 # Earned Abstraction
 Abstractions must be earned through repetition, not speculated from a single case.
-VIOLATION: An abstraction that takes a boolean or mode flag to handle a second use case, revealing it was built from one case and extended rather than extracted from understanding.
+VIOLATIONS:
+- Mode flags revealing a premature abstraction — an abstraction takes
+  a boolean or mode parameter to handle a second use case, revealing
+  it was built from one case and extended rather than extracted from
+  understanding.
+- Extracting a shared helper from two mechanically similar cases that
+  solve different domain problems — the similarity is coincidental,
+  and when the domains diverge, the helper becomes a coupling point
+  that resists change in both directions.
+  Examples:
+  - Two services both "send a notification" but one is transactional
+    (must deliver) and the other is promotional (best-effort). A
+    shared sender accrues flags for retry policy, delivery guarantees,
+    and rate limiting as each caller's needs diverge.
+
 WHY: Premature abstractions attract flags and modes because they don't understand their own boundaries — each new case warps the abstraction further from cohesion.
 
 ---

@@ -1,7 +1,24 @@
 # Fail Early and Loud
 Code must surface problems visibly and early rather than absorbing them into implicit defaults, silent fallbacks, or hidden paths.
-VIOLATION: A hashmap lookup returns null, a downstream null-check substitutes a default, and the bug surfaces three layers later as wrong data in production.
-VIOLATION: A parameterized test uses `if tc.expectError` to branch between error and success assertions, hiding which path actually executed when the test fails.
+VIOLATIONS:
+- Silent data corruption through default substitution
+  Examples:
+  - A hashmap lookup returns null, a downstream null-check substitutes
+    a default, and the bug surfaces three layers later as wrong data
+    in production.
+  - A missing config key falls through to a hardcoded default,
+    creating a working-but-wrong system that passes all tests.
+- Hidden control flow in tests — a parameterized test uses
+  `if tc.expectError` to branch between error and success assertions,
+  hiding which path actually executed when the test fails.
+- Loud but uninformative failures — the code goes boom but the error
+  message doesn't say what went wrong, forcing the developer to trace
+  through source to understand the failure.
+  Examples:
+  - A test fails with "expected true, got false" — it surfaced the
+    problem but didn't say which assertion, what the inputs were, or
+    what scenario was being tested.
+
 WHY: Every silent failure is a bug that compounds — the distance between cause and discovery is the cost.
 
 ---

@@ -49,12 +49,14 @@ OUTCOMES:
 - New integration tests are justified by a new feature boundary or a bug
   that no lower layer could catch — not by new internal complexity.
 
-MISAPPLICATION: Testing every code path through integration tests because
-"it's more realistic" — leading to a slow, brittle suite where failures
-don't localize. Or writing integration tests that import internal packages
-to set up state, coupling the test to implementation structure and losing
-the black box constraint. Or stubbing the database to "make tests faster"
-— losing the signal that queries, migrations, and constraints actually work.
+MISAPPLICATIONS:
+- Testing every code path through BB integration tests because "it's
+  more realistic" — a slow, brittle suite where failures don't
+  localize.
+- Importing internal packages to set up state — coupling the test to
+  implementation structure and losing the black box constraint.
+- Stubbing the database to "make tests faster" — losing the signal
+  that queries, migrations, and constraints actually work.
 SKIP WHEN: The code is a pure library with no integration boundaries —
 unit tests via the Unit Testing strategy are the only layer that applies.
 

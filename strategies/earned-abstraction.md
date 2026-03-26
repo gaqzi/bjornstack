@@ -73,15 +73,18 @@ OUTCOMES:
   terms — search by those terms finds all members and any
   documented reasons for intentional separation.
 
-MISAPPLICATION: Treating three mechanical similarities as an
-automatic extraction trigger without evaluating whether they share
-a genuine shared part. Applying the rule of three so rigidly that
-obvious patterns from two well-understood cases are ignored when a
-third is clearly imminent. "Extracting" with a strategy pattern
-that's just configuration bloat with extra indirection — a type
-hierarchy that doesn't clarify what varies and what's shared. Using
-the vocabulary to gatekeep — PATTERNS.md describes what exists, not
-what must exist. It's a discovery aid, not a governance mechanism.
+MISAPPLICATIONS:
+- Mechanical similarity as extraction trigger — treating three cases
+  that look alike as an automatic extraction without evaluating
+  whether they share a genuine shared part.
+- Rigid rule of three — ignoring obvious patterns from two
+  well-understood cases when a third is clearly imminent.
+- Configuration bloat disguised as extraction — a type hierarchy
+  that doesn't clarify what varies and what's shared, just adds
+  indirection.
+- Vocabulary as gatekeeping — using PATTERNS.md to decide what
+  must exist rather than what does exist. It's a discovery aid,
+  not a governance mechanism.
 SKIP WHEN: Local helpers within a single file. Extracting repetition
 to a file-scoped helper has one consumer, costs nothing to undo, and
 serves Highlight the Difference — it's not the kind of cross-consumer

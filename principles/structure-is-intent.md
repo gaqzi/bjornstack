@@ -1,7 +1,17 @@
 # Structure Is Intent
 The organization of code communicates how the system works — a reader should understand the architecture from the directory tree, not from tracing imports.
-VIOLATION: A flat `pkg/` directory with 30 files where the only way to understand module boundaries is to read import graphs.
-VIOLATION: A package named `utils` that contains unrelated functions grouped only by the fact that they didn't fit elsewhere.
+VIOLATIONS:
+- Flat structure that communicates nothing — a directory with many
+  files where the only way to understand module boundaries is to
+  read import graphs.
+  Examples:
+  - A `pkg/` directory with 30 files and no subdirectories.
+- Grab-bag packages — a package named for a technical role rather
+  than a domain concept, accumulating unrelated functions grouped
+  only by not fitting elsewhere.
+  Examples:
+  - `utils`, `helpers`, `common`, `misc`.
+
 WHY: When structure doesn't communicate, every new contributor rebuilds the mental model from scratch — and builds it differently.
 
 ---

@@ -1,6 +1,23 @@
 # Compute or Coordinate
 Code either performs computation (business logic) or orchestrates collaborators — never both.
-VIOLATION: An object that calls external services AND contains conditional business logic.
+VIOLATIONS:
+- Mixed computation and coordination — a function that depends on
+  collaborators AND contains conditional business logic. Computation
+  is a pure function; anything with side effects or collaborator
+  dependencies is coordination. When both appear together, the logic
+  can't be tested without the wiring.
+- Data transformation disguised as coordination — a coordinator that
+  maps, filters, or reshapes data between collaborators, embedding
+  business rules in what looks like wiring.
+  Examples:
+  - A coordinator receives a result from collaborator A, conditionally
+    reshapes it, then passes it to collaborator B — the reshape has
+    edge cases worth testing independently but can't be tested without
+    mocking both collaborators.
+  - An orchestrator's "mapping" function grows conditionals as new
+    cases arrive, becoming computation that's trapped inside
+    coordination.
+
 WHY: Mixed code obscures intent and makes testing harder — you can't tell whether a failure is in the logic or the wiring.
 
 ---

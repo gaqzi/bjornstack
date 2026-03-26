@@ -1,7 +1,19 @@
 # Consistent Beats Correct
 Follow established patterns even when a locally better approach exists — the ability to make assumptions across the codebase is worth more than any single optimization.
-VIOLATION: Using a different paradigm in one module without wrapping it behind the codebase's established interface patterns — forcing callers to learn a second interaction style.
-VIOLATION: Mocking some collaborators with real implementations and others with test doubles in the same test because "this one is simple enough to use directly."
+VIOLATIONS:
+- Inconsistency that forces investigation — using a structurally
+  different approach for equivalent cases, forcing the reader to
+  determine whether the difference is meaningful or accidental.
+  Examples:
+  - A module that uses a different paradigm without wrapping it
+    behind the codebase's established interface patterns, forcing
+    callers to learn a second interaction style.
+  - Three API endpoints in the same service where two use the shared
+    middleware wrapper and one hand-rolls the same setup inline —
+    the reader must figure out if the third endpoint has a reason
+    to be different or if the author just didn't know about the
+    wrapper.
+
 WHY: Every deviation forces readers to determine whether the difference is meaningful or accidental, destroying the ability to navigate by assumption.
 
 ---

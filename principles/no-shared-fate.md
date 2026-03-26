@@ -1,7 +1,19 @@
 # No Shared Fate
 Units that should be independently testable, deployable, or changeable must not couple through shared mutable state — each operates in isolation so that one's failure cannot silently break another.
-VIOLATION: Two tests that pass individually but fail when run in parallel because they both read and write the same database row.
-VIOLATION: Two services sharing a database where one team's migration breaks the other's queries.
+VIOLATIONS:
+- Shared mutable state between tests — tests that pass individually
+  but fail when run in parallel because they both read and write the
+  same data.
+  Examples:
+  - Two tests that share a database row — one's write changes the
+    other's expected read, producing non-deterministic failures.
+- Shared mutable state between services — services coupled through
+  a shared data store where one team's changes silently break
+  another's.
+  Examples:
+  - Two services sharing a database where one team's migration breaks
+    the other's queries.
+
 WHY: Shared mutable state creates invisible coupling — failures become non-deterministic and root causes become untraceable.
 
 ---

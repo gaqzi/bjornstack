@@ -59,12 +59,18 @@ OUTCOMES:
   coordinator's unit tests cover consistent error handling across
   collaborators.
 
-MISAPPLICATION: Writing the integration test, then building the entire
-feature in one pass, then running the integration test at the end. The
-loop's value is the frequent check against the outer test, not just
-writing it first. Or starting from the computation leaves and building
-up — this inverts the loop, forcing you to guess at interfaces rather
-than discovering them from what the coordinator needs.
+MISAPPLICATIONS:
+- Write-then-forget — writing the BB integration test, then building
+  the entire feature in one pass, then running the integration test
+  at the end. The loop's value is the frequent check against the
+  outer test, not just writing it first.
+- Bottom-up construction — starting from the computation leaves and
+  building up, forcing you to guess at interfaces rather than
+  discovering them from what the coordinator needs.
+- Skipping the unit test layer — the BB integration test defines
+  what needs to exist, then implementation jumps straight to making
+  it green without coordinator and computation tests driving the
+  internal design.
 SKIP WHEN: The change is a bug fix where the failing test already exists
 (a regression test) or a pure refactoring where existing tests define
 the contract. The loop applies to new feature development, not to all

@@ -59,13 +59,18 @@ OUTCOMES:
 - Rollout flags have a defined end-of-life captured in code — tooling
   can discover and surface overdue flags without human memory.
 
-MISAPPLICATION: A code-level flag for behavior that could have been a
-new endpoint, version, or UI-gated feature — adding conditional paths
-when the design could provide isolation. A flag that wraps structural
-foundation alongside behavior — making removal require restructuring.
-Rollout flags that never get removed, whether because "done" was never
-defined or because no one committed to full rollout — if both paths
-must exist permanently, reclassify as targeting and engineer accordingly.
+MISAPPLICATIONS:
+- Flagging what could be grown — a code-level flag for behavior that
+  could have been a new endpoint, version, or UI-gated feature.
+  Adding conditional paths when the design could provide isolation.
+- Wrapping structure alongside behavior — a flag that covers
+  structural foundation and behavioral change together, making
+  removal require restructuring instead of just deleting the dead
+  path.
+- Immortal rollout flags — rollout flags that never get removed
+  because "done" was never defined or no one committed to full
+  rollout. If both paths must exist permanently, reclassify as
+  targeting and engineer accordingly.
 SKIP WHEN: The change is trivially small and low-risk — a one-line fix
 doesn't need progressive rollout. Also: purely structural changes (Tidy
 or Change) — structural changes don't alter behavior and don't need a

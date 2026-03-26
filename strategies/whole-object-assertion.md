@@ -48,12 +48,14 @@ OUTCOMES:
 - Deviations between expected and actual are visible whether they occur
   in intended changes or in fields the operation shouldn't have touched.
 
-MISAPPLICATION: Whole-object assertion on a type with volatile metadata
-(database row versions, system-generated timestamps) without injecting,
-capturing, or zeroing those fields — the assertion is flaky, not
-thorough. Or asserting on serialized representations (JSON string
-comparison) when the language provides structural comparison — field
-ordering and formatting differences create false failures.
+MISAPPLICATIONS:
+- Whole-object assertion on a type with volatile metadata (database
+  row versions, system-generated timestamps) without injecting,
+  capturing, or zeroing those fields — the assertion is flaky, not
+  thorough.
+- Asserting on serialized representations (JSON string comparison)
+  when the language provides structural comparison — field ordering
+  and formatting differences create false failures.
 SKIP WHEN: The output shares no structural relationship with the
 input — the operation is a transformation between unrelated types, not
 a mutation, and field-by-field assertion of the transformed properties

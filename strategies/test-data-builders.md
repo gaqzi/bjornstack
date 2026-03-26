@@ -71,14 +71,17 @@ OUTCOMES:
 - Assertions use the same builders as setup, making each assertion
   highlight exactly what the operation changed.
 
-MISAPPLICATION: A builder that requires callers to set most fields
-before use — the defaults aren't realistic enough to stand alone, so
-every test still specifies five fields, just through a different API.
-Or extracting builders too early — a builder for a type used in only
-one test within the same domain adds indirection without earning the
-"highlight the difference" benefit. Or state methods that encode
-test-specific scenarios rather than domain states —
-"ForTestUserCreation" instead of "Persisted."
+MISAPPLICATIONS:
+- Incomplete defaults — a builder that requires callers to set most
+  fields before use because the defaults aren't realistic enough to
+  stand alone. Every test still specifies five fields, just through
+  a different API.
+- Premature extraction — a builder for a type used in only one test
+  within the same domain, adding indirection without earning the
+  "highlight the difference" benefit.
+- Test-specific state methods instead of domain states —
+  "ForTestUserCreation" instead of "Persisted." State methods should
+  name what the domain recognizes, not what a specific test needs.
 SKIP WHEN: Types with few fields where inline construction already
 highlights the difference (a coordinate with x and y). Or a type
 constructed in only one test file within the same domain — until a
