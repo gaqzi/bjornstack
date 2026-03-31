@@ -56,3 +56,7 @@ bd close <id>         # Complete work
 ## Sandbox Workarounds
 
 - Always run `bd` commands with `dangerouslyDisableSandbox: true` — Dolt needs raw TCP to localhost:3308 which the sandbox blocks (`excludedCommands` has upstream bugs)
+
+## BEADS PROVENANCE
+
+Load the /beads-provenance skill before any `bd` command, when a bead ID appears in conversation, or when implementation work produces findings worth logging. The skill has checklists for creating, claiming, updating, and closing beads — follow them. The goal: every bead should establish provenance — what was tried, what failed, why we ended up here — so future readers can evaluate the reasoning, not just see the conclusion.
