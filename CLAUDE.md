@@ -60,3 +60,7 @@ bd close <id>         # Complete work
 ## BEADS PROVENANCE
 
 Load the /beads-provenance skill before any `bd` command, when a bead ID appears in conversation, or when implementation work produces findings worth logging. The skill has checklists for creating, claiming, updating, and closing beads — follow them. The goal: every bead should establish provenance — what was tried, what failed, why we ended up here — so future readers can evaluate the reasoning, not just see the conclusion.
+
+## COMMIT STYLE
+
+Load the /commit-style skill before writing any commit message. Tim Pope style: imperative mood, capitalized, 50-char subject hard limit, no trailing period, no conventional commit prefixes (feat:, fix:, etc.). Wrap body at 72 chars. Always use HEREDOC formatting.
