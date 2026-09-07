@@ -22,7 +22,7 @@ and a human noticing is determined by user pain, not by engineering.
 
 ---
 <!-- Rationale below — read when creating strategies, reviewing, or
-questioning the principle. Not needed for routine application. -->
+questioning the tenet. Not needed for routine application. -->
 
 ## Rationale
 
@@ -84,7 +84,7 @@ normal engineering work informed by DFB as a constraint.
 
 "We'll add monitoring later" is the most common DFB violation. The cost of
 skipping is invisible until the incident — which makes it feel cheap to skip
-and catastrophically expensive when it isn't. This is one principle where PBP
+and catastrophically expensive when it isn't. This is one tenet where PBP
 should be invoked with extreme reluctance. The tradeoff is asymmetric: the
 cost of adding signals is known and modest, the cost of not having them is
 unknown and potentially severe.
@@ -93,8 +93,8 @@ unknown and potentially severe.
 
 The techniques for observability — what to instrument, how to set up
 alerting, what dashboards to build — are highly context-dependent. The
-principle is valuable as a constraint even when the strategies are less
-prescriptive than those for code design principles. Over time, patterns will
+tenet is valuable as a constraint even when the strategies are less
+prescriptive than those for code design tenets. Over time, patterns will
 emerge, but the constraint stands on its own: don't ship what you can't see.
 
 ### Cross-references

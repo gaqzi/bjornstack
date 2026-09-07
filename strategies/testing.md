@@ -1,5 +1,5 @@
 # Test Layer Selection
-PRINCIPLE: Don't Fly Blind
+TENET: Don't Fly Blind
 
 1. Start from the walking skeleton. The first test for a new feature or
    boundary proves the path works end-to-end — a request enters through
@@ -125,10 +125,10 @@ When the right budget is unclear: identify which failure would be most
 expensive to miss, start there, and expand only when a gap is
 demonstrated by step 5.
 
-### Sub-strategies serve their own principles
+### Sub-strategies serve their own tenets
 
 This meta-strategy orchestrates test layers under Don't Fly Blind.
-Sub-strategies each serve their own primary principle. This isn't a
+Sub-strategies each serve their own primary tenet. This isn't a
 conflict — the meta-strategy selects the layer, the sub-strategy
 provides the technique.
 

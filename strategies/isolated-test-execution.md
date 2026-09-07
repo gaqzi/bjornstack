@@ -1,5 +1,5 @@
 # Isolated Test Execution
-PRINCIPLE: No Shared Fate
+TENET: No Shared Fate
 
 1. Scope each test's state under a unique identity. Create a fresh user,
    tenant, or document — whatever the system naturally partitions by — and
@@ -115,7 +115,7 @@ Incorporating the scoped identity into secondary unique fields (step 3)
 is both a realism and an isolation technique.
 
 Cross-reference: Scrub on Entry (FEAL) establishes the pattern of making
-boundaries explicit. The same principle applies here — the boundary
+boundaries explicit. The same idea applies here — the boundary
 between "what the factory provides" and "what the test overrides" should
 be explicit and intentional.
 
@@ -176,6 +176,6 @@ was the design, not an afterthought.
 - **Parameterized Test Structure**: PTS step 4's uniform body ensures
   independent case execution; ITE provides the data-level isolation
   that makes parallel test execution safe.
-- **Whole-Object Assertion**: WOA extends ITE's determinism principle
+- **Whole-Object Assertion**: WOA extends ITE's determinism tenet
   from setup to assertions — deterministic factories for test inputs
   pair with deterministic expected values.

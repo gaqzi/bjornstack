@@ -1,5 +1,5 @@
 # Scrub on Entry
-PRINCIPLE: Fail Early and Loud
+TENET: Fail Early and Loud
 
 1. Identify the system boundary — where does external data cross into your domain?
 2. Classify each incoming field: acted-on (your code branches on it, computes with it, or stores it as a fact) vs. not-acted-on.

@@ -1,5 +1,5 @@
 # Tidy or Change
-PRINCIPLE: Many More Much Smaller Steps
+TENET: Many More Much Smaller Steps
 
 1. Start with the goal — what behavioral change is needed?
 2. Read the code that will change. Identify structural obstacles to this

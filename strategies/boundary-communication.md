@@ -1,5 +1,5 @@
 # Boundary Communication
-PRINCIPLE: No Shared Fate
+TENET: No Shared Fate
 
 1. Find the shared data — look for data that more than one unit reads,
    writes, or changes. A database table two services query. A struct two
@@ -169,7 +169,7 @@ this strategy keeps the structure honest.
 The enforcement mechanism differs by scale. At the package level, language
 visibility rules (exported vs unexported) enforce the contract — a
 consumer physically can't access private internals in most languages. At
-the service level, the network boundary enforces it. The principle is
+the service level, the network boundary enforces it. The idea is
 identical; only the mechanism changes. Service boundaries are harder to
 violate accidentally but also harder to refactor when wrong. Package
 boundaries are easier to violate ("just make it public") but also easier

@@ -1,5 +1,5 @@
 # Parameterized Test Structure
-PRINCIPLE: Highlight the Difference
+TENET: Highlight the Difference
 
 1. Prefer individual tests for 1-2 cases. When 3+ cases exercise the
    same operation with different inputs, parameterize.
@@ -104,7 +104,7 @@ below.
 
 ### Division of labor with Test Data Builders
 
-TDB and PTS serve the same principle (Highlight the Difference) through
+TDB and PTS serve the same tenet (Highlight the Difference) through
 complementary mechanisms:
 
 - **TDB** hides *domain object* defaults — `a.User(withEmail("x"))`

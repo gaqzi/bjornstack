@@ -24,12 +24,12 @@ CHECK layer, the fourth and final layer of the system.
 Before designing a guard, verify all four prerequisites. Stop and redirect the
 user if any are missing.
 
-1. **A principle exists.** Glob `principles/*.md` (excluding FORMAT.md) for the
-   principle name. If it doesn't exist, stop — tell the user to create it first
-   with principle-editor.
+1. **A tenet exists.** Glob `tenets/*.md` (excluding FORMAT.md) for the
+   tenet name. If it doesn't exist, stop — tell the user to create it first
+   with tenet-editor.
 
 2. **A strategy exists.** Glob `strategies/*.md` (excluding FORMAT.md) for a
-   strategy that serves the principle. If none exists, stop — tell the user to
+   strategy that serves the tenet. If none exists, stop — tell the user to
    create one first with strategy-editor.
 
 3. **A protocol exists with a guard candidate.** Check
@@ -56,7 +56,7 @@ linter rule IDs and nolint directives (e.g., `//nolint:require-in-subtests`).
 ## [guard-name]
 PROTOCOL: [Protocol file path] → Step [N] (or Step [N], [M] for multi-step)
 STRATEGY: [Strategy name]
-PRINCIPLE: [Principle name]
+TENET: [Tenet name]
 LANGUAGE: [Target language]
 
 TOOL: [What implements it — custom linter, golangci-lint plugin, AST walker,
@@ -94,10 +94,10 @@ CI step name. Short enough to use in `//nolint:require-in-subtests`.
 ```
 PROTOCOL: implementation/go/data-driven-test-cases/protocol.md → Step 6
 STRATEGY: Data-Driven Test Cases
-PRINCIPLE: No Conditional Test Logic
+TENET: No Conditional Test Logic
 LANGUAGE: Go
 ```
-Full traceability chain. Four links: protocol step → strategy → principle →
+Full traceability chain. Four links: protocol step → strategy → tenet →
 language. Anyone reading the guard can trace back to *why* it exists.
 
 ```
@@ -188,7 +188,7 @@ full guard. Design includes assessment as step 3 — you don't need to run
 Assess mode separately.
 
 1. Read the protocol file and locate the guard candidate
-2. Read the strategy and principle for context
+2. Read the strategy and tenet for context
 3. Assess whether the candidate is truly mechanizable (see Assess mode
    criteria). If not, explain why and stop.
 4. Select the tool — match to ecosystem conventions:
@@ -302,7 +302,7 @@ the pattern is mechanical.
 Every guard must trace back through all four layers:
 
 ```
-Guard → Protocol step → Strategy → Principle
+Guard → Protocol step → Strategy → Tenet
 ```
 
 The design document must include all four links. If any link is broken
@@ -311,7 +311,7 @@ guard design is stale.
 
 FAIL: A guard with no PROTOCOL reference.
 PASS: A guard that links to a specific protocol step number, strategy name,
-and principle name.
+and tenet name.
 
 ### False positive check
 
@@ -376,9 +376,9 @@ Guards exist in the CHECK layer. Check for these common misplacements:
    dependencies injected."
 
 2. **Style preference disguised as guard.** If the check enforces a
-   preference that doesn't trace back to a principle through a protocol,
-   it's not a guard — it's a style rule. Guards must trace to principles.
-   FAIL: "Enforce alphabetical import ordering." (No principle backing it.)
+   preference that doesn't trace back to a tenet through a protocol,
+   it's not a guard — it's a style rule. Guards must trace to tenets.
+   FAIL: "Enforce alphabetical import ordering." (No tenet backing it.)
    PASS: "Enforce require over assert in t.Run callbacks." (Traces to
    No Conditional Test Logic.)
 
@@ -395,7 +395,7 @@ Once the user approves the guard design, complete these steps in order.
 ### 1. Verify the traceability chain
 
 Confirm all four files exist:
-- `principles/<principle-name>.md`
+- `tenets/<tenet-name>.md`
 - `strategies/<strategy-name>.md`
 - `implementation/<lang>/<strategy-name>/protocol.md`
 
@@ -467,7 +467,7 @@ If this is the first guard for a language, add a guards section to
 
 - **Upper layer needs refinement.** During guard design, you may discover
   the protocol step is too vague to produce a precise REJECTS description,
-  the strategy step is too abstract, or the principle is too broad to
+  the strategy step is too abstract, or the tenet is too broad to
   mechanize. Don't force a vague guard. Instead: create a bead for the
   appropriate editor describing what needs refinement. Add the new bead as a
   blocker on the current guard design bead (`bd dep add <guard-bead>

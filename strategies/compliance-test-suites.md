@@ -1,5 +1,5 @@
 # Compliance Test Suites
-PRINCIPLE: No Shared Fate
+TENET: No Shared Fate
 
 1. Check the trigger: a boundary interface has two or more
    implementations that must honor the same behavioral contract.

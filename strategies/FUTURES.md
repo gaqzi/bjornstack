@@ -8,7 +8,7 @@ strategy.
 ## E2E Testing
 
 **Bead**: bs-2q1
-**Principle**: Don't Fly Blind
+**Tenet**: Don't Fly Blind
 **Parent**: Test Layer Selection (testing.md)
 **Would be**: strategies/testing__e2e.md
 

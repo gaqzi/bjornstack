@@ -19,7 +19,7 @@ nonlinearly with its size — small steps make each decision cheap to undo.
 
 ---
 <!-- Rationale below — read when creating strategies, reviewing, or
-questioning the principle. Not needed for routine application. -->
+questioning the tenet. Not needed for routine application. -->
 
 ## Rationale
 

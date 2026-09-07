@@ -1,5 +1,5 @@
 # Flag Your Changes
-PRINCIPLE: Many More Much Smaller Steps
+TENET: Many More Much Smaller Steps
 
 1. Decide during design what — if anything — needs a flag.
    - Prefer designs that grow the system over designs that flag it.
@@ -241,7 +241,7 @@ is a small, reversible step), it also serves:
   isolates blast radius by construction.
 
 These benefits are real but secondary. The strategy earns its place
-through MMMSS — the other principles benefit from it.
+through MMMSS — the other tenets benefit from it.
 
 ### Proportional infrastructure
 

@@ -1,5 +1,5 @@
 # Black Box Integration Testing
-PRINCIPLE: Don't Fly Blind
+TENET: Don't Fly Blind
 
 1. Enter through the public interface. Identify how consumers interact with
    the system — HTTP endpoints, browser interactions, CLI commands. The test
@@ -135,7 +135,7 @@ structured (packages). This is self-reinforcing: feature-organized tests
 don't break when you refactor internals, and the inability to import
 internals prevents accidental coupling. Language-specific protocols
 determine where these tests live in the filesystem, but the organizational
-principle is the same everywhere.
+rule is the same everywhere.
 
 ### What a black box integration test failure tells you
 
@@ -151,14 +151,14 @@ from expected, then add a unit test at that layer before fixing. This is the
 meta-strategy's step 5 in practice — the integration test caught it, now
 push the test down so a cheaper test catches it next time.
 
-### Cross-cutting principles
+### Cross-cutting tenets
 
 Steps 3 and 4 draw from No Shared Fate and Structure is Intent respectively.
 Data scoping (step 3) is an isolation technique; feature organization
 (step 4) is a structural choice. Both serve Don't Fly Blind through signal
 quality — flaky tests from data collisions and implementation-coupled tests
 that break on refactoring both degrade the signal that tells you whether
-the system works. The primary principle is DFB; the techniques borrow from
+the system works. The primary tenet is DFB; the techniques borrow from
 NSF and SII to make the signal reliable and interpretable.
 
 ### Relationship to the meta-strategy

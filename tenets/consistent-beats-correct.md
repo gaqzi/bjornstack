@@ -18,7 +18,7 @@ WHY: Every deviation forces readers to determine whether the difference is meani
 
 ---
 <!-- Rationale below — read when creating strategies, reviewing, or
-questioning the principle. Not needed for routine application. -->
+questioning the tenet. Not needed for routine application. -->
 
 ## Rationale
 
@@ -32,17 +32,17 @@ predictability is worth more than any local improvement.
 
 This is not "we've always done it this way" as a defense against improvement.
 It's not a reason to never change. When a pattern is actively harmful — when it
-violates other principles like Fail Early and Loud or Be Your Name — the right
-response is to fix it *everywhere*, consistently. The principle governs
+violates other tenets like Fail Early and Loud or Be Your Name — the right
+response is to fix it *everywhere*, consistently. The tenet governs
 structural and stylistic choices: which paradigm you use, how you organize
 code, how you handle common operations. It does not protect patterns that
 create hidden behavior or obscure intent.
 
-### When CBC conflicts with other principles
+### When CBC conflicts with other tenets
 
 If the established pattern silently swallows errors (FEAL violation), don't
 perpetuate it — fix it everywhere. If the established naming convention is
-vague (BYN violation), improve it everywhere. CBC yields to other principles
+vague (BYN violation), improve it everywhere. CBC yields to other tenets
 when the pattern itself is the problem. But you fix it *consistently* — don't
 fix it in one file and leave the old pattern in twenty others.
 
@@ -52,7 +52,7 @@ In greenfield projects, CBC inverts: instead of following existing patterns,
 you are establishing them. The first module isn't just a deliverable — it's a
 template. This transforms the first task from feature work into pattern-setting
 work, which requires deliberate review before the second module is built.
-Nothing in the principle block flags this transformation, so it catches teams
+Nothing in the tenet block flags this transformation, so it catches teams
 off guard — they build task 1 casually and then discover everything must be
 consistent with whatever they happened to build. The "Thin Vertical Slice"
 strategy addresses this directly.
@@ -74,7 +74,7 @@ lower when the tooling can help apply the change across the codebase.
 
 ### Earning an exception
 
-See the Practicality Beats Purity principle. When you genuinely need to deviate
+See the Practicality Beats Purity tenet. When you genuinely need to deviate
 from an established pattern, the process is: convince yourself it's not just
 convenience, convince at least one other person, and document the tradeoff. If
 you find yourself earning exceptions frequently for the same pattern, the

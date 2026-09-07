@@ -16,7 +16,7 @@ WHY: Buried differences get missed in review, misread during debugging, and acci
 
 ---
 <!-- Rationale below — read when creating strategies, reviewing, or
-questioning the principle. Not needed for routine application. -->
+questioning the tenet. Not needed for routine application. -->
 
 ## Rationale
 
@@ -39,7 +39,7 @@ Extract what's shared, expose what varies. This applies everywhere:
 
 ### Table-driven tests as a strategy
 
-Table tests are one of the strongest implementations of this principle. When
+Table tests are one of the strongest implementations of this tenet. When
 you have 3+ cases exercising the same behavior with different inputs, a table
 structure lays out the variations in a scannable grid. Each case has a name
 that describes what makes it unique. The shared test body runs identically for
@@ -47,12 +47,12 @@ every case. The differences — inputs, expected outputs, assertion strategies �
 are the only things visible in each case.
 
 For 1-2 cases, individual test functions are clearer because there isn't enough
-repetition to benefit from extraction. The principle applies when similarity
+repetition to benefit from extraction. The tenet applies when similarity
 exists — if things aren't similar, there's nothing to highlight.
 
 ### Default-with-overrides pattern
 
-Builders and options patterns serve this principle by establishing a known
+Builders and options patterns serve this tenet by establishing a known
 default and letting each usage show only what it changes. When you see
 `defaultCalculator(withTaxRates(emptyRates))`, the override (`withTaxRates`)
 is the entire signal. Everything else is the known default. Compare this to

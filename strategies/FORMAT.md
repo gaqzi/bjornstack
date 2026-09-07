@@ -1,9 +1,9 @@
 # How to Write Strategies
 
 Strategies are the HOW layer — the abstract, language-agnostic approach that
-bridges a principle (WHY) to a protocol (WHAT in language X).
+bridges a tenet (WHY) to a protocol (WHAT in language X).
 
-A principle says *why something matters*. A strategy says *how to achieve it*
+A tenet says *why something matters*. A strategy says *how to achieve it*
 as an abstract recipe. A protocol says *what to do concretely* in a specific
 language or framework.
 
@@ -11,16 +11,16 @@ language or framework.
 generating language-specific protocols and are available as reference material
 when a generated protocol needs disambiguation. Their purpose is to help
 express abstractly *what the technique is* before getting pulled into the
-specifics of a target language or stack. When a principle can be made into a
-repeatable technique, the path is always principle → strategy → protocol. The
-exception is pure-judgment principles where the technique can't be abstracted
+specifics of a target language or stack. When a tenet can be made into a
+repeatable technique, the path is always tenet → strategy → protocol. The
+exception is pure-judgment tenets where the technique can't be abstracted
 into repeatable steps.
 
 ## Format
 
 ```
 # [Strategy Name]
-PRINCIPLE: [Principle name this strategy serves]
+TENET: [Tenet name this strategy serves]
 
 1. [Step 1 — abstract, conceptual]
 2. [Step 2]
@@ -48,7 +48,7 @@ point and each path; sub-steps belong to their path:
 
 ```
 # [Strategy Name]
-PRINCIPLE: [Principle name]
+TENET: [Tenet name]
 
 1. [Classification step — how to determine which path applies.]
    - [Path A condition]: continue at step 2.
@@ -77,7 +77,7 @@ a conditional note is clearer.
 
 When a strategy's reasoning needs more context — why certain steps exist,
 how the technique applies across languages, edge cases — add a rationale
-section below a `---` separator, matching the principle format:
+section below a `---` separator, matching the tenet format:
 
 ```
 ---
@@ -112,9 +112,9 @@ nature of the connection:
 
 - `(downstream)` — the referenced strategy builds on this one. Clarifies
   directionality when both strategies cross-reference each other.
-- `(PRINCIPLE)` — a principle abbreviation like `(FEAL)`, `(NSF)`, `(CoC)`,
-  `(HTD)`. Indicates which principle the connection primarily serves.
-  Use when the link exists because of a specific principle, not just
+- `(TENET)` — a tenet abbreviation like `(FEAL)`, `(NSF)`, `(CoC)`,
+  `(HTD)`. Indicates which tenet the connection primarily serves.
+  Use when the link exists because of a specific tenet, not just
   proximity.
 
 Format: `- **Strategy Name** (tag): explanation.`
@@ -138,7 +138,7 @@ For the full relationship graph and family placement, see
 
 ```
 # Data-Driven Test Cases
-PRINCIPLE: No Conditional Test Logic
+TENET: No Conditional Test Logic
 
 1. Identify the variations — what changes between test cases?
 2. Extract those variations into data: inputs, expected outputs,
@@ -164,9 +164,9 @@ SKIP WHEN: Only one case exists. A single test function is fine.
 ## Why this format works
 
 - The **name** is a short noun phrase (2-4 words), same convention as
-  principles. It gives agents and humans a shorthand to refer to the approach.
-- The **PRINCIPLE link** makes the WHY→HOW chain explicit. Every strategy
-  serves at least one principle.
+  tenets. It gives agents and humans a shorthand to refer to the approach.
+- The **TENET link** makes the WHY→HOW chain explicit. Every strategy
+  serves at least one tenet.
 - The **numbered steps** are the core of the strategy. They describe an
   idealized procedure at a conceptual level — no language-specific details.
   This is what makes strategies *meta-procedural*: they explain how to think
@@ -184,18 +184,18 @@ SKIP WHEN: Only one case exists. A single test function is fine.
   is a distinct failure mode; use `Examples:` sub-bullets when a failure mode
   benefits from concrete instances.
 - **SKIP WHEN** makes it explicit when this specific strategy is not the right
-  fit — typically when a different strategy for the same principle applies, or
+  fit — typically when a different strategy for the same tenet applies, or
   when the situation doesn't call for this technique.
 
 ## The case for misapplications over positive examples
 
-The same boundary-based theory behind VIOLATIONS in principles applies here.
+The same boundary-based theory behind VIOLATIONS in tenets applies here.
 See [WORKFLOW.md](../docs/WORKFLOW.md#design-theory-boundary-based-constraints)
 for the full system-level reasoning.
 
-**Why "misapplications" instead of "violations."** You *violate* a principle —
+**Why "misapplications" instead of "violations."** You *violate* a tenet —
 you broke a constraint. You *misapply* a strategy — you used a technique where
-it doesn't fit or used it badly. A principle is a law, a strategy is a tool.
+it doesn't fit or used it badly. A tenet is a law, a strategy is a tool.
 The format (bulleted list) matches VIOLATIONS: for consistency, but the name
 reflects the different relationship.
 
@@ -215,23 +215,23 @@ as "testing → unit" and keeps everything flat in `strategies/`.
 
 ## What strategies are NOT
 
-- **Principles.** If it can be said in one sentence and has a violation
-  example, it's a principle. Strategies need space to describe a technique.
+- **Tenets.** If it can be said in one sentence and has a violation
+  example, it's a tenet. Strategies need space to describe a technique.
 - **Protocols.** If it references a specific language, framework, or tool,
   it's a protocol step. Strategies are language-agnostic.
 - **Tutorials.** Strategies describe *what to do conceptually*, not *how to
-  learn it*. No background reading, no motivation beyond the PRINCIPLE link.
+  learn it*. No background reading, no motivation beyond the TENET link.
 
 ## How strategies relate to other layers
 
 ```
-Principle    → WHY     "Tests must not contain conditional logic"        ← loaded into project
+Tenet        → WHY     "Tests must not contain conditional logic"        ← loaded into project
 Strategy     → HOW     Data-Driven Test Cases (the abstract technique)   ← input to protocol generation
 Protocol     → WHAT    Go: table-driven tests with t.Run subtests        ← generated, loaded into project
 Guard        → CHECK   testnoifs linter: rejects if/switch in tests      ← loaded into project, runs automatically
 ```
 
-A single principle may have multiple strategies (different approaches to the
+A single tenet may have multiple strategies (different approaches to the
 same WHY). A single strategy may have multiple protocols (same approach
 adapted per language). Not every protocol step produces guards — some require
 judgment that can't be mechanized.

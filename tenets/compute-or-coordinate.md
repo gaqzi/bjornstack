@@ -22,11 +22,11 @@ WHY: Mixed code obscures intent and makes testing harder — you can't tell whet
 
 ---
 <!-- Rationale below — read when creating strategies, reviewing, or
-questioning the principle. Not needed for routine application. -->
+questioning the tenet. Not needed for routine application. -->
 
 ## Rationale
 
-This is the backbone principle. Every piece of code falls into one of two
+This is the backbone tenet. Every piece of code falls into one of two
 roles:
 
 - **Computation (business logic)**: ideally a pure function. You pass in all
@@ -75,14 +75,14 @@ package root as shared domain vocabulary.
 
 ### Why this enables everything else
 
-This principle is foundational because it determines your entire testing
+This tenet is foundational because it determines your entire testing
 strategy. Once you classify code, you know:
 - Whether to use mocks (coordination) or real values (computation)
 - How many tests to expect (~2 per collaborator for coordination, thorough
   coverage for computation)
 - What a failure means (wiring problem vs. logic problem)
 
-Every other testing principle builds on this classification.
+Every other testing tenet builds on this classification.
 
 ### Cross-references
 

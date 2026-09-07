@@ -1,5 +1,5 @@
 # Domain-First Packaging
-PRINCIPLE: Structure Is Intent
+TENET: Structure Is Intent
 
 1. Identify the domains the system owns — each cohesive business concept or capability is a candidate package. The test: can you describe what this package *does* using a business noun, not a technical role?
 2. Name each package for the domain it owns — a noun that describes what the package is responsible for, not what it contains technically.
@@ -105,7 +105,7 @@ dependency — now both packages must know about each other's types and
 changes. The resolution is a coordinating layer (a service or handler
 that imports both domains and orchestrates between them) or a shared
 interface that both domains implement against. This connects directly to
-the Compute or Coordinate principle: domain packages compute, and the
+the Compute or Coordinate tenet: domain packages compute, and the
 layer above them coordinates.
 
 ### Relationship to Earned Abstraction
@@ -120,7 +120,7 @@ earned a shared abstraction.
 
 ### Relationship to Be Your Name
 
-Structure Is Intent is the primary principle — this strategy is fundamentally
+Structure Is Intent is the primary tenet — this strategy is fundamentally
 about where things go. But step 4 (naming exports) directly serves Be Your
 Name: when `mail.Mail` stutters, the name isn't being its name — it's
 echoing its location. `mail.Message` is being its name because it tells you

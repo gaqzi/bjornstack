@@ -1,12 +1,12 @@
 # bjornstack Workflow
 
-How to work with the four-layer system: creating principles, strategies,
+How to work with the four-layer system: creating tenets, strategies,
 protocols, and guards, and how the editor skills connect them.
 
 ## The four layers
 
 ```
-Principle    → WHY     "Tests must not contain conditional logic"
+Tenet        → WHY     "Tests must not contain conditional logic"
 Strategy     → HOW     Data-Driven Test Cases (the abstract technique)
 Protocol     → WHAT    Go design protocol: table-driven tests with t.Run subtests
 Guard        → CHECK   testnoifs linter: rejects if in test bodies
@@ -14,20 +14,20 @@ Guard        → CHECK   testnoifs linter: rejects if in test bodies
 
 Each layer has a different purpose:
 
-- **Principles** (WHY) — High-level, language-agnostic constraints. One
+- **Tenets** (WHY) — High-level, language-agnostic constraints. One
   sentence, violations, a why. They encode *why* something matters.
 - **Strategies** (HOW) — Abstract, language-agnostic techniques. Numbered
-  steps, observable outcomes, misapplications. They bridge a principle
+  steps, observable outcomes, misapplications. They bridge a tenet
   to actionable technique without referencing any language.
-- **Protocols** (WHAT) — Stage-based workflows that compose principles and
+- **Protocols** (WHAT) — Stage-based workflows that compose tenets and
   strategies into step-by-step decision trees for design, implementation,
   and review. Generated from the layers above plus language configuration.
   Deviate at your own risk.
 - **Guards** (CHECK) — Mechanical checks with zero judgment. Linter rules,
   CI gates. They reject, they don't advise.
 
-Not everything moves through all four layers. Some principles stay
-principles because they require judgment. Some protocol steps never become
+Not everything moves through all four layers. Some tenets stay
+tenets because they require judgment. Some protocol steps never become
 guards because the check can't be mechanized.
 
 ## Design theory: boundary-based constraints
@@ -36,7 +36,7 @@ The system is built on a guiding theory we're testing: constraining by
 defining what's wrong works better than prescribing what's right.
 
 **Violations define the boundary, not the interior.** Good implementations
-take many forms — the system doesn't enumerate them. Instead, principles list
+take many forms — the system doesn't enumerate them. Instead, tenets list
 failure modes (VIOLATIONS) and strategies list misuse patterns
 (MISAPPLICATIONS). Everything that doesn't cross those boundaries is allowed.
 This is a laws-not-prescriptions model: define what's prohibited, leave the
@@ -50,7 +50,7 @@ rest open.
   benefits from concrete instances, sub-bullets under an `Examples:` label
   make it recognizable without being exhaustive.
 - **WHY mechanism** — the generalization. Encodes the causal reasoning so
-  agents can apply the principle to situations no violation example
+  agents can apply the tenet to situations no violation example
   anticipated. Violations calibrate the boundary; WHY generalizes beyond it.
 - **Strategies and protocols** — the thinking process. Strategy steps and
   protocol decision trees guide how to approach the problem, not what the
@@ -58,7 +58,7 @@ rest open.
   to data, write one body, iterate" will arrive at different implementations
   depending on language and context. The technique is prescribed; the
   artifact is not. An agent that finds a novel approach violating no
-  principles is free to take it.
+  tenets is free to take it.
 
 **Why not positive examples?** Positive examples prescribe output — "make it
 look like this." The system deliberately avoids that. Strategies and protocols
@@ -68,9 +68,9 @@ guides without constraining the solution space. An agent given examples of
 constraint. An agent given a thinking process derives its own solutions.
 
 **Why "misapplications" in strategies, not "violations"?** You *violate* a
-principle — you broke a constraint. You *misapply* a strategy — you used a
+tenet — you broke a constraint. You *misapply* a strategy — you used a
 technique badly or in the wrong context. The terms reflect the different
-relationship: principles are laws, strategies are tools. The format is
+relationship: tenets are laws, strategies are tools. The format is
 consistent (both use bulleted lists); the naming is deliberately different.
 
 This is a theory, not proven truth. We believe boundary-based constraints
@@ -82,15 +82,15 @@ evolves.
 
 ## How protocols work
 
-Protocols are **generated artifacts**, compiled from principles, strategies,
+Protocols are **generated artifacts**, compiled from tenets, strategies,
 and language configuration. They are not hand-maintained documents. When an
-input changes — a strategy is refined, a principle is added, a language
+input changes — a strategy is refined, a tenet is added, a language
 config is updated — the protocols are regenerated.
 
-This matters for scale. With 9 principles, 18 strategies, and multiple
+This matters for scale. With 9 tenets, 18 strategies, and multiple
 target languages, hand-maintaining per-strategy documents per language
 creates a combinatorial maintenance burden. Generated protocols keep the
-intellectual work in the input layers (principles and strategies) where it
+intellectual work in the input layers (tenets and strategies) where it
 belongs.
 
 ### Three stage protocols
@@ -100,7 +100,7 @@ a separate document for each strategy in each language, protocols compose
 multiple strategies into a coherent workflow for each stage of development:
 
 - **Design protocol** — Collaborative discovery. The agent facilitates, asks
-  questions, and applies principles in sequence to identify domains, classify
+  questions, and applies tenets in sequence to identify domains, classify
   components, name concepts, and plan increments. Strategies provide
   acceptance criteria for the design, not execution steps.
 - **Implementation protocol** — Execution against a design. The agent follows
@@ -111,11 +111,11 @@ multiple strategies into a coherent workflow for each stage of development:
 
 Each stage has distinct **agent behavior expectations**:
 
-| Stage          | Agent behavior     | Content loaded                          |
-|----------------|--------------------|-----------------------------------------|
-| Design         | Facilitate, ask    | Principles (as questions), strategy rationale |
-| Implementation | Execute, follow    | Strategy steps, language config          |
-| Review         | Evaluate, check    | Strategy outcomes, guard candidates      |
+| Stage          | Agent behavior     | Content loaded                            |
+|----------------|--------------------|-------------------------------------------|
+| Design         | Facilitate, ask    | Tenets (as questions), strategy rationale |
+| Implementation | Execute, follow    | Strategy steps, language config           |
+| Review         | Evaluate, check    | Strategy outcomes, guard candidates       |
 
 ### Coordinator and subagent pattern
 
@@ -123,10 +123,10 @@ Protocols use a **coordinator + subagent** architecture:
 
 - The **coordinator** (the agent the human interacts with) holds the
   protocol — the ordering, the questions to ask, the decision tree. It does
-  not load principle or strategy content directly. Its job is orchestration
+  not load tenet or strategy content directly. Its job is orchestration
   and synthesis.
 - **Subagents** are spawned for deep analysis. Each subagent is loaded with
-  a specific principle and its relevant strategies, focused on one analytical
+  a specific tenet and its relevant strategies, focused on one analytical
   task. Results flow back to the coordinator for synthesis and presentation
   to the human.
 
@@ -136,24 +136,24 @@ Why this separation:
   delivery mode because it doesn't have detailed content loaded — its job is
   to direct, not to produce.
 - **Context stays clean.** The human-facing conversation isn't polluted with
-  thousands of tokens of principle and strategy text. The coordinator
+  thousands of tokens of tenet and strategy text. The coordinator
   presents synthesized findings.
 - **Each subagent gets focused context.** A subagent loaded with one
-  principle and two strategies has ideal conditions for deep analysis.
+  tenet and two strategies has ideal conditions for deep analysis.
 
 The delegation pattern varies by stage:
 
-- **Design**: Mostly sequential — each principle's output feeds the next.
+- **Design**: Mostly sequential — each tenet's output feeds the next.
   The coordinator facilitates discussion between each subagent's analysis.
 - **Implementation**: More parallel — multiple strategies can be applied to
   independent parts of the codebase simultaneously.
-- **Review**: Heavily parallel — multiple principles can be evaluated against
+- **Review**: Heavily parallel — multiple tenets can be evaluated against
   the code at the same time, with results aggregated into a single review.
 
-### Principle ordering in design
+### Tenet ordering in design
 
-Principles have a natural dependency sequence for design work. Each
-principle's output feeds the next:
+Tenets have a natural dependency sequence for design work. Each
+tenet's output feeds the next:
 
 1. **Structure Is Intent** — identify domains from what the system does
 2. **Compute or Coordinate** — classify each piece as logic or wiring
@@ -161,9 +161,9 @@ principle's output feeds the next:
 4. **Many More Much Smaller Steps** — slice into smallest coherent increments
 5. **Fail Early and Loud** — design error paths as first-class concerns
 
-The design protocol applies principles in this order. Not all principles
+The design protocol applies tenets in this order. Not all tenets
 appear in every design — the protocol includes decision points for which
-principles are relevant to the current task.
+tenets are relevant to the current task.
 
 ### "Ask before proposing" in design
 
@@ -172,7 +172,7 @@ before building your own.** The person who described the requirements already
 has a mental model. Extracting it ("what domains do you see here?") is
 faster and more accurate than building one from scratch and iterating on the
 delta. This is built into the design protocol as step 1 — before any
-principle is applied, the coordinator asks the user what they see.
+tenet is applied, the coordinator asks the user what they see.
 
 ### Strategies as reference material
 
@@ -210,7 +210,7 @@ The format and location of language configuration is not yet defined.
 
 ### Validation
 
-Generated protocols need test cases: known-good inputs (spec + principles +
+Generated protocols need test cases: known-good inputs (spec + tenets +
 strategies) paired with known-good designs and implementations. These detect
 regressions when inputs change. Not needed for the initial prototype but
 critical as the system grows.
@@ -218,9 +218,9 @@ critical as the system grows.
 ## File organization
 
 ```
-principles/
-  FORMAT.md                          # How to write principles
-  <principle-name>.md                # Individual principle files
+tenets/
+  FORMAT.md                          # How to write tenets
+  <tenet-name>.md                    # Individual tenet files
 
 strategies/
   FORMAT.md                          # How to write strategies
@@ -235,7 +235,7 @@ guards/
     <guard-name>.md                  # Guard design documents
 
 script/
-  audit-principles                   # Scans for gaps (planned)
+  audit-tenets                       # Scans for gaps (planned)
 ```
 
 Filenames use kebab-case: `no-conditional-test-logic.md`,
@@ -247,7 +247,7 @@ Filenames use kebab-case: `no-conditional-test-logic.md`,
 |------------|-------------|
 | Go         | In progress |
 
-Principles and strategies are shared across all languages. Protocols and
+Tenets and strategies are shared across all languages. Protocols and
 guards are language-specific.
 
 ### Adding a new language
@@ -265,7 +265,7 @@ Code skill that can be invoked independently.
 
 | Skill              | Layer      | Invocation         |
 |--------------------|------------|--------------------|
-| principle-editor   | Principles | `/principle-editor`|
+| tenet-editor       | Tenets     | `/tenet-editor`    |
 | strategy-editor    | Strategies | `/strategy-editor` |
 | guard-designer     | Guards     | `/guard-designer`  |
 
@@ -282,28 +282,28 @@ Why separate:
 
 - **Single responsibility.** Each skill does one thing well. The quality
   checks, format rules, and mental model are different per layer.
-- **Batch workflows.** You might define five principles in a session, then
+- **Batch workflows.** You might define five tenets in a session, then
   come back for strategies later. A mandatory pipeline blocks that.
-- **Quality.** Creating a good principle demands focus. Forcing an immediate
+- **Quality.** Creating a good tenet demands focus. Forcing an immediate
   pivot to strategy mode risks half-baked strategies.
 
 ### How work flows between skills
 
-#### principle-editor → strategy-editor
+#### tenet-editor → strategy-editor
 
-**When:** After creating or reviewing a principle, if the principle needs a
+**When:** After creating or reviewing a tenet, if the tenet needs a
 non-obvious technique to follow.
 
 **Signals:**
 
-- The principle says "don't do X" and the natural response is "so what do I do
+- The tenet says "don't do X" and the natural response is "so what do I do
   instead?" — the answer is a strategy.
-- The layer check caught a strategy disguised as a principle. After extracting
-  the real principle, the technique becomes a strategy.
+- The layer check caught a strategy disguised as a tenet. After extracting
+  the real tenet, the technique becomes a strategy.
 
-**Offer:** *"This principle could benefit from a strategy. Want to create one?"*
+**Offer:** *"This tenet could benefit from a strategy. Want to create one?"*
 
-If accepted, invoke strategy-editor with the principle name pre-filled.
+If accepted, invoke strategy-editor with the tenet name pre-filled.
 
 #### strategy-editor → protocol regeneration
 
@@ -323,12 +323,12 @@ affected languages, noting what changed and why.
 
 Strategies emerge from three entry points:
 
-1. **During principle creation.** The principle-editor's layer check may catch
-   a strategy disguised as a principle, or the principle may naturally suggest
+1. **During tenet creation.** The tenet-editor's layer check may catch
+   a strategy disguised as a tenet, or the tenet may naturally suggest
    "how do I follow this?" — both lead to strategy work.
 
 2. **Explicit request.** The user directly invokes the strategy-editor with a
-   principle name or technique description.
+   tenet name or technique description.
 
 3. **During protocol review.** When reviewing a generated protocol, the
    reviewer discovers that the abstract technique hasn't been documented as a
@@ -336,12 +336,12 @@ Strategies emerge from three entry points:
 
 ## The audit script
 
-`script/audit-principles` scans the file system for gaps. It checks:
+`script/audit-tenets` scans the file system for gaps. It checks:
 
-1. **Missing strategies.** Every principle that would benefit from a strategy
+1. **Missing strategies.** Every tenet that would benefit from a strategy
    has one in `strategies/`.
 2. **Stale protocols.** Generated protocols are older than their input
-   strategies or principles (compares modification times).
+   strategies or tenets (compares modification times).
 3. **Missing language coverage.** Every supported language has generated
    protocols.
 
@@ -361,24 +361,24 @@ candidate bead, they invoke guard-designer, which designs the full guard:
 tool selection, rejection/acceptance patterns, false positive assessment,
 escape hatch, and implementation plan.
 
-## Judgment-only principles
+## Judgment-only tenets
 
-Some principles require human judgment and will never become guards. That's
+Some tenets require human judgment and will never become guards. That's
 legitimate. The test is **actionability**, not **mechanizability**:
 
 - Can someone look at code and recognize a violation? → Actionable.
 - Can they describe what should have been done differently? → Actionable.
 - Does following it require omniscience or predicting the future? → Not a
-  principle, decompose it.
+  tenet, decompose it.
 
-Judgment-only principles stay in the principles layer. They may have
+Judgment-only tenets stay in the tenets layer. They may have
 strategies that inform protocol steps, but those steps won't produce guards.
 
 ## Not-applicable handling
 
-Not every principle applies to every language. When a principle is genuinely
+Not every tenet applies to every language. When a tenet is genuinely
 not applicable to a language:
 
-- The language configuration documents which principles don't apply and why.
+- The language configuration documents which tenets don't apply and why.
 - The audit script skips known not-applicable combinations.
-- Generated protocols omit steps for non-applicable principles.
+- Generated protocols omit steps for non-applicable tenets.

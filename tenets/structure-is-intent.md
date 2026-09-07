@@ -16,7 +16,7 @@ WHY: When structure doesn't communicate, every new contributor rebuilds the ment
 
 ---
 <!-- Rationale below — read when creating strategies, reviewing, or
-questioning the principle. Not needed for routine application. -->
+questioning the tenet. Not needed for routine application. -->
 
 ## Rationale
 
@@ -55,7 +55,7 @@ guides developers toward putting things in the right place.
 
 - **Be Your Name** (complementary): BYN covers naming — what you call things.
   SII covers organization — where you put things. A well-named function in a
-  chaotic package is a BYN success and an SII failure. Both principles are
+  chaotic package is a BYN success and an SII failure. Both tenets are
   needed for code that communicates fully.
 - **Compute or Coordinate** (complementary): the directory tree should reflect
   the compute/coordinate classification — computation modules and coordinators

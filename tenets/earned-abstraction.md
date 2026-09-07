@@ -19,7 +19,7 @@ WHY: Premature abstractions attract flags and modes because they don't understan
 
 ---
 <!-- Rationale below — read when creating strategies, reviewing, or
-questioning the principle. Not needed for routine application. -->
+questioning the tenet. Not needed for routine application. -->
 
 ## Rationale
 
@@ -64,19 +64,19 @@ keep the duplication.
 Earned Abstraction doesn't mean never abstract. It means the abstraction
 should come from understanding, not from speculation. Once you've solved the
 same problem three times and can clearly see what varies and what's stable,
-that's earned — abstract with confidence. The principle targets the impulse to
+that's earned — abstract with confidence. The tenet targets the impulse to
 abstract on the first or second encounter, before the pattern is actually
 visible.
 
 ### Dependencies are not abstractions
 
-Adopting a well-established library because it serves other principles (e.g.,
+Adopting a well-established library because it serves other tenets (e.g.,
 an assertion library for better diffs and whole-object comparisons, or a
 battle-tested protocol library instead of a hand-rolled implementation) is a
 tool choice, not a premature abstraction. EA governs abstractions you create —
 your own interfaces, helpers, and generic frameworks — not dependencies you
 adopt. The question for dependencies is whether they genuinely serve the
-principles you live by, not whether you've seen three cases first. When a
+tenets you live by, not whether you've seen three cases first. When a
 proven library exists for a problem, the default should be to use it —
 choosing to implement instead is the decision that needs justification.
 

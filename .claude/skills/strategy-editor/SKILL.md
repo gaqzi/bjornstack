@@ -1,20 +1,20 @@
 ---
 name: strategy-editor
 description: >
-  Write, review, and refine strategies — the HOW layer that bridges principles
+  Write, review, and refine strategies — the HOW layer that bridges tenets
   (WHY) to protocols (WHAT). Use this skill whenever the user wants to create
   a new strategy, review or improve an existing strategy, convert a technique
   or best practice into a strategy, or check whether something belongs in the
   strategy layer vs. another layer. Also trigger when handed off from
-  principle-editor, when the user describes a multi-step abstract technique,
-  asks "how do I follow this principle?", "what's the approach for...",
+  tenet-editor, when the user describes a multi-step abstract technique,
+  asks "how do I follow this tenet?", "what's the approach for...",
   "what's the pattern for...", or mentions the strategy layer or HOW layer —
   even if they don't use the word "strategy" explicitly.
 ---
 
 # Strategy Editor
 
-Write, review, and refine strategies that bridge principles to protocols.
+Write, review, and refine strategies that bridge tenets to protocols.
 
 **Strategies are primarily an authoring tool.** They are consumed when
 generating language-specific protocols and are available as reference material
@@ -22,7 +22,7 @@ when a generated protocol needs disambiguation. Their purpose is to help
 express abstractly *what the technique is* before getting pulled into the
 specifics of a target language or stack. This matters for growth: when you add
 a second or third language, the strategy ensures consistency across all
-protocols derived from it. Every principle gets a strategy.
+protocols derived from it. Every tenet gets a strategy.
 
 Read `references/FORMAT.md` before proceeding. It defines the exact format and
 explains why each part matters.
@@ -33,7 +33,7 @@ Every strategy follows this exact structure:
 
 ```
 # [Strategy Name]
-PRINCIPLE: [Principle name this strategy serves]
+TENET: [Tenet name this strategy serves]
 
 1. [Step 1 — abstract, conceptual]
 2. [Step 2]
@@ -49,7 +49,7 @@ MISAPPLICATIONS:
 - [What it looks like when this strategy is applied too aggressively.]
 
 SKIP WHEN: [When this specific strategy adds no value — when a different
-strategy for the same principle is a better fit.]
+strategy for the same tenet is a better fit.]
 ```
 
 No exceptions. If the output doesn't match this structure, revise until it does.
@@ -82,7 +82,7 @@ creates genuinely different procedures, not when paths share most steps.
 When a strategy's reasoning needs more context — why certain steps exist,
 how the technique applies across languages, edge cases protocol authors
 should understand — add a rationale section below a `---` separator,
-matching the principle format:
+matching the tenet format:
 
 ```
 ---
@@ -98,7 +98,7 @@ don't cover and why.]
 ```
 
 Not every strategy needs a rationale. Add one when:
-- The strategy serves a principle in a non-obvious way (the connection
+- The strategy serves a tenet in a non-obvious way (the connection
   needs explaining)
 - The technique has cross-language implications that protocol authors
   need to understand
@@ -119,9 +119,9 @@ This is what a complete strategy looks like and why each part works:
 Name: 3-word noun phrase. Works as shorthand.
 
 ```
-PRINCIPLE: No Conditional Test Logic
+TENET: No Conditional Test Logic
 ```
-Links to a real principle file in `principles/`.
+Links to a real tenet file in `tenets/`.
 
 ```
 1. Identify the variations — what changes between test cases?
@@ -135,7 +135,7 @@ Links to a real principle file in `principles/`.
 you could pause between any two and hand off to someone else. The insight:
 decompose variations into data and let the framework iterate. A motivated
 but not-yet-senior engineer wouldn't necessarily arrive at this from the
-principle alone.
+tenet alone.
 
 ```
 OUTCOMES:
@@ -144,7 +144,7 @@ OUTCOMES:
 - Adding a new case requires only adding data, not changing code.
 ```
 3 outcomes, each checkable by looking at the result. Every outcome traces
-back to the steps. Together they satisfy the principle.
+back to the steps. Together they satisfy the tenet.
 
 ```
 MISAPPLICATIONS:
@@ -160,20 +160,20 @@ specific enough to recognize in real code.
 ```
 SKIP WHEN: Only one case exists. A single test function is fine.
 ```
-Genuinely common case where a different strategy for the same principle
+Genuinely common case where a different strategy for the same tenet
 is a better fit (or the strategy simply doesn't apply to the situation).
 
 ## Modes
 
 ### Create
 
-User describes a technique or provides a principle name. Produce a strategy.
+User describes a technique or provides a tenet name. Produce a strategy.
 
-The user often arrives with a principle and a loose collection of ideas —
+The user often arrives with a tenet and a loose collection of ideas —
 things to watch for, habits that work, instincts about the right approach.
 This isn't a strategy yet, it's raw material. Your job is to find the
 technique hiding in it. Ask: "What's the sequence? When you follow this
-principle well, what do you do first, then next?" The answers reveal the
+tenet well, what do you do first, then next?" The answers reveal the
 steps. If the ideas don't form a sequence — they're just a list of tips —
 they might be multiple strategies, or they might be protocol steps rather
 than a strategy.
@@ -200,27 +200,27 @@ an outcome), call out the ripple explicitly.
 User provides prose docs, best practices, or technical descriptions. For each
 distinct technique:
 
-1. Decide if it's actually a strategy (vs. principle, protocol, or guard)
+1. Decide if it's actually a strategy (vs. tenet, protocol, or guard)
 2. If it's a strategy, produce it in the format
 3. If it's not, say what it is and why — suggest where it belongs instead.
-   For principles, create a bead for principle-editor to handle separately.
+   For tenets, create a bead for tenet-editor to handle separately.
    For protocol steps, note which strategy they'd implement.
 
 ### Update
 
-User wants to revise an existing strategy — because the principle evolved, a
+User wants to revise an existing strategy — because the tenet evolved, a
 protocol revealed a step doesn't translate, or experience showed a step is
 wrong. Read the existing strategy file. Diff the proposed change against the
 quality and coherence checks. Flag if the change breaks step-outcome tracing
 or introduces language-specific content. After approval, update the file in
 place.
 
-### When triggered from principle-editor
+### When triggered from tenet-editor
 
-The principle name is your starting point. If the principle-editor's layer
-check caught a strategy disguised as a principle, the technique is already
+The tenet name is your starting point. If the tenet-editor's layer
+check caught a strategy disguised as a tenet, the technique is already
 in the conversation — extract it. Otherwise, ask the user what technique or
-approach they have in mind for following the principle. Don't invent one
+approach they have in mind for following the tenet. Don't invent one
 unprompted.
 
 ## Quality checks
@@ -232,29 +232,29 @@ optional.
 
 This is the most important check. A strategy encodes a technique that a
 motivated but not-yet-senior engineer would need help arriving at from the
-principle alone. The principle tells them *why* — the strategy shows them
+tenet alone. The tenet tells them *why* — the strategy shows them
 *how* in a way they couldn't confidently figure out themselves. A senior
 engineer might see the path; a staff engineer probably would. But the
 strategy makes that path explicit and repeatable for everyone.
 
-The test: would a capable engineer who believes in the principle still
+The test: would a capable engineer who believes in the tenet still
 struggle with *what to actually do*? If yes, the strategy is earning its
-place. If the steps are just the principle rephrased as instructions, there's
+place. If the steps are just the tenet rephrased as instructions, there's
 no technique — delete the strategy.
 
 EXAMPLE — restatement vs. strategy:
 
-Restatement: Principle is "No Conditional Test Logic." Strategy steps are
+Restatement: Tenet is "No Conditional Test Logic." Strategy steps are
 "1. Don't use if statements in tests. 2. Don't use switch statements in
-tests. 3. Keep test logic linear." These are just the principle repeated as
-instructions. There's no technique here — an engineer reading the principle
+tests. 3. Keep test logic linear." These are just the tenet repeated as
+instructions. There's no technique here — an engineer reading the tenet
 could produce these steps on their own.
 
-Strategy: Same principle, but the steps are "Identify the variations between
+Strategy: Same tenet, but the steps are "Identify the variations between
 test cases. Extract them into data. Write a single test body. Have the
 framework iterate." This is an actual technique — the insight is the
 data-extraction decomposition. An engineer who's never done this before
-wouldn't necessarily arrive here from the principle alone.
+wouldn't necessarily arrive here from the tenet alone.
 
 ### Format checks
 
@@ -263,12 +263,12 @@ wouldn't necessarily arrive here from the principle alone.
   FAIL: "How To Write Data-Driven Tests Using Tables."
   PASS: "Data-Driven Test Cases."
 
-- **PRINCIPLE link references a real principle.** Flag during drafting if
-  the principle doesn't exist in `principles/` yet — note it for the user
+- **TENET link references a real tenet.** Flag during drafting if
+  the tenet doesn't exist in `tenets/` yet — note it for the user
   but don't block the draft. The after-approval workflow will resolve this
   before writing.
-  FAIL: `PRINCIPLE: Good Testing` (not a real principle file).
-  PASS: `PRINCIPLE: No Conditional Test Logic` (exists in principles/).
+  FAIL: `TENET: Good Testing` (not a real tenet file).
+  PASS: `TENET: No Conditional Test Logic` (exists in tenets/).
 
 - **Steps are numbered, abstract, and language-agnostic.** Steps describe
   a conceptual procedure, not language-specific code. No function names,
@@ -278,7 +278,7 @@ wouldn't necessarily arrive here from the principle alone.
   PASS: "3. Write a single test body that operates on one case."
 
   Flat strategies typically have 3-7 steps. 1-2 steps suggests the content
-  is really a principle. 8+ steps suggests a tutorial or a strategy that
+  is really a tenet. 8+ steps suggests a tutorial or a strategy that
   should be decomposed. For forked strategies, count steps per path — each
   path should independently be 2-5 steps. The classification step itself
   doesn't count toward either path's total.
@@ -344,9 +344,9 @@ wouldn't necessarily arrive here from the principle alone.
   body — the structure looks data-driven but the execution isn't."
 
 - **SKIP WHEN is present and honest.** It states when this specific strategy
-  is not the right fit — when a different strategy for the same principle
+  is not the right fit — when a different strategy for the same tenet
   applies, or when the situation doesn't call for this technique. This helps
-  users choose between multiple strategies for the same principle.
+  users choose between multiple strategies for the same tenet.
   FAIL: (missing entirely)
   PASS: "Only one case exists. A single test function is fine."
 
@@ -356,7 +356,7 @@ Strategies exist in a four-layer system. Make sure the strategy is in the
 right layer.
 
 ```
-Principle    → WHY     One sentence + violations. Why something matters.     ← loaded into project
+Tenet        → WHY     One sentence + violations. Why something matters.     ← loaded into project
 Strategy     → HOW     Numbered steps + outcomes. Abstract technique.        ← input to protocol generation
 Protocol     → WHAT    Stage-based workflows. Generated, language-specific.  ← loaded into project
 Guard        → CHECK   Mechanical checks. Zero judgment. Linter rules.      ← loaded into project, runs automatically
@@ -364,11 +364,11 @@ Guard        → CHECK   Mechanical checks. Zero judgment. Linter rules.      �
 
 Check for these common misplacements:
 
-1. **Principle disguised as strategy.** If it can be said in one sentence
+1. **Tenet disguised as strategy.** If it can be said in one sentence
    with a violation example and doesn't need multiple steps, it's a
-   principle. Strategies need space to describe a technique.
+   tenet. Strategies need space to describe a technique.
    FAIL: A strategy whose steps boil down to "just don't do the bad thing."
-   FIX: Extract the one-sentence rule as a principle. The strategy is the
+   FIX: Extract the one-sentence rule as a tenet. The strategy is the
    technique for how to avoid it.
 
 2. **Protocol step disguised as strategy.** If any step references a specific
@@ -379,43 +379,43 @@ Check for these common misplacements:
    that body." The `t.Run` detail belongs in a Go protocol.
 
 3. **Tutorial disguised as strategy.** If it includes background reading,
-   motivation beyond the PRINCIPLE link, or learning context, it's a
+   motivation beyond the TENET link, or learning context, it's a
    tutorial. Strategies describe *what to do conceptually*, not *how to
    learn it*.
    FAIL: A strategy that spends three steps explaining why the technique
    matters before getting to what to do.
-   FIX: The "why" is the principle. The strategy starts at step 1 of the
+   FIX: The "why" is the tenet. The strategy starts at step 1 of the
    technique.
 
 ### Coherence check
 
 These checks ensure the strategy hangs together as a whole.
 
-1. **Steps follow from the principle.** Each step should be traceable to
-   the principle it serves. If a step doesn't help achieve the principle,
+1. **Steps follow from the tenet.** Each step should be traceable to
+   the tenet it serves. If a step doesn't help achieve the tenet,
    it doesn't belong.
    FAIL: A strategy for "No Conditional Test Logic" that includes a step
    about measuring code coverage — related to testing but doesn't serve
-   the principle.
+   the tenet.
 
-2. **Outcomes satisfy the principle.** If all outcomes are met, the
-   principle should be satisfied. If there's a gap, add an outcome or
-   question whether the strategy fully serves the principle.
+2. **Outcomes satisfy the tenet.** If all outcomes are met, the
+   tenet should be satisfied. If there's a gap, add an outcome or
+   question whether the strategy fully serves the tenet.
    FAIL: Outcomes mention "no branching in tests" but don't mention
-   independent failure identification — the principle isn't fully satisfied.
+   independent failure identification — the tenet isn't fully satisfied.
 
-   **Each outcome traces to the primary principle.** If an outcome
-   primarily serves a different principle, reframe it to show how it
+   **Each outcome traces to the primary tenet.** If an outcome
+   primarily serves a different tenet, reframe it to show how it
    serves the primary, or move it to the rationale as a noted cross-cutting
    benefit. An outcome can pass every other check — observable, traces to
    a step — and still not belong if it's earning its keep for the wrong
-   principle.
+   tenet.
    FAIL: A strategy for "Fail Early and Loud" with outcome "existing
    consumers continue working without changes" — that serves Grow Don't
    Break, not FEAL. Reframe: "Errors surface at the new boundary before
    reaching legacy paths."
    PASS: Every outcome, read in isolation, answers "how do I know the
-   primary principle is being followed?"
+   primary tenet is being followed?"
 
 3. **Every outcome traces to a step, every step contributes to an outcome.**
    If an outcome doesn't trace back to any step, a step is missing. If a
@@ -432,9 +432,9 @@ These checks ensure the strategy hangs together as a whole.
 
 5. **Skip-when is honest.** It should describe a genuinely common case
    where this specific strategy is not the right fit — typically when a
-   different strategy for the same principle applies, or the situation
+   different strategy for the same tenet applies, or the situation
    doesn't call for this technique. If the strategy is the only one for
-   its principle, skip-when describes when the technique doesn't apply.
+   its tenet, skip-when describes when the technique doesn't apply.
    FAIL: "When you don't have any tests" — dodges the question instead
    of describing when the strategy is the wrong choice.
 
@@ -453,13 +453,13 @@ Once the user approves the strategy, complete these steps in order.
 ### 1. Uniqueness check
 
 Glob `strategies/*.md` (excluding FORMAT.md). For each
-existing strategy, compare the name and principle link against the new one:
+existing strategy, compare the name and tenet link against the new one:
 
 - **Name collision** — Same or nearly identical name. Resolve before writing.
-- **Semantic overlap** — Different name but serves the same principle with
+- **Semantic overlap** — Different name but serves the same tenet with
   the same technique. Show both to the user and ask: merge, differentiate,
   or abort?
-- **Same principle, different technique** — This is fine. A single principle
+- **Same tenet, different technique** — This is fine. A single tenet
   can have multiple strategies (independent and complementary approaches to
   solve the same WHY).
 
@@ -470,16 +470,16 @@ propagate the refinement back to the parent.
 
 If no conflicts, proceed.
 
-### 2. Verify the principle exists
+### 2. Verify the tenet exists
 
-Check that the principle referenced in the PRINCIPLE field exists in
-`principles/`. If it doesn't:
+Check that the tenet referenced in the TENET field exists in
+`tenets/`. If it doesn't:
 
-- Ask the user if they want to create the principle first using
-  principle-editor
-- Or confirm this is a well-known principle that will be created separately
+- Ask the user if they want to create the tenet first using
+  tenet-editor
+- Or confirm this is a well-known tenet that will be created separately
 
-Don't write a strategy that points to a nonexistent principle without
+Don't write a strategy that points to a nonexistent tenet without
 acknowledgment.
 
 ### 3. Write the strategy file
@@ -561,21 +561,21 @@ generated yet, skip this step.
 
 ## Edge cases
 
-- **Multiple principles.** A strategy primarily serves one principle but
-  may support others. Use the primary principle in the PRINCIPLE field.
+- **Multiple tenets.** A strategy primarily serves one tenet but
+  may support others. Use the primary tenet in the TENET field.
   Mention secondary connections in the strategy description if useful, but
   don't over-link.
 
-- **Strategy without a principle yet.** A technique that doesn't have a
-  principle is a *discovery opportunity*, not an error. Ask: "What goes
+- **Strategy without a tenet yet.** A technique that doesn't have a
+  tenet is a *discovery opportunity*, not an error. Ask: "What goes
   wrong if someone doesn't follow this technique?" The answer is the
-  principle. Draft the strategy, then offer to hand *up* to
-  principle-editor to articulate the WHY, by creating a bead linked 
+  tenet. Draft the strategy, then offer to hand *up* to
+  tenet-editor to articulate the WHY, by creating a bead linked 
   to this strategy. This is the reverse of the normal flow — 
-  principle-editor usually hands down to strategy-editor — but discovering 
-  principles from techniques is legitimate and common.
+  tenet-editor usually hands down to strategy-editor — but discovering 
+  tenets from techniques is legitimate and common.
 
-- **Multiple strategies for one principle.** Two patterns are common and
+- **Multiple strategies for one tenet.** Two patterns are common and
   both are legitimate:
 
   1. **Complementary techniques in the same domain.** "Data-Driven Test
@@ -584,7 +584,7 @@ generated yet, skip this step.
      strategy's SKIP WHEN should clarify when to prefer it over the
      other — this is how users decide.
 
-  2. **Same principle, different domains.** "Fail Loudly" might produce
+  2. **Same tenet, different domains.** "Fail Loudly" might produce
      "Error Propagation" (application code: bubble errors, abort early)
      and "Fail-Fast Assertions" (tests: require over assert). These
      aren't competing — they're parallel applications of the same WHY

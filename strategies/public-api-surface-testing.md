@@ -1,5 +1,5 @@
 # Public API Surface Testing
-PRINCIPLE: Be Your Name
+TENET: Be Your Name
 
 1. Position tests outside the package boundary — they interact through
    exported symbols only, the same way external consumers would.
@@ -52,7 +52,7 @@ the surface doesn't declare — the names are incomplete. A package whose
 tests can't stay outside its boundary has a surface that doesn't say what
 the package does. That's a BYN violation: lying by omission.
 
-This is BYN's verification mechanism. The principle says names should
+This is BYN's verification mechanism. The tenet says names should
 declare behavior. This strategy proves or disproves that claim at the
 package level.
 
@@ -99,7 +99,7 @@ those tests through the public API makes them indirect and fragile. An
 internal sub-module lets you test the algorithm directly while preserving
 the parent package's public boundary.
 
-The principle applies recursively: the internal sub-module is tested
+The tenet applies recursively: the internal sub-module is tested
 through its own public API. The SKIP WHEN acknowledges this — when you're
 inside the sub-module, the parent's boundary already provides the external
 constraint.

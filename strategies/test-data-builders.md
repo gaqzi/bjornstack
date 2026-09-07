@@ -1,5 +1,5 @@
 # Test Data Builders
-PRINCIPLE: Highlight the Difference
+TENET: Highlight the Difference
 
 1. Define a builder per domain type that produces a complete, valid
    instance with production-realistic defaults for every field — not
@@ -104,11 +104,11 @@ else builds on. The "a" entry point convention also originates from
 WEWUT: the builder reads as natural language, making tests
 self-describing.
 
-### Three principles, one technique
+### Three tenets, one technique
 
-The primary principle is Highlight the Difference: builders exist so
+The primary tenet is Highlight the Difference: builders exist so
 tests show only what varies. But the technique serves two secondary
-principles through the same mechanism:
+tenets through the same mechanism:
 
 **No Shared Fate** — When a domain type evolves, every test that
 constructs it inline breaks. Builders absorb structural changes in

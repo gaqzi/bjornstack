@@ -1,7 +1,7 @@
-# Principle Relationships
+# Tenet Relationships
 
-How principles connect to each other and where they sit in the design
-landscape. This is a derived view — the cross-references in each principle
+How tenets connect to each other and where they sit in the design
+landscape. This is a derived view — the cross-references in each tenet
 file are authoritative. This document provides the overview.
 
 ## Relationship graph
@@ -26,7 +26,7 @@ graph TD
 
 ## Architectural and delivery families
 
-Principles cluster into two families with a fuzzy border. Placement is
+Tenets cluster into two families with a fuzzy border. Placement is
 approximate — the cross-references are authoritative, not this diagram.
 
 ```
@@ -42,15 +42,15 @@ approximate — the cross-references are authoritative, not this diagram.
  └─────────────────────────┸─────────────────────────────┘
 ```
 
-**Architectural** principles govern how things fit together — structure,
+**Architectural** tenets govern how things fit together — structure,
 boundaries, naming, classification, isolation. An architect reaches for these
 when deciding what to build and how the pieces relate.
 
-**Delivery** principles govern how we build and ship — sequencing, observability,
+**Delivery** tenets govern how we build and ship — sequencing, observability,
 patterns, and when to break rules. A delivery planner reaches for these when
 deciding how to get from the design to working software.
 
-Some principles straddle the border:
+Some tenets straddle the border:
 - **BYN** leans architectural — naming is a design decision — but names are
   also refined during implementation.
 - **HTD** leans delivery — differences matter most during change and review —
@@ -63,7 +63,7 @@ Some principles straddle the border:
 
 ## Common entry points
 
-These are not a prescribed ordering — context determines which principle is
+These are not a prescribed ordering — context determines which tenet is
 primary. But when starting work in each family, these are common first
 questions:
 

@@ -1,5 +1,5 @@
 # Contract Testing
-PRINCIPLE: No Shared Fate
+TENET: No Shared Fate
 
 1. Classify the direction: are you consuming an external party's service,
    or providing a service that others consume? Both directions can apply

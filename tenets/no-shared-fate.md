@@ -18,7 +18,7 @@ WHY: Shared mutable state creates invisible coupling — failures become non-det
 
 ---
 <!-- Rationale below — read when creating strategies, reviewing, or
-questioning the principle. Not needed for routine application. -->
+questioning the tenet. Not needed for routine application. -->
 
 ## Rationale
 
@@ -101,7 +101,7 @@ shouldn't block another's rollback).
 
 ### Shared immutable state is fine
 
-This principle is about *mutable* state. Shared configuration, constants,
+This tenet is about *mutable* state. Shared configuration, constants,
 and read-only reference data are not violations — they can't cause one unit's
 change to break another because they don't change. The moment the shared state
 becomes writable, No Shared Fate applies.

@@ -1,35 +1,35 @@
 ---
-name: principle-editor
+name: tenet-editor
 description: >
-  Write, review, and refine engineering principles in a structured format
+  Write, review, and refine engineering tenets in a structured format
   optimized for both humans and AI agents. Use this skill whenever the user
-  wants to create a new principle, review or improve an existing principle,
-  convert prose rules or ideas into principles, or check whether something
-  qualifies as a principle vs. a strategy, protocol, or guard. Also trigger when the
-  user mentions AGENTS.md principles, CLAUDE.md principles, engineering
-  tenets, or asks "is this a good principle?" — even if they don't use the
-  word "principle" explicitly.
+  wants to create a new tenet, review or improve an existing tenet,
+  convert prose rules or ideas into tenets, or check whether something
+  qualifies as a tenet vs. a strategy, protocol, or guard. Also trigger when the
+  user mentions AGENTS.md tenets, CLAUDE.md tenets, engineering
+  principles, or asks "is this a good tenet?" — even if they don't use
+  the word "tenet" explicitly.
 ---
 
-# Principle Editor
+# Tenet Editor
 
-Write, review, and refine engineering principles that are clear to both humans
+Write, review, and refine engineering tenets that are clear to both humans
 and AI agents.
 
 Read `references/FORMAT.md` before proceeding. It defines the exact format and
 explains why each part matters. Read `references/RELATIONSHIPS.md` when
-creating or updating principles — it shows how all principles relate and where
+creating or updating tenets — it shows how all tenets relate and where
 they sit in the architectural/delivery landscape.
 
 ## What you produce
 
-Every principle file has two parts: a tight **principle block** that agents
+Every tenet file has two parts: a tight **tenet block** that agents
 match against, and a **rationale section** that captures the thinking.
 
-### Principle block
+### Tenet block
 
 ```
-# [Principle Name]
+# [Tenet Name]
 [One constraint, clearly stated.]
 
 VIOLATIONS:
@@ -44,27 +44,27 @@ WHY: [One sentence: the mechanism — what goes wrong without it.]
 
 ### Rationale section
 
-Below the principle block, separated by `---` and an HTML comment:
+Below the tenet block, separated by `---` and an HTML comment:
 
 ```
 ---
 <!-- Rationale below — read when creating strategies, reviewing, or
-questioning the principle. Not needed for routine application. -->
+questioning the tenet. Not needed for routine application. -->
 
 ## Rationale
 
-[The thinking behind the principle. How it was arrived at. Edge cases.
-What this principle is NOT. Tensions with other principles and how they
+[The thinking behind the tenet. How it was arrived at. Edge cases.
+What this tenet is NOT. Tensions with other tenets and how they
 resolve.]
 ```
 
-Agents read only the principle block for routine application. The rationale
-is for deeper work: creating strategies, reviewing principles, resolving
+Agents read only the tenet block for routine application. The rationale
+is for deeper work: creating strategies, reviewing tenets, resolving
 ambiguous cases, or onboarding new contributors.
 
 ### Annotated example
 
-This is what a complete principle looks like and why each part works:
+This is what a complete tenet looks like and why each part works:
 
 ```
 # Fail Early and Loud
@@ -79,7 +79,7 @@ implicit defaults, silent fallbacks, or hidden paths.
 ```
 One constraint, clearly stated. The em-dash and qualifying phrases ("implicit",
 "silent", "hidden") carve out what IS and ISN'T a violation. If a qualifying
-clause can be removed and the principle still makes sense, the clause belongs
+clause can be removed and the tenet still makes sense, the clause belongs
 in the rationale instead.
 
 ```
@@ -115,7 +115,7 @@ situations.
 
 ## Voice
 
-Principles should sound like a person explaining something at a whiteboard,
+Tenets should sound like a person explaining something at a whiteboard,
 not like a corporate policy document. The user's natural language and lived
 experience are the richest source material.
 
@@ -134,26 +134,26 @@ The test: read it aloud. If it sounds like a memo, rewrite it.
 
 ### Create
 
-User describes a concept, rule, or constraint. Produce a principle.
+User describes a concept, rule, or constraint. Produce a tenet.
 
 The user often arrives with a vague rule, a frustration, or an instinct about
-what matters. This isn't a principle yet — it's raw material. Their stories,
+what matters. This isn't a tenet yet — it's raw material. Their stories,
 frustrations, and natural language are valuable — encourage them. The phrase
 they use to explain the idea to a friend is often better than any formal name.
 
 #### Step 1: Explore
 
 Don't draft too early. The first identification is rarely the right one — it's
-usually a symptom of a broader principle.
+usually a symptom of a broader tenet.
 
 - Ask: "What goes wrong when this is violated?" The answer reveals the
   definition and WHY.
 - Ask: "What other things share this same WHY?" If multiple candidates share
-  a WHY, they're strategies/protocols for one principle, not separate
-  principles. Zoom out.
+  a WHY, they're strategies/protocols for one tenet, not separate
+  tenets. Zoom out.
 - If the answer to "what goes wrong" is "everything" or "it's just bad,"
   help decompose into something observable.
-- The actionability check is the zoom-out limiter: if the principle becomes
+- The actionability check is the zoom-out limiter: if the tenet becomes
   so abstract that violations are vague, you've zoomed too far.
 
 #### Step 2: Name
@@ -169,7 +169,7 @@ The naming test (all must pass):
 
 Don't require noun phrases. "Fail Early and Loud", "Consistent Beats Correct",
 "Be Your Name", "Highlight the Difference" — none are noun phrases, all are
-excellent principle names. TLAs/eTLAs (FEAL, CBC, BYN, HtD) are a bonus when
+excellent tenet names. TLAs/eTLAs (FEAL, CBC, BYN, HtD) are a bonus when
 they fall out naturally but not a requirement.
 
 FAIL: "Proactive Failure Surface Optimization." Corporate, forgettable.
@@ -177,7 +177,7 @@ PASS: "Fail Early and Loud." Human, sticky, immediately clear.
 
 #### Step 3: Draft
 
-Produce the principle block in the exact format.
+Produce the tenet block in the exact format.
 
 #### Step 4: Quality checks
 
@@ -185,41 +185,41 @@ Run every quality check (see below).
 
 #### Step 5: Red team
 
-If other principles exist, stress-test against the set:
-- **Tensions**: does this principle conflict with any existing one? If so,
+If other tenets exist, stress-test against the set:
+- **Tensions**: does this tenet conflict with any existing one? If so,
   which yields and why? Resolve in the rationale and add a `(tension)` or
   `(yields to)` cross-reference.
-- **Overlaps**: does this principle cover the same constraint as an existing
+- **Overlaps**: does this tenet cover the same constraint as an existing
   one with different words? If so, merge, differentiate, or abort.
-- **Gaps**: does adding this principle reveal something missing from the set?
-- **Relationships**: which existing principles does this one relate to?
+- **Gaps**: does adding this tenet reveal something missing from the set?
+- **Relationships**: which existing tenets does this one relate to?
   Draft cross-reference entries with appropriate tags. Check
   `references/RELATIONSHIPS.md` for the existing graph — where does this
-  principle fit in the architectural/delivery landscape?
+  tenet fit in the architectural/delivery landscape?
 - **Ambiguous terms**: read every word in the definition. Could any term be
   misread? ("immediately" could mean "stop at the first error."
   "objects" could sound OO-specific.) Stress-test and tighten.
 - **Novelty**: is this just an existing concept (screaming architecture, SRP,
   YAGNI) with a new name? If so, be honest about the relationship. Either
   acknowledge the lineage or genuinely differentiate.
-- **Agent-actionability**: can an agent use this principle to make decisions
+- **Agent-actionability**: can an agent use this tenet to make decisions
   about code? Can it detect violations in a changeset or codebase? If
   detection requires infrastructure knowledge the agent won't have
-  (dashboards, deployment topology), is the principle still valuable as a
+  (dashboards, deployment topology), is the tenet still valuable as a
   constraint the agent raises or as guidance for what the agent should
-  emit? Be honest about the difference — a principle that agents can
+  emit? Be honest about the difference — a tenet that agents can
   mechanically check is stronger than one they can only remind about, but
   both are legitimate.
 
 #### Step 6: Present and wait
 
-Present the final principle with a brief note on any tradeoffs or judgment
+Present the final tenet with a brief note on any tradeoffs or judgment
 calls. Wait for user approval before writing. Do not proceed to the
 after-approval workflow until the user confirms.
 
 ### Review
 
-User provides a draft principle. Evaluate it against every quality check.
+User provides a draft tenet. Evaluate it against every quality check.
 Lead with a summary: which checks pass, which fail. Then for each failure,
 show the failing text, explain what's wrong, and provide a concrete rewrite.
 If a fix to one part would ripple into others (e.g., changing the definition
@@ -228,16 +228,16 @@ just say "this could be improved" — show the improved version.
 
 ### Update
 
-User wants to revise an existing principle — because a strategy revealed the
+User wants to revise an existing tenet — because a strategy revealed the
 definition is too narrow, a protocol showed a violation doesn't cover a real
-case, or experience proved the WHY is wrong. Read the existing principle file.
+case, or experience proved the WHY is wrong. Read the existing tenet file.
 Diff the proposed change against the quality checks. Grep `strategies/*.md`
-for strategies that reference this principle — for each, check whether their
+for strategies that reference this tenet — for each, check whether their
 steps still serve the updated definition and WHY. Flag any that don't. Also
-check cross-references: grep sibling principles for `**[This Principle]**` —
+check cross-references: grep sibling tenets for `**[This Tenet]**` —
 if the definition or WHY changed, the explanation text in those cross-references
 may need updating. After approval, update the file in place and update any
-stale cross-reference explanations in sibling principles.
+stale cross-reference explanations in sibling tenets.
 
 ### Extract
 
@@ -246,45 +246,45 @@ User provides prose rules, a document, or a list of ideas.
 #### Step 1: Explore before classifying
 
 Don't jump to formal drafts. Present your initial read of the material:
-- Which concepts look like principles (and why)
+- Which concepts look like tenets (and why)
 - Which look like strategies, protocols, or guards (and why)
-- Where you suspect the real principle is broader than any single rule
+- Where you suspect the real tenet is broader than any single rule
 
 Discuss with the user. Encourage them to share stories and frustrations
-behind the rules — the lived experience often reveals the real principle
+behind the rules — the lived experience often reveals the real tenet
 that the written rule was approximating.
 
 #### Step 2: Zoom out
 
-For each candidate principle, ask "what other rules in this document share
+For each candidate tenet, ask "what other rules in this document share
 the same WHY?" Group them. Often 3-4 written rules are strategies/protocols
-for one principle that hasn't been named yet.
+for one tenet that hasn't been named yet.
 
-#### Step 3: For each distinct principle
+#### Step 3: For each distinct tenet
 
-1. Decide if it's actually a principle (vs. strategy, protocol, guard, or
+1. Decide if it's actually a tenet (vs. strategy, protocol, guard, or
    aspiration)
-2. If it's a principle, produce it in the format and run quality checks
+2. If it's a tenet, produce it in the format and run quality checks
 3. If it's an aspiration, reject it — explain why it's not actionable and
-   help decompose it into observable principles (see Actionability check).
-   Produce each decomposed principle through step 2.
+   help decompose it into observable tenets (see Actionability check).
+   Produce each decomposed tenet through step 2.
 4. If it belongs in another layer, say what it is and why — then route it
    to the highest missing layer in the design chain for the relevant
-   principle. Check what exists:
+   tenet. Check what exists:
    - No strategy yet → bead for strategy-editor
    - Strategy exists, no protocol → bead for protocol generation
    - Strategy and protocol exist → bead for guard-designer
 
-   Group all discoveries for the same principle into one bead. Include
+   Group all discoveries for the same tenet into one bead. Include
    downstream discoveries as context in the bead description — a guard
    idea found in prose might inform strategy design. Each layer's design
    may reshape what reaches the next, and downstream editors' handoff
    workflows will carry valid ideas forward. Discoveries that don't
    survive the design chain were probably wrong.
-5. If it enriches an existing principle — a new framing, lineage
+5. If it enriches an existing tenet — a new framing, lineage
    reference, edge case, or boundary clarification that strengthens
-   a rationale without changing the principle block — draft the
-   rationale addition and present it alongside new principles. Read
+   a rationale without changing the tenet block — draft the
+   rationale addition and present it alongside new tenets. Read
    the existing rationale first to avoid duplication or contradiction.
    When a rationale enrichment has a corresponding strategy, add a
    forward reference ("The X strategy makes this operational") to
@@ -293,12 +293,12 @@ for one principle that hasn't been named yet.
 #### Step 4: Red team the set
 
 Once all candidates are drafted, red team the full set (see Create step 5).
-Present in groups of 3-5 for review. Don't try to finalize 15 principles at
+Present in groups of 3-5 for review. Don't try to finalize 15 tenets at
 once — quality drops.
 
 ## Quality checks
 
-Run every check on every principle you produce or review. These are not
+Run every check on every tenet you produce or review. These are not
 optional.
 
 ### Format checks
@@ -316,7 +316,7 @@ optional.
 - **Definition states one constraint clearly.** The constraint should be
   expressible as one sentence, though qualifying clauses (em-dashes,
   subordinate phrases) are fine when they carve out what IS and ISN'T a
-  violation. The test: if a qualifying clause can be removed and the principle
+  violation. The test: if a qualifying clause can be removed and the tenet
   still makes sense, the clause is elaboration that belongs in the rationale.
   If removing it changes what counts as a violation, it's part of the
   constraint.
@@ -339,8 +339,8 @@ optional.
   block with sub-bullets — the label reinforces that these are illustrative,
   not exhaustive.
   If two violations need genuinely different WHY explanations, you have two
-  principles — split them.
-  FAIL: "Code that doesn't follow the principle."
+  tenets — split them.
+  FAIL: "Code that doesn't follow the tenet."
   PASS: "Silent data corruption through default substitution" with
   `Examples:` sub-bullets showing specific instances.
 
@@ -354,7 +354,7 @@ optional.
 
 ### Actionability check
 
-This is the most important check. A principle must be actionable — there
+This is the most important check. A tenet must be actionable — there
 must be at least one clear way to follow it, even if that way requires
 judgment.
 
@@ -363,29 +363,29 @@ Ask two questions:
 1. **Can the violation be detected?** Could an agent or human look at
    current code or design and recognize "this is happening right now"?
    If detection requires omniscience (e.g., "this will cause a bug in
-   production"), the principle needs to be decomposed into something
+   production"), the tenet needs to be decomposed into something
    observable.
 
 2. **Can the violation be avoided by changing a specific behavior?**
    There must be at least one concrete thing you could do differently.
-   Not necessarily spelled out in the principle — that's what protocols
-   are for — but the principle must point toward action, not just toward
+   Not necessarily spelled out in the tenet — that's what protocols
+   are for — but the tenet must point toward action, not just toward
    wishing.
 
 The quick test: "If an agent violated this, could you point at the specific
 thing they did wrong and describe what they should have done instead?"
 
-- If yes → principle.
+- If yes → tenet.
 - If the answer is "they should have just been better" → aspiration, not
-  a principle. Reject it and help decompose it into something observable.
+  a tenet. Reject it and help decompose it into something observable.
 
-EXAMPLE — aspiration vs. principle:
+EXAMPLE — aspiration vs. tenet:
 
 Aspiration: "We don't release buggy code."
 Why it fails: no one can look at their work and know what to do differently.
 Detection requires knowing the future. There's no specific behavior to change.
 
-Decomposed into real principles:
+Decomposed into real tenets:
 - "Test-Driven Boundaries" — Every public API boundary has tests that
   exercise its contract before the implementation is considered complete.
 - "No Blind Deploys" — Every deployment is preceded by automated checks
@@ -393,13 +393,13 @@ Decomposed into real principles:
 
 ### Layer check
 
-Principles exist in a four-layer system. Make sure the principle is in the
+Tenets exist in a four-layer system. Make sure the tenet is in the
 right layer.
 
-- **Principles** — WHY: high-level, language-agnostic constraints that encode
+- **Tenets** — WHY: high-level, language-agnostic constraints that encode
   *why* something matters. Loaded into projects.
 - **Strategies** — HOW: abstract, language-agnostic techniques that make a
-  principle actionable. Used by protocol authors (human or AI) when creating
+  tenet actionable. Used by protocol authors (human or AI) when creating
   protocols — not loaded into projects.
 - **Protocols** — WHAT: tactical, language-specific implementation steps.
   Loaded into projects.
@@ -408,32 +408,32 @@ right layer.
 
 Check for these common misplacements:
 
-1. **Protocol disguised as principle.** If it prescribes specific steps
+1. **Protocol disguised as tenet.** If it prescribes specific steps
    or references a specific language/framework, it's a protocol. Nudge
-   the user to promote the *why* behind it into the principle.
+   the user to promote the *why* behind it into the tenet.
    FAIL: "Use table-driven tests when you have multiple input cases."
-   FIX: The principle is "Fail Early and Loud." The table-driven approach
+   FIX: The tenet is "Fail Early and Loud." The table-driven approach
    is a protocol that implements it via the "Parameterized Test Structure"
    strategy.
 
-2. **Strategy disguised as principle.** If it describes a multi-step
-   technique without language specifics, it's a strategy, not a principle.
-   Principles are one constraint. Strategies need space for steps.
+2. **Strategy disguised as tenet.** If it describes a multi-step
+   technique without language specifics, it's a strategy, not a tenet.
+   Tenets are one constraint. Strategies need space for steps.
    FAIL: "Identify variations, extract to data, write one test body,
    iterate."
-   FIX: The principle is "Highlight the Difference." The technique is a
+   FIX: The tenet is "Highlight the Difference." The technique is a
    strategy called "Parameterized Test Structure."
 
-3. **Guard disguised as principle.** If it can be checked mechanically
+3. **Guard disguised as tenet.** If it can be checked mechanically
    with zero human judgment, it's a guard. It belongs in a linter or CI.
    FAIL: "No if statements in test bodies."
-   FIX: This is a guard (linter rule). The principle behind it is
+   FIX: This is a guard (linter rule). The tenet behind it is
    "Fail Early and Loud" — the *why* is that conditionals in tests
    hide which case failed and make tests act as multiple tests in a
    trenchcoat.
 
-4. **Language-specific principle.** Principles are language-agnostic. If
-   the principle references Go interfaces, TypeScript generics, or any
+4. **Language-specific tenet.** Tenets are language-agnostic. If
+   the tenet references Go interfaces, TypeScript generics, or any
    language-specific construct, abstract up. Language-specific
    implementation belongs in protocols.
    FAIL: "All Go interfaces must be defined by the consumer."
@@ -450,35 +450,35 @@ After writing the rationale section, verify it covers:
 - **What this is NOT.** Carve out the exceptions — things that look like
   violations but aren't (e.g., explicit circuit breakers are not FEAL
   violations).
-- **Tensions resolved.** If this principle can conflict with another, the
+- **Tensions resolved.** If this tenet can conflict with another, the
   rationale says which yields and why.
-- **Cross-references present.** Every principle that relates to another must
+- **Cross-references present.** Every tenet that relates to another must
   have a `### Cross-references` bulleted list at the end of the rationale.
-  Format: `- **Principle Name** (tag): explanation.` Tags:
+  Format: `- **Tenet Name** (tag): explanation.` Tags:
   - `(complementary)` — two halves of the same concern, both needed together.
-  - `(upstream)` — this principle's outputs feed the referenced one's inputs.
+  - `(upstream)` — this tenet's outputs feed the referenced one's inputs.
   - `(tension)` — genuine pull in opposite directions; resolution documented.
-  - `(yields to)` — this principle defers when the referenced one applies.
+  - `(yields to)` — this tenet defers when the referenced one applies.
   Mirror policy: if A references B, B must reference A. Symmetric presence,
   asymmetric explanation — each side explains from its own perspective.
-  Cross-references are principle-to-principle only — do not reference
+  Cross-references are tenet-to-tenet only — do not reference
   strategies in the formal list (strategy mentions can appear in rationale
   prose).
   See `references/RELATIONSHIPS.md` for the full relationship graph and
   architectural/delivery family placement.
 - **No first-person.** The rationale should make sense if someone copies it
   who doesn't know the author.
-- **Lineage acknowledged.** If the principle builds on an existing concept
+- **Lineage acknowledged.** If the tenet builds on an existing concept
   (screaming architecture, SRP, fail-fast), say so and explain what's the
   same and what's different.
 
 ## After approval
 
-Once the user approves the principle(s), complete these steps in order.
+Once the user approves the tenet(s), complete these steps in order.
 
 ### 1. Uniqueness check
 
-Glob `principles/*.md` (excluding FORMAT.md). For each existing principle,
+Glob `tenets/*.md` (excluding FORMAT.md). For each existing tenet,
 compare the name and definition against the new one:
 
 - **Name collision** — Same or nearly identical name. Resolve before writing.
@@ -487,59 +487,59 @@ compare the name and definition against the new one:
 
 If no conflicts, proceed.
 
-### 2. Write the principle file
+### 2. Write the tenet file
 
-Write the principle to `principles/<kebab-name>.md` using the format from
-FORMAT.md — principle block followed by rationale section. The filename uses
-the kebab-case version of the principle name (e.g., "Fail Early and Loud" →
+Write the tenet to `tenets/<kebab-name>.md` using the format from
+FORMAT.md — tenet block followed by rationale section. The filename uses
+the kebab-case version of the tenet name (e.g., "Fail Early and Loud" →
 `fail-early-and-loud.md`).
 
-When writing multiple principles at once, write all files in parallel.
+When writing multiple tenets at once, write all files in parallel.
 
 ### 3. Update cross-references
 
-The new principle likely relates to existing ones. For each relationship:
+The new tenet likely relates to existing ones. For each relationship:
 
-1. Add a cross-reference entry in the new principle's `### Cross-references`
+1. Add a cross-reference entry in the new tenet's `### Cross-references`
    list with the appropriate tag and explanation.
-2. Add the mirror entry in the related principle's `### Cross-references`
-   list — same tag, explanation from the other principle's perspective.
-3. Update `principles/RELATIONSHIPS.md` — add the new principle to the
+2. Add the mirror entry in the related tenet's `### Cross-references`
+   list — same tag, explanation from the other tenet's perspective.
+3. Update `tenets/RELATIONSHIPS.md` — add the new tenet to the
    Mermaid graph and the architectural/delivery family placement diagram.
 
 If no clear relationships exist yet, that's fine — cross-references can be
 added later as the relationship becomes apparent through use. But check: a
-principle with zero cross-references to any of the 10 existing principles
+tenet with zero cross-references to any of the 10 existing tenets
 is unusual and worth a second look.
 
 ### 4. Offer strategy handoff
 
-Most principles need a strategy. The strategy is where the abstract technique
+Most tenets need a strategy. The strategy is where the abstract technique
 gets worked out before language-specific protocols are written. This ensures
 consistency across languages and prevents protocol authors from each
 independently inventing their own approach.
 
-The exception is pure-judgment principles — principles where the technique
-can't be abstracted into repeatable steps. These stay principles without
+The exception is pure-judgment tenets — tenets where the technique
+can't be abstracted into repeatable steps. These stay tenets without
 strategies or protocols.
 
-For principles that do get strategies, create a bead with type `task`,
-priority `3`, title "Create strategy for [Principle Name]", and description
+For tenets that do get strategies, create a bead with type `task`,
+priority `3`, title "Create strategy for [Tenet Name]", and description
 that includes:
-- Which principle(s) the strategy serves
+- Which tenet(s) the strategy serves
 - Expected protocols underneath (language-specific implementation steps)
 - Guard candidates (mechanical checks that could enforce protocol steps)
 - Cross-references to related strategies
 
-If the layer check caught a multi-step technique disguised as a principle,
+If the layer check caught a multi-step technique disguised as a tenet,
 note the extracted technique in the bead description — it's a head start
 for the strategy-editor.
 
 ## Edge cases
 
-- **Principle requires judgment and that's fine.** Not every principle needs
-  a strategy or protocols. Some principles are pure judgment calls that
-  stay principles forever because the technique can't be abstracted into
+- **Tenet requires judgment and that's fine.** Not every tenet needs
+  a strategy or protocols. Some tenets are pure judgment calls that
+  stay tenets forever because the technique can't be abstracted into
   repeatable steps. That's legitimate. The test is actionability, not
   mechanizability.
 
@@ -549,15 +549,15 @@ for the strategy-editor.
   violation be reworded to cover this? If so, reword instead of adding.
   When a failure mode has multiple concrete instances, use `Examples:`
   sub-bullets rather than separate violations. If two violations need
-  different WHY explanations, the principle should be split.
+  different WHY explanations, the tenet should be split.
 
 - **User wants to write a batch.** When converting a large document into
-  principles, work through the exploration and zoom-out steps first. Present
-  candidates in groups of 3-5 for review. Don't try to produce 15 principles
+  tenets, work through the exploration and zoom-out steps first. Present
+  candidates in groups of 3-5 for review. Don't try to produce 15 tenets
   at once — quality drops.
 
-- **Meta-principles.** Some principles constrain how you use other principles
-  (e.g., "Practicality Beats Purity" — when and how to break principles).
+- **Meta-tenets.** Some tenets constrain how you use other tenets
+  (e.g., "Practicality Beats Purity" — when and how to break tenets).
   These are legitimate and follow the same format. They're recognizable
-  because their violations describe principle-following behavior, not code
+  because their violations describe tenet-following behavior, not code
   behavior.

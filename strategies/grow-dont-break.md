@@ -1,5 +1,5 @@
 # Grow Don't Break
-PRINCIPLE: No Shared Fate
+TENET: No Shared Fate
 
 1. Classify the change to a public contract: additive or subtractive.
    - Additive: new fields, new endpoints, new enum values, new optional

@@ -1,5 +1,5 @@
 # Earned Abstraction
-PRINCIPLE: Earned Abstraction
+TENET: Earned Abstraction
 
 1. Before implementing, search for existing solutions to the same
    problem.
@@ -240,7 +240,7 @@ whether to abstract, BYN makes that decision visible through naming.
 ### Configuration bloat and Compute or Coordinate
 
 Step 4's configuration bloat check connects to the Compute or
-Coordinate principle. An abstraction with mode flags or
+Coordinate tenet. An abstraction with mode flags or
 caller-specific config subsets is usually mixing coordination and
 computation — the shared parts coordinate, the configured parts
 compute different things. Refactoring into named collaborators is
@@ -286,7 +286,7 @@ Two things that look like premature abstractions but aren't:
 choice, not a speculative abstraction. EA governs abstractions you
 create — your own interfaces, helpers, and generic frameworks — not
 dependencies you adopt. The question for dependencies is whether
-they serve the principles you live by, not whether you've seen three
+they serve the tenets you live by, not whether you've seen three
 cases.
 
 **Testability seams.** An interface defined so a coordinator can be

@@ -23,7 +23,7 @@ WHY: Every silent failure is a bug that compounds — the distance between cause
 
 ---
 <!-- Rationale below — read when creating strategies, reviewing, or
-questioning the principle. Not needed for routine application. -->
+questioning the tenet. Not needed for routine application. -->
 
 ## Rationale
 
@@ -60,7 +60,7 @@ because nothing told you which one triggered it. A loud assertion message says
 what was expected, what actually happened, and in what context, without
 requiring the developer to open the test source. The concrete mechanism varies
 by language and framework (diff output, format strings, custom matchers), but
-the principle is universal: if a failure message requires reading code to
+the tenet is universal: if a failure message requires reading code to
 understand what went wrong, it isn't loud enough.
 
 ### Explicit fallbacks are not violations
@@ -84,7 +84,8 @@ case calls the same code path) makes the test fail early and loud.
 Asserting on two fields when the object has ten is a quiet death for the other
 eight. If `ApplyDiscount` accidentally zeros out `TaxRate`, a check on
 `TotalPrice` and `Discount` won't notice. Whole-object comparison catches
-unintended side effects — it's the "fail loud" principle applied to assertions.
+unintended side effects — it's the "fail loud" half of this tenet applied
+to assertions.
 
 ### External boundary validation belongs here
 

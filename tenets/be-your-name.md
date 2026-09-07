@@ -20,11 +20,11 @@ WHY: A bad name is a lie that every caller pays for — each reader must re-deri
 
 ---
 <!-- Rationale below — read when creating strategies, reviewing, or
-questioning the principle. Not needed for routine application. -->
+questioning the tenet. Not needed for routine application. -->
 
 ## Rationale
 
-This principle is about playing with open cards. Code should be who it says it
+This tenet is about playing with open cards. Code should be who it says it
 is. A function named `calculateTax` should BE a tax calculator, not just carry
 that label while also validating input, fetching exchange rates, and writing
 audit logs. The name is a contract — every caller trusts it.

@@ -1,5 +1,5 @@
 # Unit Testing
-PRINCIPLE: Compute or Coordinate
+TENET: Compute or Coordinate
 
 1. Classify the code under test: does it call other objects and pass data
    between them? If classification is unclear, the code is likely mixing

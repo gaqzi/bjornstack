@@ -1,5 +1,5 @@
 # Intentionally Public
-PRINCIPLE: Structure Is Intent
+TENET: Structure Is Intent
 
 1. Default to unexported — new code starts without public access.
 2. Promote to public only when a consumer outside the package has a concrete, current need.

@@ -1,5 +1,5 @@
 # Whole-Object Assertion
-PRINCIPLE: Fail Early and Loud
+TENET: Fail Early and Loud
 
 1. Assert against the complete expected object, not selected fields.
    When an operation returns or modifies a structure, compare the full
@@ -70,7 +70,7 @@ questioning the strategy. Not needed for routine application. -->
 
 ### Why Fail Early and Loud, not Highlight the Difference
 
-Both principles are served by this technique, but FEAL is primary. The
+Both tenets are served by this technique, but FEAL is primary. The
 motivation is that unchecked fields are silent failures — asserting on
 2 fields when the object has 10 means 8 fields can silently corrupt
 without any test noticing. That's the same failure mode as a swallowed
@@ -136,7 +136,7 @@ these distinctions are already resolved.
 
 ### Mutual reinforcement with Test Data Builders
 
-WOA and TDB are mutually reinforcing but serve different principles:
+WOA and TDB are mutually reinforcing but serve different tenets:
 
 - **TDB → WOA**: Builders make whole-object assertion practical.
   Without builders, the expected value requires specifying every field
@@ -164,6 +164,6 @@ arbitrary test data).
   parameterized test uses whole-object assertion — the expected value
   per row is a builder with case-specific overrides.
 - **Isolated Test Execution**: ITE step 3 prescribes deterministic
-  factories. WOA step 2 extends the same principle to assertion
+  factories. WOA step 2 extends the same tenet to assertion
   values — determinism isn't just for setup, it's for expectations
   too.

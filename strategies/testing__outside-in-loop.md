@@ -1,5 +1,5 @@
 # Outside-In Development Loop
-PRINCIPLE: Many More Much Smaller Steps
+TENET: Many More Much Smaller Steps
 
 Happy path: the user accomplished what the feature intends. Unhappy
 path: the user tried but couldn't, given the feature's rules.
@@ -178,7 +178,7 @@ when an error occurs somewhere in the stack, the full path works and
 the user sees a designed response. Testing every collaborator's failure
 through the integration layer re-tests what the unit layer already
 covers, creating slow, redundant tests that violate the meta-strategy's
-"push tests to the cheapest layer" principle.
+"push tests to the cheapest layer" step.
 
 ### Relationship to the meta-strategy
 
