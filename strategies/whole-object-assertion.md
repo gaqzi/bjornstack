@@ -32,7 +32,7 @@ TENET: Fail Early and Loud
      captures, validates, and substitutes in one step prevents the
      "forgot to check it actually changed" failure mode.
 3. Construct the expected value with the same builder that created the
-   test input (Test Data Builders step 6). Apply only the overrides
+   test input (Test Data Builders step 7). Apply only the overrides
    that represent the operation's intended effect — unchanged fields
    carry the builder's defaults.
    - When no builder exists, construct the expected value inline with
@@ -149,15 +149,15 @@ WOA and TDB are mutually reinforcing but serve different tenets:
   tests, that's the signal from step 3's sub-bullet. WOA creates the
   demand that TDB fulfills.
 
-TDB step 6 ("use builders for both test input and expected values")
-and WOA step 3 aren't redundant. TDB step 6 says builders *can*
+TDB step 7 ("use builders for both test input and expected values")
+and WOA step 3 aren't redundant. TDB step 7 says builders *can*
 construct expected values. WOA step 3 says *why you'd want to* and
 what the overrides represent (the operation's intended effect, not
 arbitrary test data).
 
 ### Cross-references
 
-- **Test Data Builders**: Step 6 provides the builder mechanism for
+- **Test Data Builders**: Step 7 provides the builder mechanism for
   expected values. WOA provides the FEAL motivation and the assertion
   technique.
 - **Parameterized Test Structure**: Each row in a

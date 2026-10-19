@@ -24,8 +24,9 @@ TENET: No Shared Fate
    - Each error condition the interface contract specifies (not-found,
      duplicate, invalid input — whatever the types and documentation
      declare).
-   - Boundary behavior the contract implies (empty collections, zero
-     values, idempotent re-calls).
+   - Boundary behavior the contract implies, such as idempotent
+     re-calls. Unusual input values — empty collections, zero values
+     — come from the builders' edge cases (step 4).
    - Mutation scenarios verifying the implementation returns
      independent copies, not references to stored state.
    - When the boundary between contract behavior and implementation
@@ -35,14 +36,39 @@ TENET: No Shared Fate
      the interface contract is underspecified — flag for review.
    Use builders (per Test Data Builders) to construct scenario inputs
    and expected outputs — the compliance suite delegates object
-   construction, it doesn't own it.
-4. Each implementation provides its own factory and invokes the shared
+   construction, it doesn't own it. When a scenario needs one specific
+   edge case, use the builder's named variant for it, so the same
+   value is also in the collection every other suite iterates.
+4. Iterate over the edge cases of the builders for every type this
+   interface takes or returns (per Test Data Builders), not only the
+   realistic defaults. Run each case through the operations that take
+   it and, where the interface accepts it, read it back. Decide what
+   this interface promises: accept it, reject it, normalize it, or
+   record that it doesn't apply. What an edge case should produce is
+   the contract's decision, not the type's.
+   - Record the decision for each case by name in the suite,
+     including "doesn't apply". A case the suite has no decision for
+     fails, so a new edge case added to a builder stays red in every
+     suite until someone decides how that contract handles it.
+   - Assert what comes back, not just that the operation succeeded,
+     and not just equality. Equality can hide the exact difference an
+     edge case exists to show — the same instant in two different
+     time zones compares equal — so assert the properties the
+     contract cares about.
+   - When a type can hold something the realistic default never holds
+     and no builder declares it yet, add the edge case to the builder,
+     not to the suite. Values the contract never pinned down are where
+     two implementations are free to differ, and eventually will.
+5. Each implementation provides its own factory and invokes the shared
    test function. The factory handles infrastructure setup, data
    scoping (per Isolated Test Execution), and cleanup.
-5. Test implementation-specific behavior separately. Behavior beyond
+6. Test implementation-specific behavior separately. Behavior beyond
    the interface contract — performance characteristics, storage-
-   specific edge cases, migration compatibility — lives in the
-   implementation's own test file, not the compliance suite.
+   specific behavior, migration compatibility — lives in the
+   implementation's own test file, not the compliance suite. If a
+   consumer can observe it through the interface, it is contract even
+   when storage causes it: a reordered list or truncated precision
+   belongs in the compliance suite.
 
 OUTCOMES:
 - Every implementation of a boundary interface passes the same
@@ -55,6 +81,10 @@ OUTCOMES:
   inherits assumptions from an older version.
 - The compliance suite contains no implementation-specific logic —
   it tests what the interface promises, not how.
+- The suite iterates the edge cases of every type the interface takes
+  or returns and states what each should produce — every
+  implementation is held to the same answer for values a happy-path
+  fixture never reaches.
 - Test doubles used in coordinator tests pass the same suite as
   production implementations — coordinator test results don't
   depend on double fidelity.
@@ -70,6 +100,17 @@ MISAPPLICATIONS:
   implementation's own file — implementation-specific behavior
   tested in the compliance suite couples all implementations to
   one's details.
+- Every fixture a well-formed happy-path value — the same whole-second
+  timestamp, the same already-sorted list, in every scenario. The
+  suite is blind on every axis its fixtures hold constant.
+  Examples:
+  - A suite whose only list fixture holds one element. An
+    implementation that sorts on write and one that preserves
+    insertion order both pass.
+- Marking edge cases "doesn't apply" to turn the suite green.
+  The decision exists to force an explicit, considered judgment
+  about what the contract promises; a blanket dismissal leaves the
+  contract as unexamined as recording no decision at all.
 SKIP WHEN: Only one implementation exists with no test double and no
 concrete second implementation planned. The Unit Testing strategy
 covers direct testing without the indirection of a shared suite.
@@ -151,8 +192,8 @@ in-memory does it with a sort and slice. The implementations are
 fundamentally different, but the suite verifies they agree on what,
 not how.
 
-Implementation-specific tests (step 5) cover what the compliance suite
-can't: query performance under load, database-specific quirks (JSONB
+Implementation-specific tests (step 6) cover what the compliance suite
+can't: query performance under load, database-specific behavior (JSONB
 indexing behavior, connection pool exhaustion), retry semantics, cache
 eviction timing. These are real concerns about how the implementation
 fulfills the contract.
@@ -208,10 +249,10 @@ GDB, not NSF — noted as a cross-cutting benefit, not an outcome.
 ### Cross-references
 
 - **Isolated Test Execution**: ITE provides the isolation technique
-  the factory parameter implements. Step 4 explicitly references ITE.
+  the factory parameter implements. Step 5 explicitly references ITE.
 - **Test Data Builders**: TDB provides the builder pattern for
-  scenario inputs and expected outputs. Step 3 explicitly references
-  TDB.
+  scenario inputs and expected outputs (step 3), and the edge cases
+  step 4 iterates over.
 - **Unit Testing**: CoC's classification creates the boundary
   interfaces that compliance suites test. The trust chain above
   explains how compliance suites make Unit Testing's test doubles

@@ -42,12 +42,30 @@ TENET: Highlight the Difference
    When multiple tests need the same cluster of field changes,
    extract a method that applies all related fields together.
    Common categories include lifecycle states ("Persisted",
-   "Expired"), validation states ("Invalid"), and business-case
-   states ("Grandfathered", "OverLimit") — but name the state for
-   what it represents in the domain, not for which category it
-   falls into. State methods compose with each other and with
-   single-field modifiers.
-6. Use builders for both test input and expected values. The same
+   "Expired") and business-case states ("Grandfathered",
+   "OverLimit") — but name the state for what it represents in the
+   domain, not for which category it falls into. State methods
+   compose with each other and with single-field modifiers.
+6. Declare the builder's edge cases: everything that isn't the happy
+   path — invalid, unexpected, or merely quirky values a consumer has
+   to handle, or at least be aware of. "Edge cases" is the one name
+   for all of them.
+   - Each edge case is a named variant built with the modifiers and
+     state methods above. A test that needs one specific case calls
+     the variant directly.
+   - The builder also returns every edge case as a collection of name
+     and fresh builder, for tests that must be robust to all of them:
+     a `NoEmail` variant shows up as `NoEmail: <the builder NoEmail()
+     returns>`. The collection is a convenience for iterating, not a
+     second place to define cases. Returning builders lets the caller
+     add its own overrides, such as a unique identifier, before
+     building.
+   - Find them by walking every field and asking what it can hold
+     that the realistic default never does. A missing required
+     field, empty and absent collections, timestamps in two different
+     time zones, data as an older version stored it — these
+     illustrate what the walk turns up, not a list to copy.
+7. Use builders for both test input and expected values. The same
    builder that creates setup data constructs the expected object
    for assertions. When a test overrides one field, the expected
    value uses the same builder with the same overrides — making the
@@ -66,8 +84,11 @@ OUTCOMES:
   the change — no test shows additional setup noise for fields it
   doesn't care about.
 - Named state methods describe domain concepts ("Persisted",
-  "Invalid", "Grandfathered"), not field combinations — reading a
+  "Expired", "Grandfathered"), not field combinations — reading a
   test reveals intent, not mechanics.
+- Every builder declares its edge cases by name, and its collection
+  of them always matches the named variants — a test reaches every
+  known edge case through one call.
 - Assertions use the same builders as setup, making each assertion
   highlight exactly what the operation changed.
 
@@ -118,9 +139,10 @@ important for nested structures like slices and maps.
 
 **Fail Early and Loud** — Production-realistic defaults prevent bugs
 where tests pass because they exercise code paths that only exist
-with zero or empty values. The "Invalid" state method makes FEAL
-explicit in the other direction: a test calling "Invalid" is loudly
-declaring "this is the error path."
+with zero or empty values. Named edge cases make FEAL explicit in
+the other direction: a test using "no email" is loudly declaring
+which rule it expects to be broken, where a single catch-all invalid
+object can't say which.
 
 If a builder accumulates many state methods, that's a signal about
 the domain type, not the builder — a type with ten distinct named
@@ -134,7 +156,7 @@ composes a user builder, the build step sets the order's user
 identifier to the user's identifier and handles any mechanical
 relationship setup the domain requires.
 
-This makes step 6 more powerful than it appears: when the same
+This makes step 7 more powerful than it appears: when the same
 builder constructs expected values, relationships are resolved
 identically. Tests don't manually wire expected foreign keys — the
 builder handles it for both setup and assertions, so assertions
@@ -165,14 +187,16 @@ concept, not a reason for a shared base class.
 
 ### Cross-references
 
-- **Whole-Object Assertion** (downstream): Builds on step 6 —
+- **Whole-Object Assertion** (downstream): Builds on step 7 —
   asserting against the full builder output catches unintended
   side effects.
 - **Parameterized Test Structure** (downstream): Uses builders to
   create the varying inputs in each test case row.
 - **Compliance Test Suites** (downstream): Uses builders to
   construct the state needed for compliance verification across
-  implementations.
+  implementations, and iterates the edge cases (step 6) of the types
+  its interface takes or returns, so each implementation gives the
+  same answer for them.
 - **Isolated Test Execution**: ITE steps 2-3 prescribe factories
   with deterministic, realistic data. This strategy provides the
   structural pattern for those factories.
