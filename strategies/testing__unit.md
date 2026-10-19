@@ -20,7 +20,8 @@ TENET: Compute or Coordinate
       coordinator constructs its own dependencies or reads global state,
       those are hidden collaborators — they can't be replaced in tests.
    3. Replace every direct collaborator with a test double. All of them,
-      never a subset.
+      never a subset. Where a double lives, and when to reuse one,
+      follows Test Data Builders step 2.
    4. Write N+1 tests: one error-path test per collaborator that can
       fail, plus one happy-path test where all collaborators succeed.
       Each error-path test verifies that this coordinator's own error
@@ -169,7 +170,7 @@ are the only layer and this strategy covers it.
   compose: classify, then test through the public surface.
 - **Compliance Test Suites**: CTS verifies interface implementations
   using the boundary interfaces that UT's compute/coordinate classification
-  creates. The trust chain runs through UT's test doubles.
+  creates. The trust chain runs through UT's stateful test doubles.
 - **Parameterized Test Structure**: PTS provides the table-driven
   structure for computation tests. UT classifies code as computation; PTS
   structures the resulting test cases into input/expected/assertion rows.

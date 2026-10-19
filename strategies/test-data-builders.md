@@ -17,6 +17,26 @@ TENET: Highlight the Difference
    project. The entry point provides discoverability — all available
    builders in one place — and the composition reads as a sentence
    describing the test's data: "a user, persisted, with email X."
+   - Test doubles (Unit Testing step 3.3) stay in their test file.
+     Each consumer depends only on the operations it calls, so its
+     double is a few lines, often a single function. Copying one is
+     fine.
+   - The exception is a stateful double: one for a collaborator the
+     code under test calls more than once, where a later call's
+     result depends on an earlier one (marks a message read, then
+     fetches unread). Fetching, then marking what was fetched, is not
+     stateful: no call's result depends on another.
+   - A stateful double implements the interface the real
+     implementation provides, and lives under the same entry point
+     once a second test file in that interface's domain needs it, or
+     from the first test outside that domain. It moves only once it
+     passes that interface's compliance suite (per Compliance Test
+     Suites), since tests in other domains rely on it without
+     reading it.
+   - Before writing a stateful double, look under the entry point,
+     then search the test files for a double standing in for the
+     same real implementation. One found in another test file moves
+     now; don't copy it.
 3. When a builder constructs a related domain object, delegate to
    that object's builder. An order builder that needs a user uses
    the user builder, not inline construction. Defaults stay
@@ -65,6 +85,10 @@ TENET: Highlight the Difference
      field, empty and absent collections, timestamps in two different
      time zones, data as an older version stored it — these
      illustrate what the walk turns up, not a list to copy.
+   - A type with no builder, such as a bare timestamp, still declares
+     its edge cases under the entry point, as a collection of name
+     and value, once an interface with a compliance suite takes or
+     returns it.
 7. Use builders for both test input and expected values. The same
    builder that creates setup data constructs the expected object
    for assertions. When a test overrides one field, the expected
@@ -91,6 +115,10 @@ OUTCOMES:
   known edge case through one call.
 - Assertions use the same builders as setup, making each assertion
   highlight exactly what the operation changed.
+- No test file holds a copy of another file's stateful test double —
+  one used by a second test file in its interface's domain, or
+  outside that domain, lives under the entry point and passes its
+  compliance suite.
 
 MISAPPLICATIONS:
 - Incomplete defaults — a builder that requires callers to set most
@@ -176,7 +204,9 @@ evolution fragility — is higher than for most abstractions:
 EA step 1 still applies: before creating a builder, check whether
 one already exists. The progression before a shared builder is:
 inline construction (one test) → local helper (multiple tests, one
-file) → shared builder (multiple files or cross-domain).
+file) → shared builder (multiple files or cross-domain). Stateful test
+doubles climb the same progression and need a compliance suite before
+they move; other doubles stay in their test file (step 2).
 
 ### Builder composition, not inheritance
 
@@ -204,6 +234,7 @@ concept, not a reason for a shared base class.
   builders — see threshold discussion above.
 - **Be Your Name**: State method naming is BYN applied to test
   helpers.
-- **Domain-First Packaging**: Builders live in a shared package
-  (step 2), not per-domain. DFP governs the domain types builders
-  construct, not where builders themselves live.
+- **Domain-First Packaging**: Builders and shared stateful doubles live
+  in a shared package (step 2), not per-domain. DFP governs the
+  domain types builders construct, not where builders themselves
+  live.

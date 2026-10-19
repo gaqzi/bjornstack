@@ -7,11 +7,12 @@ TENET: No Shared Fate
      Redis vs. SQS vs. RabbitMQ as message queues, Postgres vs.
      SQLite as stores. The suite is written once; each
      implementation proves compliance.
-   - A hand-rolled in-memory test double used in coordinator tests
-     also counts — without shared verification, coordinator tests
-     have shared fate with the double's fidelity.
-   - One implementation, no test double → test directly per Unit
-     Testing strategy.
+   - A stateful test double (per Test Data Builders step 2) also
+     counts — without shared verification, coordinator tests have
+     shared fate with the double's fidelity. Spies and stubs that
+     only record calls or return fixed values don't count.
+   - One implementation, no stateful test double → test directly per
+     Unit Testing strategy.
    - Two or more → continue at step 2.
 2. Write a shared test function alongside the interface definition,
    parameterized by a factory. The factory creates a ready-to-use
@@ -39,8 +40,8 @@ TENET: No Shared Fate
    construction, it doesn't own it. When a scenario needs one specific
    edge case, use the builder's named variant for it, so the same
    value is also in the collection every other suite iterates.
-4. Iterate over the edge cases of the builders for every type this
-   interface takes or returns (per Test Data Builders), not only the
+4. Iterate over the edge cases declared for every type this interface
+   takes or returns (per Test Data Builders step 6), not only the
    realistic defaults. Run each case through the operations that take
    it and, where the interface accepts it, read it back. Decide what
    this interface promises: accept it, reject it, normalize it, or
@@ -48,17 +49,18 @@ TENET: No Shared Fate
    the contract's decision, not the type's.
    - Record the decision for each case by name in the suite,
      including "doesn't apply". A case the suite has no decision for
-     fails, so a new edge case added to a builder stays red in every
-     suite until someone decides how that contract handles it.
+     fails, so a newly declared edge case stays red in every suite
+     until someone decides how that contract handles it.
    - Assert what comes back, not just that the operation succeeded,
      and not just equality. Equality can hide the exact difference an
      edge case exists to show — the same instant in two different
      time zones compares equal — so assert the properties the
      contract cares about.
    - When a type can hold something the realistic default never holds
-     and no builder declares it yet, add the edge case to the builder,
-     not to the suite. Values the contract never pinned down are where
-     two implementations are free to differ, and eventually will.
+     and nothing declares it yet, add the edge case where that type's
+     edge cases are declared, not to the suite. Values the contract
+     never pinned down are where two implementations are free to
+     differ, and eventually will.
 5. Each implementation provides its own factory and invokes the shared
    test function. The factory handles infrastructure setup, data
    scoping (per Isolated Test Execution), and cleanup.
@@ -85,8 +87,8 @@ OUTCOMES:
   or returns and states what each should produce — every
   implementation is held to the same answer for values a happy-path
   fixture never reaches.
-- Test doubles used in coordinator tests pass the same suite as
-  production implementations — coordinator test results don't
+- Stateful test doubles used in coordinator tests pass the same suite
+  as production implementations — coordinator test results don't
   depend on double fidelity.
 
 MISAPPLICATIONS:
@@ -94,7 +96,7 @@ MISAPPLICATIONS:
   counts, query plans, cache hit rates. The suite tests what goes
   in and what comes out, not how.
 - A compliance suite for a single-implementation interface with no
-  test double — the technique earns its keep through shared
+  stateful test double — the technique earns its keep through shared
   verification.
 - A suite so exhaustive it duplicates tests that belong in the
   implementation's own file — implementation-specific behavior
@@ -111,9 +113,10 @@ MISAPPLICATIONS:
   The decision exists to force an explicit, considered judgment
   about what the contract promises; a blanket dismissal leaves the
   contract as unexamined as recording no decision at all.
-SKIP WHEN: Only one implementation exists with no test double and no
-concrete second implementation planned. The Unit Testing strategy
-covers direct testing without the indirection of a shared suite.
+SKIP WHEN: Only one implementation exists with no stateful test double
+and no concrete second implementation planned. The Unit Testing
+strategy covers direct testing without the indirection of a shared
+suite.
 
 ---
 <!-- Rationale below — read when creating protocols, reviewing, or
@@ -140,7 +143,9 @@ any implementation and know it meets the same behavioral standard.
 
 This is the strategy's most important non-obvious consequence. Unit
 Testing step 3.3 says "replace every direct collaborator with a test
-double." But what makes those doubles trustworthy?
+double." A spy or stub returns only what its test gives it, so the
+test can see everything it relies on. A stateful double encodes how
+operations affect each other. What makes that trustworthy?
 
 The compliance suite. When both the Postgres adapter and the in-memory
 double pass the same suite, coordinator tests that use the in-memory
