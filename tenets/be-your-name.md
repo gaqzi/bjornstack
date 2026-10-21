@@ -15,6 +15,13 @@ VIOLATIONS:
   Examples:
   - "TestService_HappyPath" — doesn't say what scenario is being
     tested or what outcome is expected.
+- A short name read far from where it is defined — the reader has to
+  go and find what it means before the line makes sense.
+  Examples:
+  - A two-letter field defined in one file and used across a module:
+    reading one function means learning the whole module first.
+  - An abbreviation in a public name, read at every call site with no
+    definition in sight.
 
 WHY: A bad name is a lie that every caller pays for — each reader must re-derive what the author already knew.
 
@@ -44,6 +51,18 @@ implementation to know what it does. If 10 developers read that function over a
 year, you've spent 10x the time the author saved by not thinking of a good
 name. And some of those 10 will misunderstand it, creating bugs that compound
 further.
+
+### Name length grows with distance
+
+A name has to carry its meaning as far as it travels. A field read across
+a module needs a full name. Descriptive names are the default. A short
+name works only where its definition is in sight: a loop index two lines
+from its declaration, or an algorithm's parts where the code reads better
+as a shape — index arithmetic over a buffer, a formula — defined by an
+overview in the same scope (a function, a type, a file header) and used
+inside that scope alone. A reader should never have to understand a
+whole module to read one variable. This is the scope rule from Robert C.
+Martin's Clean Code: the longer a name's reach, the longer the name.
 
 ### Test names are specifications
 

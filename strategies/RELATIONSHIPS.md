@@ -31,6 +31,7 @@ graph TD
         DFP["Domain-First Packaging"] <--> BC["Boundary Communication"]
         IP["Intentionally Public"]
         SOE["Scrub on Entry"]
+        SIO["Say It Once"]
     end
 
     subgraph evolution [Evolution]
@@ -45,6 +46,9 @@ graph TD
     BC --> CT
     DFP <--> TDB
     DFP <--> SOE
+    SIO --> SOE
+    SIO --> ToC
+    SIO --> EA
     UT <--> DFP
 ```
 
@@ -59,7 +63,7 @@ cross-references are authoritative, not this diagram.
 │                ┃                          ┃                  │
 │  DFP  ·  IP    ┃  TLS  ·  UT  ·  BBIB     ┃  GDB  ·  FYC     │
 │                ┃  OILD  ·  CT             ┃  ToC             │
-│  SOE           ┃  ITE  ·  TDB  ·  PAST    ┃                  │
+│  SOE  ·  SIO   ┃  ITE  ·  TDB  ·  PAST    ┃                  │
 │                ┃  PTS  ·  WOA  ·  CTS     ┃                  │
 │                ┃                          ┃                  │
 │           BC ··╂··························╂·· EA             │
@@ -68,7 +72,7 @@ cross-references are authoritative, not this diagram.
 ```
 
 **Structure** — how code is organized: domains, boundaries, visibility,
-validation.
+validation, and where its reasoning is written down.
 
 **Testing** — how code is verified: test layer selection, case structure,
 data builders, assertions.
