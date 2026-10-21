@@ -61,6 +61,40 @@ bd close <id>         # Complete work
 
 Load the /beads-workflow skill before any `bd` command, when a bead ID appears in conversation, or when implementation work produces findings worth logging. The skill has checklists for creating, claiming, updating, and closing beads — follow them. The goal: every bead should establish provenance — what was tried, what failed, why we ended up here — so future readers can evaluate the reasoning, not just see the conclusion.
 
+## LAYER REVIEWS
+
+When drafting or changing a tenet, strategy, protocol or guard:
+
+- Draft it yourself from a two-sentence statement of the finding.
+  Subagents review; they don't write.
+- Write in plain words a reader without this session's context can
+  follow: no invented terms, no references to removed text, no
+  rationale that only makes sense if you know the discussion — that
+  history belongs in the bead.
+- Review with independent subagents, each in its own role:
+  - Blind reader: sees only the draft (and the tenet it serves),
+    applies it to concrete cases you supply, and reports what it
+    decided versus guessed. Use a small, fast model on purpose:
+    where it guesses, the text relies on judgment.
+  - Consistency check: reads the draft against its bead and the
+    neighbouring layers, Rationale sections included, for
+    contradictions and stale text.
+  - Adversarial pass, when rules interact or the change is large:
+    the strongest model, ideally against a worked example.
+- When a change is hard to judge in the abstract, have one subagent
+  build a worked example, another review it, and show the owner.
+- Select findings; don't apply them all. Rounds converge on edge
+  cases.
+- Re-review after the last substantive revision before calling a
+  draft clean.
+- Keep the diff small, show it to the owner in place, and commit only
+  after the owner agrees.
+
+Pick model and effort by what the role needs: reasoning about how
+rules interact needs the strongest model and more effort; checking
+text against files needs a solid middle tier; reading cold works
+best on a small model. Models change; the roles don't.
+
 ## COMMIT STYLE
 
 Load the /commit-style skill before writing any commit message. Tim Pope style: imperative mood, capitalized, 50-char subject hard limit, no trailing period, no conventional commit prefixes (feat:, fix:, etc.). Wrap body at 72 chars. Always use HEREDOC formatting.
