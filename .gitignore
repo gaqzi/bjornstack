@@ -8,3 +8,6 @@
 
 # Beads / Dolt files (added by bd init)
 .beads/proxieddb/
+
+# Beads interaction log (local only)
+.beads/interactions.jsonl
