@@ -201,3 +201,7 @@ Contract Testing proves they hold.
 - **Flag Your Changes**: FYC's flags live within BC's ownership model —
   a pricing flag lives in the pricing boundary. Flags don't create new
   boundaries; they sit within existing ones.
+- **Failure Identity**: the failures a caller branches on are part of
+  the contract step 3 makes explicit. FI says which failures get an
+  identity, and that an outside system's identity never becomes part
+  of the contract: the unit that calls it translates.

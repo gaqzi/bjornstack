@@ -266,3 +266,6 @@ GDB, not NSF — noted as a cross-cutting benefit, not an outcome.
   *external* parties. Compliance testing verifies implementations of
   *internal* interfaces. Both prevent shared fate, at different
   boundaries.
+- **Failure Identity**: the error conditions step 3 exercises are the
+  interface's identified failures; FI step 6 says how to assert them:
+  by identity and data, never by message wording.
