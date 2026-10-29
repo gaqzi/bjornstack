@@ -11,3 +11,6 @@
 
 # Beads interaction log (local only)
 .beads/interactions.jsonl
+
+# Local scratch space, not tracked
+tmp/
