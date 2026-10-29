@@ -3,6 +3,11 @@ TENET: Be Your Name
 
 1. Position tests outside the package boundary — they interact through
    exported symbols only, the same way external consumers would.
+   - Good: the test reaches the package only as a caller can; such as
+     passing real values to an exported function and checking what it
+     returns, or handing test doubles to a coordinator through the
+     constructor a real caller uses.
+   - Bad: a test that calls an unexported helper to check its result.
 2. When a test can't exercise behavior through the public surface,
    classify what it needs to reach:
    - The behavior belongs in the package's contract but isn't exported →

@@ -5,12 +5,22 @@ TENET: Don't Fly Blind
    the system — HTTP endpoints, browser interactions, CLI commands. The test
    sends a request through that interface and asserts on what comes back. No
    calling internal functions or importing internal packages.
+   - Good: the test reaches the system only as a consumer does; such
+     as an HTTP request to the orders endpoint, or a CLI command run
+     and its output read.
+   - Bad: seeding an order through the repository package before
+     calling the endpoint.
 2. Run real internal components, stub everything outside the service
    boundary. The service's database, cache, sidecar workers, and
    background processors run for real. Other services, third-party APIs,
    and managed infrastructure are stubbed or replaced with local
    equivalents. The line: if it deploys as part of this service, it's
    real; if it's across a service boundary, it's stubbed.
+   - Good: real if it deploys with this service; such as the
+     service's own database and workers running for real, or a queue
+     replaced by a local equivalent like localstack.
+   - Bad: the suite needs another service running because the same
+     team owns it, though it deploys separately.
 3. Scope each test's data for parallel execution. Each test creates its
    own isolated slice and operates entirely within it. Tests must not
    assume an empty database or depend on data from other tests. The

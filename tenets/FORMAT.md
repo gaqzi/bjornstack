@@ -5,7 +5,8 @@ encode *why* something matters. They sit at the top of a four-layer system:
 Tenet (WHY) → Strategy (HOW) → Protocol (WHAT) → Guard (CHECK).
 
 Tenets are not prose rules or tutorials. They are named concepts with a
-tight definition, violations, and a one-line why.
+tight definition, Good and Bad cases where they help, violations, and a
+one-line why.
 
 ## Format
 
@@ -18,6 +19,10 @@ Every tenet file has two parts: a tight **tenet block** and a
 # [Tenet Name]
 [One constraint, clearly stated.]
 
+- Good: [Optional. The property that makes it good]; such as [one
+  form], or [a contrasting form].
+- Bad: [Optional. A case on the wrong side of the boundary.]
+
 VIOLATIONS:
 - [Failure mode — concrete, recognizable, language-agnostic.]
   Examples:
@@ -28,6 +33,24 @@ VIOLATIONS:
 
 WHY: [One sentence: the mechanism, what goes wrong without it.]
 ```
+
+### Good and Bad cases
+
+A tenet states its constraint first. It may then carry Good and Bad
+cases that illustrate the constraint; they never replace it. A Good case
+names the property that makes it good and shows it in two contrasting
+forms (contrasting: forms that differ in kind, not only in detail), so
+the reader learns the property, not one way to reach it. Bad cases and
+VIOLATIONS mark the boundary.
+
+Delete the cases and the constraint must still apply on its own. A case
+must not add a condition the constraint doesn't state, or drop one it
+does; if it needs to, change the constraint.
+
+- FAIL: "Good: exit at startup when a config key is missing."
+- PASS: "Good: a missing required value is reported where it is first
+  noticed, naming the value; such as refusing to start, or failing the
+  one request that needed it."
 
 ### Rationale section
 
@@ -90,6 +113,15 @@ For the full relationship graph and family placement, see
 Code must surface problems visibly and early rather than absorbing them into
 implicit defaults, silent fallbacks, or hidden paths.
 
+- Good: nothing continues as if the problem were not there, and the
+  failure names what is wrong; such as startup stopping with "config
+  /etc/app.yaml: missing key db.url", or a CSV import rejected with
+  every bad row listed.
+- Good: a fallback someone chose, that signals it is in use; such as a
+  cache serving last hour's prices marked as stale, or a degraded flag
+  on the service's health check.
+- Bad: a price lookup fails and the page shows a price of zero.
+
 VIOLATIONS:
 - Silent data corruption through default substitution
   Examples:
@@ -124,27 +156,38 @@ breakers are not violations, how conditional test logic belongs here, etc.]
 - The **definition** states one constraint clearly. If you can't say it in one
   sentence (with qualifying clauses as needed), you don't understand the
   tenet yet — or you have two tenets hiding in one.
-- The **violations** are the most important part. They give the agent failure
-  modes to recognize, not just a rule to memorize. Violations must be
-  language-agnostic: "object" not "struct", "hashmap" not "hash". See
-  "The case for violations only" below for the design theory.
+- The **Good and Bad cases** show where the constraint applies and where it
+  stops. Each Good case names a property, so the agent learns what makes
+  an answer acceptable rather than one answer to copy.
+- The **violations** give the agent failure modes to recognize, not just a
+  rule to memorize. Violations must be language-agnostic: "object" not
+  "struct", "hashmap" not "hash". See "Good cases, Bad cases and
+  violations" below for the design theory.
 - The **why** encodes the mechanism, so agents can apply the tenet in novel
   situations rather than just pattern-matching on familiar ones.
 - The **rationale** captures the thinking for future editors: how ambiguous
   terms should be interpreted, what doesn't count as a violation, how this
   tenet relates to others. It's institutional memory.
 
-## The case for violations only
+## Good cases, Bad cases and violations
 
-The violation-only format is a guiding theory we're testing: constraining by
-defining the boundary works better than prescribing the interior. See
-[WORKFLOW.md](../docs/WORKFLOW.md#design-theory-boundary-based-constraints) for
-the full system-level theory. This section covers what it means for writing
-violations.
+See [WORKFLOW.md](../docs/WORKFLOW.md#design-theory-procedures-boundaries-and-examples)
+for the system-level reasoning. This section covers what it means for
+writing a tenet.
 
-**Good takes many forms.** Showing examples of correct code risks implying
-only those forms are valid. Violations define what's prohibited and leave the
-solution space open — everything that doesn't violate a tenet is allowed.
+**A Good case names the property, in two forms.** Good takes many forms.
+When blind readers applied tenets to concrete cases, a Good case that
+named a single form narrowed them: they took that form as the only valid
+answer and doubted other valid ones. A Good case that named the property
+and showed two contrasting forms never ruled out a valid answer. Readers
+often copy a Good form outright; two forms that differ keep the copy
+within the property.
+
+**Violations alone leave readers guessing.** Violations say what is
+wrong but not that a nearby choice is fine. In a small comparison,
+readers given only violations guessed more often, and a violation
+example made them doubt a valid answer that resembled it. Readers who
+also had Good cases decided more cases and ruled out none.
 
 **Each violation must be a distinct failure mode.** Before adding a violation,
 check whether rewording an existing one would cover the same ground — if so,
@@ -199,7 +242,8 @@ hierarchy.
 ## Source
 
 Informed by Steve Yegge's Gas Town/Beads approach: named tenets (GUPP,
-ZFC, MEOW) with terse definitions that agents invoke by name. The violation
-example format is our own addition based on what makes tenets actionable
-rather than decorative. The rationale section was added to capture institutional
-memory — the reasoning that future editors need to make good updates.
+ZFC, MEOW) with terse definitions that agents invoke by name. The Good,
+Bad and violation format is our own addition based on what makes tenets
+actionable rather than decorative. The rationale section was added to
+capture institutional memory — the reasoning that future editors need to
+make good updates.

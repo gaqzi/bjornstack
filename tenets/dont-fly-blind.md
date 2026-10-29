@@ -1,6 +1,14 @@
 # Don't Fly Blind
 A change is not released until there are signals — tests, metrics, alerts —
 that will show when it's not working.
+
+- Good: before release, a signal that will show whether the change is
+  working, scaled to the change's risk; such as a success-rate alert
+  and dashboard for a new payment flow, or the existing tests for a
+  refactor that changes no behavior.
+- Bad: a new feature turned on in production with "we'll add
+  monitoring next sprint".
+
 VIOLATIONS:
 - Shipping a change with no failure signals
   Examples:

@@ -6,6 +6,9 @@ TENET: No Shared Fate
    run all test operations within that scope. When no natural scoping
    identity exists (global configuration, system-level settings), use a
    unique namespace or key prefix.
+   - Good: everything the test reads or writes sits under its own
+     identity; such as a fresh tenant whose documents only that test
+     queries, or a unique key prefix on a global setting.
    - When the natural scope isn't obvious: list the entities the test
      creates or modifies, identify which entity other operations are
      queried through, and scope under that entity.
@@ -16,6 +19,8 @@ TENET: No Shared Fate
    that produces mutable state shared between tests. (Package-level
    constants and read-only configuration are fine — shared immutable
    state doesn't create coupling.)
+   - Bad: a user created once in suite setup that several tests
+     modify.
 3. Default factories to deterministic, production-realistic data. Given
    the same scoped identity, the factory should produce the same state
    every time — realistic field values, correct relationships,
@@ -26,6 +31,8 @@ TENET: No Shared Fate
    visible at a glance. Secondary unique fields (emails, slugs) should
    incorporate the scoped identity from step 1 to prevent collisions
    across tests.
+   - Bad: every user gets `Name: "test"`; two properly scoped tests
+     still collide on a unique email.
 4. Validate parallel safety. Tests must pass when run concurrently with
    arbitrary other tests, on a database containing arbitrary other test
    data. If a test fails only when run alone (requires a clean database)

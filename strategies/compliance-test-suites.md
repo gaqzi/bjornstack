@@ -19,6 +19,9 @@ TENET: No Shared Fate
    implementation with isolated state per call. The test function
    exercises the interface's behavioral contract — what the interface
    promises, not how any implementation fulfills it.
+   - Good: no call sees or changes state any other call writes; such
+     as a fresh in-memory instance per call, or a shared database
+     scoped to a namespace unique to that call.
 3. Structure scenarios around the interface's operations. For each
    operation the interface declares:
    - One success path exercising the core behavior.
@@ -56,11 +59,18 @@ TENET: No Shared Fate
      edge case exists to show — the same instant in two different
      time zones compares equal — so assert the properties the
      contract cares about.
+     - Good: the assertion checks the property the contract promises
+       for that case; such as the zone a timestamp comes back in, when
+       the contract keeps zones, or the order of a list, when the
+       contract promises an order.
    - When a type can hold something the realistic default never holds
      and nothing declares it yet, add the edge case where that type's
      edge cases are declared, not to the suite. Values the contract
      never pinned down are where two implementations are free to
      differ, and eventually will.
+     - Bad: a millisecond timestamp, which no builder declares yet,
+       written inline in one suite's scenario; no other suite whose
+       interface takes that type ever sees it.
 5. Each implementation provides its own factory and invokes the shared
    test function. The factory handles infrastructure setup, data
    scoping (per Isolated Test Execution), and cleanup.

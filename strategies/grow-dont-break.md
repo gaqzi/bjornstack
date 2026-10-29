@@ -7,6 +7,9 @@ TENET: No Shared Fate
    - Subtractive: removing, renaming, narrowing types, changing the
      meaning of what exists — including adding a field that alters the
      behavior of existing ones.
+   - Bad: calling a new `priority` field additive when it changes how
+     the existing `status` transitions work — no field was removed, but
+     the meaning of an existing one changed.
 2. Apply additive changes directly — they cannot break existing consumers.
    A consumer that doesn't know about a new field ignores it; a consumer
    that doesn't call a new endpoint never notices it.
@@ -15,6 +18,10 @@ TENET: No Shared Fate
    - A rename becomes a new field plus deprecation of the old.
    - A behavior change becomes a new endpoint with the new behavior.
    - A type narrowing becomes a new stricter type alongside the original.
+   - Good: consumers of the old version notice nothing while the new one
+     exists; such as a renamed field added beside the old one, or a v1
+     endpoint kept as a thin wrapper that calls v2 and maps the response
+     back to v1's shape.
 4. For internal contracts (you control all callers): grow then subtract —
    migrate every caller to the new version, then remove the old.
    - Ordering matters: add new, migrate callers, remove old — never
@@ -24,6 +31,10 @@ TENET: No Shared Fate
    - No deprecation period needed because you can change both sides.
    - When migration spans multiple PRs, track the phases explicitly so
      the old version isn't forgotten.
+   - Good: the old version is removed only after its last caller has
+     moved; such as add, migrate, and remove within one PR, or the new
+     version behind a flag, made the default once every caller uses it,
+     then the flag removed along with the old path.
 5. For external contracts (library consumers, API clients you don't
    control): deprecate rather than break. Mark the old version as
    deprecated, document its replacement, and let it continue to function.

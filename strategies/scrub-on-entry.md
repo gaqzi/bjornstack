@@ -3,7 +3,11 @@ TENET: Fail Early and Loud
 
 1. Identify the system boundary — where does external data cross into your domain?
 2. Classify each incoming field: acted-on (your code branches on it, computes with it, or stores it as a fact) vs. not-acted-on.
+   - Good: the code depends on the value; such as a status it branches
+     on, or an amount it stores as a fact.
 3. For every acted-on field, define what values are valid — including relationships between fields. The constraints are whatever your domain logic assumes to be true.
+   - Good: each assumption the domain makes, written down; such as a
+     quantity above zero, or an end date after the start date.
 4. Validate all acted-on fields at the boundary. Collect every violation before rejecting — surface the full picture in one pass, not a fix-one-resubmit loop.
 5. Discard fields you don't act on. They aren't part of your domain — don't model what you don't use.
 6. Construct a domain object from validated data. After this point, domain logic never questions whether its inputs are valid.

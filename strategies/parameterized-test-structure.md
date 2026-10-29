@@ -13,6 +13,8 @@ TENET: Highlight the Difference
    - Case names describe the situation and expected outcome — they
      read as sentences and serve as specifications. "expired token
      returns authentication error" not "test3" or "error case."
+   - Bad: a case that leaves out `expectedError` because it is empty;
+     it looks like a case that set it empty on purpose.
 3. When assertion logic varies between cases, encode the difference
    as an assertion function — each case carries its own assertion
    and the test body calls it uniformly.

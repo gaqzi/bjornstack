@@ -25,6 +25,10 @@ TENET: No Shared Fate
    endpoints or event schemas at the service level. Everything behind the
    contract is private. The contract should describe what the owner
    provides, not how it works inside.
+   - Good: the owner decides what crosses the boundary and nothing behind
+     it is reachable; such as exported functions and types at the package
+     level, or an API endpoint or event schema the owner publishes at the
+     service level.
 4. Remove every back door — any path that bypasses the public contract is
    shared fate waiting to happen. Importing another package's internal
    types, querying another service's database, reading shared mutable
@@ -33,6 +37,11 @@ TENET: No Shared Fate
    either extend the contract or determine the consumer doesn't need it.
    "Just reading" another unit's internals is still a back door: an
    internal change in the owner will break the reader.
+   - Good: the consumer's need is met through the contract or dropped;
+     such as the owner adding the missing data to its contract, or
+     finding the consumer doesn't need the data and removing the access.
+   - Bad: a reporting service that "just reads" another service's
+     database tables because it only queries and never writes.
 5. Verify independence — change something behind the contract: a private
    function, an internal data structure, how data is stored. If any
    consumer would notice, the boundary leaks — something private is being

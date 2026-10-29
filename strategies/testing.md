@@ -5,11 +5,20 @@ TENET: Don't Fly Blind
    boundary proves the path works end-to-end — a request enters through
    its public interface, passes through coordination, and produces a
    result. This is a black box integration test.
+   - Good: the test enters through the public interface and reaches a
+     result through the real wiring; such as an HTTP request to an API,
+     or a command run against a CLI.
 2. Push tests down to the cheapest layer that catches the failure. Unit
    tests are fast and precise — if a bug can be caught by testing a
    function in isolation, don't test it through an integration test.
    Integration tests are slow and broad — reserve them for behavior that
    unit tests can't see.
+   - Good: the test sits at the cheapest layer that sees the failure;
+     such as a unit test for a rounding error in a price calculation,
+     or an integration test for a handler that is wired to the wrong
+     collaborator.
+   - Bad: an integration test for every input variation of a pure
+     calculation.
 3. Select the layer by what you're verifying. Unit tests and black box
    integration tests apply to nearly every project. Contract and
    end-to-end tests are adopted per-project based on need.
@@ -37,6 +46,8 @@ TENET: Don't Fly Blind
    catch becomes a unit test, not another integration test. If no lower
    layer could catch it, the bug is genuinely about integration — add
    the test where it's visible.
+   - Bad: a production bug in a pure function fixed with another
+     integration test.
 
 OUTCOMES:
 - Every new feature has at least one black box integration test proving

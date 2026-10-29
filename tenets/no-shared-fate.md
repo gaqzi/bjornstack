@@ -1,5 +1,13 @@
 # No Shared Fate
 Units that should be independently testable, deployable, or changeable must not couple through shared mutable state — each operates in isolation so that one's failure cannot silently break another.
+
+- Good: no unit reaches state another unit changes except through
+  that unit's contract; such as each test creating its own user and scoping all its data under it
+  in one shared database, or a service that owns its tables and gives
+  others its data only through its API.
+- Bad: two services that must be deployed together because one changes
+  the schema of a table the other reads.
+
 VIOLATIONS:
 - Shared mutable state between tests — tests that pass individually
   but fail when run in parallel because they both read and write the

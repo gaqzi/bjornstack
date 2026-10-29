@@ -10,6 +10,12 @@ TENET: Many More Much Smaller Steps
    - When access must be controlled, prefer gating at the UI layer —
      access controls, feature visibility — over code-level flags. UI
      gating keeps conditional paths out of the backend.
+     - Good: when the design can isolate the change, no backend code
+       path branches on a flag; such as a new endpoint consumers opt
+       into, or a feature shown only to users that access controls let
+       in.
+     - Bad: a code-level flag around a new endpoint that nothing calls
+       until a consumer opts in.
    - Code-level flags create optionality — the ability to verify
      progressively and reverse quickly — for changes to existing
      behavior that are uncertain or risky. When the change is a known
@@ -23,12 +29,17 @@ TENET: Many More Much Smaller Steps
 2. Name and classify the flag before creating it.
    - The name describes what `true` activates — readable by an operator
      during an incident without additional context.
+     - Good: `true` means the named action is happening; such as
+       `payments_swish` (swish payments are active), or
+       `disable_online_payments` (online payments are off).
    - Track the flag's lifecycle in the flag system's config, not in
      the name — flags can legitimately change lifecycle. Each flag
      entry carries its state (active, deprecated, retired) and
      retirement metadata (when, why, owner). Retired names cannot be
      reused — lingering config from a previous flag with the same
      name can cause unintended activation.
+     - Bad: a name like `payments_swish_rollout` — the flag may become
+       a targeting flag, and the name would then be wrong.
    - Rollout flag: temporary. Will this flag still be meaningful after
      100% activation? If no, it's a rollout flag. Capture the removal
      condition in code alongside the flag — a dated annotation, expiry

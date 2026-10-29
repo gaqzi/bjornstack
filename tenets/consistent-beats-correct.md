@@ -1,5 +1,16 @@
 # Consistent Beats Correct
 Follow established patterns even when a locally better approach exists — the ability to make assumptions across the codebase is worth more than any single optimization.
+
+- Good: equivalent cases look alike to anyone using them; such as a new
+  endpoint using the same middleware wrapper as its siblings, or a
+  module that uses a different paradigm inside but exposes the
+  codebase's standard interface.
+- Good: a pattern that violates another tenet, changed everywhere it
+  appears; such as replacing an error-swallowing pattern in every handler, or renaming
+  a vague naming convention across the codebase.
+- Bad: a better pattern introduced in one file while the old one stays
+  in twenty others.
+
 VIOLATIONS:
 - Inconsistency that forces investigation — using a structurally
   different approach for equivalent cases, forcing the reader to

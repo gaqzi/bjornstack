@@ -5,6 +5,10 @@ TENET: Many More Much Smaller Steps
 2. Read the code that will change. Identify structural obstacles to this
    specific goal — places where the current shape makes the behavioral
    change hard to write, review, or understand in a diff.
+   - Good: each obstacle stands in the way of this goal; such as a
+     rename that makes the pagination diff clearer, or a function
+     extracted so the new behavior has one place to go.
+   - Bad: "while I'm here, this other module could use cleanup."
 3. Plan the sequence: a tidy changeset for each structural obstacle,
    followed by a behavioral changeset for the actual change. Alternatively,
    change first when you won't know what tidying helps until the new
@@ -13,6 +17,10 @@ TENET: Many More Much Smaller Steps
    starting the next.
 5. In a structural changeset, confirm tests pass without modification — if
    a test needs updating, behavior changed.
+   - Good: the test logic stays the same; such as tests that pass
+     untouched, or tests whose only edits are references renamed along
+     with the type they name.
+   - Bad: a tidy changeset that changes an assertion or a test's setup.
 6. In a behavioral changeset, limit structural changes to the minimum the
    new behavior requires — any structural diff beyond that should have been
    a separate tidy changeset.

@@ -5,6 +5,12 @@ TENET: Fail Early and Loud
    When an operation returns or modifies a structure, compare the full
    result to a fully-specified expected value — every unchecked field
    is a silent failure waiting to happen.
+   - Good: every field is either checked or explicitly accounted for;
+     such as an exact comparison against a fully specified expected
+     value, or a full comparison where a generated ID was captured,
+     verified, and substituted (step 2).
+   - Bad: asserting only the status and total of an order that has ten
+     fields.
 2. Make every field in the result deterministic so whole-object
    comparison is possible. Prefer approaches higher in this hierarchy:
    - **Inject a controlled source**: replace the non-deterministic

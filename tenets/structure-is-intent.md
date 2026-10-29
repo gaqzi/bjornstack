@@ -1,5 +1,13 @@
 # Structure Is Intent
 The organization of code communicates how the system works — a reader should understand the architecture from the directory tree, not from tracing imports.
+
+- Good: the tree says what the parts are and where their boundaries
+  lie before a reader opens a file; such as top-level directories named
+  for domains (`billing/`, `inventory/`, `shipping/`), or one directory
+  whose files are named for the stages of the pipeline they form.
+- Bad: a date-formatting function put in `shared/` because no other
+  package seemed right.
+
 VIOLATIONS:
 - Flat structure that communicates nothing — a directory with many
   files where the only way to understand module boundaries is to

@@ -1,5 +1,13 @@
 # Highlight the Difference
 When things are similar, structure them so the differences are instantly visible — the reader should never scan boilerplate to find what actually changed.
+
+- Good: the shared part is written once and each case shows only what
+  sets it apart; such as a table of test cases where each row holds just
+  its inputs and expected result, or a default builder where each test
+  states only the one override it needs.
+- Bad: three per-environment config files that match line for line
+  except for the database host and the log level.
+
 VIOLATIONS:
 - Buried variations in repeated boilerplate — similar code blocks
   repeat shared structure so that the meaningful differences are

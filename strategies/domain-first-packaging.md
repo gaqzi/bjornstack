@@ -2,10 +2,15 @@
 TENET: Structure Is Intent
 
 1. Identify the domains the system owns — each cohesive business concept or capability is a candidate package. The test: can you describe what this package *does* using a business noun, not a technical role?
+   - Bad: top-level packages named `http`, `database`, and `cache` — they describe how the system is built, not what it does.
 2. Name each package for the domain it owns — a noun that describes what the package is responsible for, not what it contains technically.
 3. Place types where their invariants are enforced — ask: which package validates, constrains, or transforms this type? That package owns it. When ownership is unclear, analyze the usage and mutation patterns, group the collaborating types, propose a domain concept that names the grouping, and present the options to a human. "These three types are always used together around pricing logic — I'd call this a `pricing` boundary" is actionable; "where should this type go?" is not.
+   - Good: the type lives with what enforces its invariants; such as one domain that owns it while others import it, a small contract package scoped to one boundary for an event no single domain owns, or a separate type per domain, translated at the boundary, when each domain has its own rules.
+   - Bad: a `models` or `types` package that collects every shared type without asking which of these cases applies.
 4. Name exports to extend the package name, not echo it — the qualified path already provides context, so the export adds what's new. `mail.Message` over `mail.Mail`; `cart.Item` over `cart.CartItem`. Repetition in the qualified name is a signal the export isn't pulling its weight.
 5. Point imports inward, not sideways — domain packages depend on foundational or shared-contract packages, never on sibling domains directly. When two domains need to communicate, they share an interface or a coordinating layer mediates.
+   - Good: sibling domains never import each other; such as a coordinating service that imports both and orchestrates between them, or a shared interface both domains implement against.
+   - Bad: the cart package importing the pricing package directly to compute a total.
 6. Wrap external dependencies at the boundary — third-party types don't appear in domain interfaces. The wrapping package translates external types into domain types so that internal code depends on your model, not theirs.
 
 OUTCOMES:

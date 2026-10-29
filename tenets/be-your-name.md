@@ -1,5 +1,16 @@
 # Be Your Name
 Code declares its behavior through names so that understanding comes from reading signatures, not implementations.
+
+- Good: the name tells a caller everything the code does, so no one
+  needs to open it; such as `parseCsvRows` for a function that only
+  parses, or a test named "an empty cart sums to zero".
+- Good: a short name used only where its definition is in sight; such
+  as a loop index two lines from its declaration, or the terms of a
+  formula defined by an overview in the same function and used only
+  there.
+- Bad: `calculateTax` that also fetches exchange rates and writes
+  audit logs.
+
 VIOLATIONS:
 - Overloaded names hiding multiple responsibilities — a name that
   covers several unrelated operations, discoverable only by reading

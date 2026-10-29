@@ -23,6 +23,12 @@ TENET: Be Your Name
    keep the document to that. Code that exists because of a requirement
    states it in a sentence where it matters; point to the document only
    when a reader needs more than that sentence.
+   - Good: reasoning that survives a rewrite with the same behaviour;
+     such as "typing must not lag on files of a few hundred kilobytes",
+     or "one loop owns every open document; nothing else touches one
+     directly".
+   - Bad: the design document says the gap grows by doubling, at least
+     64 slots.
 3. Implementation reasoning: keep it in the code, where the reader is when
    they need it.
    1. Delete what the code already says. If the code can't be read without
@@ -30,6 +36,11 @@ TENET: Be Your Name
    2. Say the rest in a sentence at the point of use: why this value, why
       this line is written the non-obvious way, which obvious alternative
       was rejected and why that still holds.
+      - Good: the why, in one sentence where the reader needs it; such
+        as "doubling keeps inserts cheap; 64 stops small files
+        regrowing every few keystrokes" on a constant, or a sentence
+        naming the rejected rope and why it still loses for edits in
+        one place.
    3. When it takes more than a sentence, several places share it, or it
       is about the whole unit (why this data structure), write it once in
       the nearest overview that covers all of them — the function, then
@@ -51,6 +62,10 @@ TENET: Be Your Name
       components, each states it where it relies on it, and the feature's
       design document states the decision they all rely on. Where a test
       can catch the rule breaking, write that test.
+      - Good: the rule where its keeper reads it, with what breaks;
+        such as "takes no locks; two callers at once corrupt the text"
+        in a type's documentation for callers, or "kept for v1 clients,
+        which still read it" beside a field the code itself keeps.
 
 OUTCOMES:
 - Design documents hold only reasoning that would survive a rewrite with

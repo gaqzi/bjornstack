@@ -6,17 +6,23 @@ TENET: Fail Early and Loud
    failures: retries it, creates the missing thing, asks the user to
    fix their input, answers with a specific status. Logging it doesn't
    count, whether or not the caller carries on.
-   - Good: "order not found" gets an identity; the handler answers 404.
-   - Good: "config file is not valid JSON" gets none; the only caller
-     prints it and exits.
-   - Good: a parsing library, whose callers aren't known, gives "syntax
-     error at line N" an identity: the input is the caller's to fix.
+   - Good: an identity where a caller handles it differently, such as
+     "order not found", which the handler answers with 404, or "syntax
+     error at line N" from a parsing library whose callers aren't
+     known: the input is the caller's to fix.
+   - Good: no identity where no caller handles it differently, such as
+     "config file is not valid JSON", which the only caller prints
+     before exiting, or a failed cache refresh that a background job
+     logs before carrying on.
    - Bad: an identity for "not valid JSON" added only so a test can
      check it.
 2. Make the identity something the caller compares, never text it
    searches. Put the values the caller needs in it as data, and
    document it with the operation that reports it.
-   - Good: a `NotFound` failure carrying order ID `order-42`.
+   - Good: the caller compares the identity and reads the values as
+     data, such as a `NotFound` failure carrying order ID `order-42`,
+     or a result whose status field, separate from its message, is
+     `not_found` and whose `orderId` field is `order-42`.
    - Bad: the caller checks whether the message contains "not found",
      or reads the order ID back out of the text.
 3. Translate where a failure enters your code from outside. The unit
@@ -26,9 +32,15 @@ TENET: Fail Early and Loud
    passes the failure on unchanged, unless handling that failure is
    the unit's whole job, like a retry wrapper or a handler choosing a
    status.
-   - Good: the order store turns "file does not exist" into
-     `NotFound`. The coordinator above it returns
-     `fulfil order "order-42": ` followed by the store's failure.
+   - Good: the unit that calls outside keeps the outside message but
+     not its identity, and reports its own identity if it has one,
+     such as the order store turning "file does not exist" into
+     `NotFound`, or the client for a shipping service turning its
+     HTTP 404 into `NotFound`.
+   - Good: a unit above adds what it was doing and passes the failure
+     on unchanged, or handles it as its whole job, such as the
+     coordinator returning `fulfil order "order-42": ` followed by the
+     store's failure, or the handler answering 404 for `NotFound`.
    - Bad: the store wraps "file does not exist" so its callers can
      match it, and moving the store to a database breaks them.
    - Bad: a coordinator switches on its collaborators' failures to
@@ -37,22 +49,26 @@ TENET: Fail Early and Loud
 4. When one operation reports several problems at once, ask what the
    caller acts on. If it acts on the whole, report one failure. If it
    acts on each part, report one failure per part.
-   - Good: every problem with one submitted form is one "invalid
-     input" failure listing them all.
-   - Good: a batch of ten orders reports each order's failure on its
-     own.
+   - Good: the failures follow what the caller acts on, such as one
+     "invalid input" failure listing every problem with a submitted
+     form, which the caller rejects as a whole, or a batch of ten
+     orders reporting each order's failure on its own, which the
+     caller handles order by order.
    - Bad: ten orders' failures merged into one, so a caller checking
      for "not found" treats the whole batch as not found.
 5. Write the message for the human who must fix the problem: what
    failed, the values involved, and what was expected.
-   - Good: `read order "order-42": open /data/order-42.json: permission
-     denied`.
+   - Good: the message names what failed, the values and what was
+     expected, such as `read order "order-42": parse
+     /data/order-42.json: line 3: want "}", got end of file`, or
+     `set quantity of order "order-42": 250, want 1 to 100`.
    - Bad: `read failed`.
 6. Test the identity where there is one, and the facts in the message
    always, never its wording.
-   - Good: the failure is `NotFound` for order ID `order-42`, and the
-     message mentions `order-42`.
-   - Good: a corrupt order file fails, and is not `NotFound`.
+   - Good: the test compares the identity, if any, and checks facts,
+     not wording, such as the failure being `NotFound` for order ID
+     `order-42` with a message that mentions `order-42`, or a corrupt
+     order file failing and not being `NotFound`.
    - Bad: the message contains "could not be found".
 
 OUTCOMES:

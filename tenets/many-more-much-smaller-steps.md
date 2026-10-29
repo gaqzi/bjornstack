@@ -1,6 +1,14 @@
 # Many More Much Smaller Steps
 Changes to production must be small enough that each can be understood,
 reviewed, and reversed independently.
+
+- Good: each change carries one concern and can be reversed without
+  taking anything else with it; such as a PR that only moves a module,
+  followed by a PR that changes its behavior, or a feature shipped wired
+  but inert behind a flag that can be switched off on its own.
+- Bad: a commit titled "Move billing into its own package and add
+  proration".
+
 VIOLATIONS:
 - Bundled changes with shared rollback fate — a release or deploy
   combines multiple concerns so that reversing one means reversing

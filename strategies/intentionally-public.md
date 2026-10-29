@@ -5,7 +5,10 @@ TENET: Structure Is Intent
 2. Promote to public only when a consumer outside the package has a concrete, current need.
 3. Before exporting, evaluate the boundary: does this symbol belong in the package's contract, or is a caller reaching into an implementation detail?
 4. When a caller needs an unexported detail, treat it as a design signal — restructure the boundary or introduce an internal package rather than promoting the detail to the public contract.
+   - Good: the caller gets what it needs while the detail stays out of the public contract; such as an internal sub-package your own code and tests can import, or a reshaped boundary where the caller uses a public operation instead of the detail.
+   - Bad: exporting an internal helper as-is because one caller asked for it, without asking whether it belongs in the contract.
 5. Shape the exports into a coherent surface — the public API should read as a description of what the package does, not a grab-bag of what callers happened to need.
+   - Bad: a package exporting `ParseHeader`, `ValidateChecksum`, and `WriteAuditLog` because three different callers each needed one function.
 6. When a consumer is removed or refactored, check whether exports can be demoted back to private.
 
 OUTCOMES:

@@ -71,10 +71,11 @@ The tenets here all come from trying to achieve these outcomes:
 
 High-level constraints that encode *why* something matters. Language-agnostic.
 
-Each tenet has a name, a one-sentence definition, a violation example, and
-a why. The name gives agents (and humans) a shorthand. The violation example
-is the most important part, it shows you what *wrong* looks like so you can
-spot it.
+Each tenet has a name, a one-sentence constraint, Good and Bad cases,
+violation examples, and a why. The name gives agents (and humans) a
+shorthand. The constraint comes first; the Good and Bad cases illustrate it,
+and the violations mark where it stops, so you can spot what *wrong* looks
+like.
 
 See [tenets/FORMAT.md](tenets/FORMAT.md) for the full format spec.
 

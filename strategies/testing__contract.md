@@ -6,9 +6,16 @@ TENET: No Shared Fate
    to the same boundary.
    - Consuming: continue at step 2.
    - Providing: continue at step 3.
+   - Bad: one suite that mixes your assumptions about a service you
+     consume with another service's assumptions about you.
 2. Consumer-side (we depend on them):
    1. Identify what you actually use — the specific endpoints, fields,
       and behaviors your code relies on. Not the full API surface.
+      - Good: the expectations start from your code's actual calls, not
+        from their docs; such as the two fields your handler reads from
+        a response, or an error status your code retries on.
+      - Bad: a test for every endpoint in the provider's documentation,
+        including ones your code never calls.
    2. Encode those expectations as tests that run against a stub of the
       external service. These tests verify your assumptions, not their
       implementation.

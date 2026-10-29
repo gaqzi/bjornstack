@@ -13,6 +13,7 @@ TENET: Earned Abstraction
      similar problem, not call sites using the same implementation.
      With one case, you can't distinguish pattern from accident.
      With two, you might overfit to what they share.
+   - Bad: counting five call sites of one helper as five cases.
 2. With fewer than three cases, keep the duplication.
    - Name the implementation for the business problem it solves —
      that happens regardless of case count.
@@ -43,6 +44,12 @@ TENET: Earned Abstraction
    behavior becomes a named collaborator — any unit of code the
    shared part delegates to, selected through composition rather
    than configuration.
+   - Good: a caller selects behavior by which collaborator it supplies,
+     never by a setting; such as email, webhook, and SMS dispatchers
+     behind one "send notification" interface, or a plain function the
+     shared part calls for the step that varies.
+   - Bad: a config struct with fifteen fields where each caller sets a
+     different three.
    - Before extracting, verify the design doesn't require callers
      to configure which behavior path to follow. Boolean
      parameters, enum switches, large config structs where each

@@ -1,5 +1,18 @@
 # Practicality Beats Purity
 When following a tenet costs more than violating it, break the tenet deliberately — but only after convincing yourself and at least one other person, and documenting the tradeoff.
+
+- Good: the exception states what following the tenet would cost and
+  what breaking it gains, someone who could push back agreed, and the
+  record sits where the next reader will meet it; such as a code comment
+  naming the tenet and the reason, approved in review, or a decision
+  record a teammate signed off before the work started.
+- Good: a tenet that keeps costing more than it gives is dealt with
+  once, with the same argument and agreement, instead of collecting
+  exceptions; such as changing the tenet itself, or fixing the pattern
+  everywhere so the exceptions are no longer needed.
+- Bad: a comment that says "skipping tests here, deliberate" with no
+  reason given.
+
 VIOLATIONS:
 - Undocumented deviation — breaking a tenet without documenting
   the tradeoff because "it was faster" or "it's just this once."

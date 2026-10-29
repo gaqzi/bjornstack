@@ -5,6 +5,8 @@ TENET: Highlight the Difference
    instance with production-realistic defaults for every field — not
    zero values, not random data, not placeholder strings. This
    baseline is what all tests deviate from.
+   - Bad: a builder whose user has an empty name, so every test sets
+     one before use.
    - Each builder instantiation creates new, independent state.
      Nested structures — collections, maps, embedded objects — are
      fresh. No test can mutate another test's data through shared
@@ -58,6 +60,9 @@ TENET: Highlight the Difference
      a mutation function rather than a dedicated modifier. This
      prevents the builder API from growing unbounded with
      single-use methods.
+   - Good: the overrides say what the test is about; such as
+     `a.User(withEmail("x"))` composing named modifiers, or a mutation
+     function for a one-off field combination.
 5. Extract named state methods for recurring multi-field overrides.
    When multiple tests need the same cluster of field changes,
    extract a method that applies all related fields together.

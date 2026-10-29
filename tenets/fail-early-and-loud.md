@@ -1,5 +1,20 @@
 # Fail Early and Loud
 Code must surface problems visibly and early rather than absorbing them into implicit defaults, silent fallbacks, or hidden paths.
+
+- Good: nothing continues as if the problem were not there, and the
+  failure names what is wrong; such as startup stopping with "config
+  /etc/app.yaml: missing key db.url", or a CSV import rejected with
+  every bad row listed.
+- Good: a fallback someone chose, that signals it is in use; such as a
+  cache serving last hour's prices marked as stale, or a degraded flag
+  on the service's health check.
+- Good: data from outside is checked on entry for every value the code
+  acts on, an unknown value is refused visibly, and fields the code
+  does not use are ignored; such as a webhook answered with an error
+  naming the unknown status, or the message moved to a dead-letter
+  queue while an alert fires.
+- Bad: a price lookup fails and the page shows a price of zero.
+
 VIOLATIONS:
 - Silent data corruption through default substitution
   Examples:

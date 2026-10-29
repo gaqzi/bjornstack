@@ -32,6 +32,10 @@ match against, and a **rationale section** that captures the thinking.
 # [Tenet Name]
 [One constraint, clearly stated.]
 
+- Good: [Optional. The property that makes it good]; such as [one
+  form], or [a contrasting form].
+- Bad: [Optional. A case on the wrong side of the boundary.]
+
 VIOLATIONS:
 - [Failure mode — concrete, recognizable, language-agnostic.]
   Examples:
@@ -41,6 +45,10 @@ VIOLATIONS:
 
 WHY: [One sentence: the mechanism — what goes wrong without it.]
 ```
+
+The constraint comes first. Good and Bad cases illustrate it and never
+replace it: a reader should be able to apply the constraint with the
+cases deleted.
 
 ### Rationale section
 
@@ -81,6 +89,27 @@ One constraint, clearly stated. The em-dash and qualifying phrases ("implicit",
 "silent", "hidden") carve out what IS and ISN'T a violation. If a qualifying
 clause can be removed and the tenet still makes sense, the clause belongs
 in the rationale instead.
+
+```
+- Good: nothing continues as if the problem were not there, and the
+  failure names what is wrong; such as startup stopping with "config
+  /etc/app.yaml: missing key db.url", or a CSV import rejected with
+  every bad row listed.
+- Good: a fallback someone chose, that signals it is in use; such as a
+  cache serving last hour's prices marked as stale, or a degraded flag
+  on the service's health check.
+- Bad: a price lookup fails and the page shows a price of zero.
+```
+Each Good case names the property first ("nothing continues as if the problem
+were not there, and the failure names what is wrong"), then shows it in two
+forms that differ in kind: a process refusing to start and an import being
+rejected, not two wordings of the same startup error. A reader learns what
+makes an answer acceptable rather than one answer to copy. The second Good
+case says that a chosen, signalled fallback is fine, which VIOLATIONS alone
+can't say. The Bad case sits just across the boundary from it: a fallback
+nobody can see. Every Good case stays inside the definition; if a case
+needs a condition the definition doesn't state, it adds a rule and the
+definition must change instead.
 
 ```
 VIOLATIONS:
@@ -325,6 +354,25 @@ optional.
   PASS: "Code must surface problems visibly and early rather than absorbing
   them into implicit defaults, silent fallbacks, or hidden paths."
 
+- **Good and Bad cases illustrate the constraint; they never replace it.**
+  Cases are optional. When present, they follow the constraint, and the
+  constraint must still be applicable with them deleted. Readers treat a
+  list of examples as the complete set, so a tenet whose cases are the
+  only guidance gets applied to those cases and nothing else.
+  Each Good case names the property that makes it good and shows it in
+  two contrasting forms: forms that differ in kind, not only in detail.
+  A single form narrows readers to that form; two forms that differ only
+  in detail do the same. Bad cases and VIOLATIONS mark the boundary.
+  A case must not add a condition the constraint doesn't state, or drop
+  one it does; if it needs to, change the constraint.
+  FAIL: "Good: exit at startup when a config key is missing." (One form;
+  readers take it as the only valid answer.)
+  FAIL: "Good: startup fails on a missing db.url, or on a missing
+  cache.ttl." (Two forms, same kind; no property named.)
+  PASS: "Good: a missing required value is reported where it is first
+  noticed, naming the value; such as refusing to start, or failing the
+  one request that needed it."
+
 - **Each violation is a distinct, concrete, language-agnostic failure mode.**
   Not abstract. Someone looking at real code or a real design should be able
   to point at it and say "that — that's the violation." Use language-agnostic
@@ -549,7 +597,10 @@ for the strategy-editor.
   violation be reworded to cover this? If so, reword instead of adding.
   When a failure mode has multiple concrete instances, use `Examples:`
   sub-bullets rather than separate violations. If two violations need
-  different WHY explanations, the tenet should be split.
+  different WHY explanations, the tenet should be split. The same goes
+  for Good cases: when readers doubt a valid answer the tenet allows,
+  add or widen a Good case (property plus two forms) rather than
+  another violation.
 
 - **User wants to write a batch.** When converting a large document into
   tenets, work through the exploration and zoom-out steps first. Present

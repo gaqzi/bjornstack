@@ -1,5 +1,18 @@
 # Earned Abstraction
 Abstractions must be earned through repetition, not speculated from a single case.
+
+- Good: an abstraction extracted once the same problem has been solved
+  enough times (as a rule of thumb, three) to see what varies; such as
+  a shared retry helper written after three services each hand-rolled
+  the same retry, or a script that automates a runbook after it has
+  been run by hand three times.
+- Good: a library you adopt, or an interface a coordinator's test needs,
+  is not an abstraction this rule governs; such as adopting a
+  well-established library instead of writing one, or an interface
+  that lets a coordinator be tested with a mock.
+- Bad: a generic exporter interface written for the first and only
+  export format.
+
 VIOLATIONS:
 - Mode flags revealing a premature abstraction — an abstraction takes
   a boolean or mode parameter to handle a second use case, revealing

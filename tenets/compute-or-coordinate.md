@@ -1,5 +1,17 @@
 # Compute or Coordinate
 Code either performs computation (business logic) or orchestrates collaborators — never both.
+
+- Good: computation that takes all its data as input and returns a
+  result, with no collaborators; such as a pricing function given the
+  cart and the tax table, or a validator that returns the list of
+  errors it found.
+- Good: a coordinator that only calls collaborators, passes data
+  between them and handles their errors; such as a checkout handler
+  that fetches the cart, calls the pricing function and saves the
+  order, or one that upper-cases a name between a fetch and a save.
+- Bad: a coordinator that fetches an order, applies a discount only
+  when the customer is a member, and saves it.
+
 VIOLATIONS:
 - Mixed computation and coordination — a function that depends on
   collaborators AND contains conditional business logic. Computation

@@ -15,7 +15,8 @@ Guard        → CHECK   testnoifs linter: rejects if in test bodies
 Each layer has a different purpose:
 
 - **Tenets** (WHY) — High-level, language-agnostic constraints. One
-  sentence, violations, a why. They encode *why* something matters.
+  sentence, optional Good and Bad cases, violations, a why. They
+  encode *why* something matters.
 - **Strategies** (HOW) — Abstract, language-agnostic techniques. Numbered
   steps, observable outcomes, misapplications. They bridge a tenet
   to actionable technique without referencing any language.
@@ -30,42 +31,49 @@ Not everything moves through all four layers. Some tenets stay
 tenets because they require judgment. Some protocol steps never become
 guards because the check can't be mechanized.
 
-## Design theory: boundary-based constraints
+## Design theory: procedures, boundaries and examples
 
-The system is built on a guiding theory we're testing: constraining by
-defining what's wrong works better than prescribing what's right.
+The system is built on a guiding theory we're testing: state the
+constraint or procedure first, mark its boundary with what's wrong, and
+illustrate it with cases that teach a property rather than a shape to
+copy.
 
-**Violations define the boundary, not the interior.** Good implementations
-take many forms — the system doesn't enumerate them. Instead, tenets list
-failure modes (VIOLATIONS) and strategies list misuse patterns
-(MISAPPLICATIONS). Everything that doesn't cross those boundaries is allowed.
-This is a laws-not-prescriptions model: define what's prohibited, leave the
-rest open.
+**Four components work together:**
 
-**Three components work together:**
-
-- **Violations / misapplications** — the boundary. Pattern-recognition
-  targets that an agent scanning code should recognize: "that is the
-  violation." Each must be a distinct failure mode. When a failure mode
-  benefits from concrete instances, sub-bullets under an `Examples:` label
-  make it recognizable without being exhaustive.
+- **Constraints and procedures** — the core. A tenet states one
+  constraint; a strategy step states a procedure, a way to find the
+  cases rather than a list of them. Readers treat a list of examples as
+  the complete set, so examples never stand in for the procedure.
+- **Good and Bad cases** — the illustration. A tenet or a strategy step
+  may carry them. A Good case names the property that makes it good and
+  shows it in two contrasting forms, so the reader learns the property,
+  not one way to reach it. Bad cases show the other side of the line.
+- **Violations / misapplications** — the boundary. Tenets list failure
+  modes (VIOLATIONS) and strategies list misuse patterns
+  (MISAPPLICATIONS). Each must be a distinct failure mode. When a failure
+  mode benefits from concrete instances, sub-bullets under an `Examples:`
+  label make it recognizable without being exhaustive.
 - **WHY mechanism** — the generalization. Encodes the causal reasoning so
-  agents can apply the tenet to situations no violation example
-  anticipated. Violations calibrate the boundary; WHY generalizes beyond it.
-- **Strategies and protocols** — the thinking process. Strategy steps and
-  protocol decision trees guide how to approach the problem, not what the
-  output should look like. An agent following "identify variations, extract
-  to data, write one body, iterate" will arrive at different implementations
-  depending on language and context. The technique is prescribed; the
-  artifact is not. An agent that finds a novel approach violating no
-  tenets is free to take it.
+  agents can apply the tenet to situations no case anticipated. Cases
+  calibrate the boundary; WHY generalizes beyond it.
 
-**Why not positive examples?** Positive examples prescribe output — "make it
-look like this." The system deliberately avoids that. Strategies and protocols
-prescribe technique and thinking process — "approach it this way" — which
-guides without constraining the solution space. An agent given examples of
-"good code" tends to interpolate between them rather than reasoning from the
-constraint. An agent given a thinking process derives its own solutions.
+Strategy steps and protocol decision trees prescribe the technique, not
+the artifact. An agent following "identify variations, extract to data,
+write one body, iterate" will arrive at different implementations
+depending on language and context. An agent that finds a novel approach
+violating no tenets is free to take it.
+
+**Why Good cases name a property, in two forms.** When blind readers
+applied tenets and strategies to concrete cases, a Good case that named
+a single form narrowed them: they took that form as the only valid
+answer and doubted other valid ones. A Good case that named the property
+and showed two contrasting forms never ruled out a valid answer, and
+readers decided as many cases or more. Readers often copy a Good form
+outright, so two forms that differ keep the copy within the property.
+On tenets, readers given only violations guessed more often: a list of
+what's wrong doesn't say that a nearby choice is fine. On strategies,
+the procedure carried most of the weight and cases changed little. The
+samples were small; the evaluation is recorded in bead bs-b39.
 
 **Why "misapplications" in strategies, not "violations"?** You *violate* a
 tenet — you broke a constraint. You *misapply* a strategy — you used a
@@ -73,12 +81,9 @@ technique badly or in the wrong context. The terms reflect the different
 relationship: tenets are laws, strategies are tools. The format is
 consistent (both use bulleted lists); the naming is deliberately different.
 
-This is a theory, not proven truth. We believe boundary-based constraints
-combined with structured thinking processes leave agents more room to find
-novel solutions than output-based guidance would. Protocols haven't been
-generated yet — strategy steps and outcomes currently carry the
-thinking-process layer. If we discover the theory doesn't hold, the format
-evolves.
+This is a theory, not proven truth. Protocols haven't been generated yet —
+strategy steps and outcomes currently carry the technique. If
+we discover the theory doesn't hold, the format evolves.
 
 ## How protocols work
 
@@ -366,7 +371,8 @@ escape hatch, and implementation plan.
 Some tenets require human judgment and will never become guards. That's
 legitimate. The test is **actionability**, not **mechanizability**:
 
-- Can someone look at code and recognize a violation? → Actionable.
+- Can someone look at code and recognize a violation, or tell a Good case
+  from a Bad one? → Actionable.
 - Can they describe what should have been done differently? → Actionable.
 - Does following it require omniscience or predicting the future? → Not a
   tenet, decompose it.

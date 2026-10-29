@@ -8,26 +8,32 @@ TENET: Consistent Beats Correct
    times set by that clock are kept as local date and time plus the
    zone's name, and the feature's design document says once which
    zone and why.
-   - Good: log files rotate by UTC day; programs and on-call staff in
-     several zones read them, and no one zone is the point.
-   - Good: the design document says opening hours follow the shop's
-     zone, and "is the shop open now?" takes `Pacific/Auckland` as an
-     argument.
-   - Good: a clock fixed by a contract or a law: settlement days follow
-     the exchange's city because its rules say so, and invoices are
-     dated by the seller country's calendar because its tax law does.
-   - Good: a meeting set for 09:00 in Auckland next March is stored as
-     that local date and time plus the zone's name.
+   - Good: UTC wherever no one zone's clock is the point; such as log
+     files rotating by UTC day for programs and on-call staff in
+     several zones, or a daily quota that resets at UTC midnight for
+     users all over the world.
+   - Good: one clock that matters becomes an input, with the reason
+     written once; such as opening hours that follow the shop's zone,
+     so "is the shop open now?" takes `Pacific/Auckland` as an
+     argument, or a clock fixed by a contract or a law: settlement days
+     follow the exchange's city because its rules say so, and invoices
+     are dated by the seller country's calendar because its tax law
+     does.
+   - Good: a time set by a clock is kept as local date and time plus
+     the zone's name; such as a meeting set for 09:00 in Auckland next
+     March, or a reminder every morning at 08:00, each occurrence
+     converted to UTC when it is needed.
    - Bad: the server's own zone decides the date because that is where
      it runs.
 2. Convert every instant to UTC where it enters your code: parsed
    input, values read back from storage, and the clock. Asking the
    clock for the time is reading an input. Values that step 1 keeps
    as local time plus a zone name stay as they are.
-   - Good: the command reads the clock, converts the result to UTC and
-     passes that on.
-   - Good: `2026-03-02T01:30:00+02:00` from a request becomes
-     `2026-03-01T23:30:00Z` when it is parsed.
+   - Good: every instant is UTC from the moment it enters, whatever its
+     source; such as a command that reads the clock, converts the
+     result to UTC and passes that on, or `2026-03-02T01:30:00+02:00`
+     from a request that becomes `2026-03-01T23:30:00Z` when it is
+     parsed.
    - Bad: timestamps are converted to UTC when written to storage, but
      the current time is passed on in the machine's zone.
 3. Inside each computation, convert every value into the
@@ -35,33 +41,45 @@ TENET: Consistent Beats Correct
    UTC, the zone step 1 made an input, or for a value kept local, the
    zone stored with it. Never rely on the zone a value happens to
    carry.
-   - Good: the week-grouping function converts each entry and the
-     current time to UTC itself, then works out their weeks.
+   - Good: the computation converts into its own zone itself; such as
+     a week-grouping function that converts each entry and the current
+     time to UTC, then works out their weeks, or "is the shop open
+     now?" converting the current time into the zone it was passed.
    - Bad: the week-grouping function trusts its callers to have
      converted, so the one caller that forgets mixes two zones.
 4. Show local time only to people, converted as the last step before
    output, into the viewer's zone passed in. Output that programs read
    is UTC with the offset written out, or local time with its zone
    name for values step 1 keeps local.
-   - Good: the page shows each entry in the reader's zone; the file
-     behind it stores `2026-03-01T23:30:00Z`.
+   - Good: only people see local time without its zone; such as a page
+     that shows each entry in the reader's zone while the file behind
+     it stores `2026-03-01T23:30:00Z`, or a calendar export that writes
+     the Auckland meeting as `2027-03-10T09:00` with
+     `Pacific/Auckland`.
    - Bad: a local time is written to a file without its zone and later
      parsed back to compute with.
 5. Test every computation that turns a time into a date or a time of
    day with values from a zone east of the computation's zone and one
    west of it, each at a moment that falls on different dates in the
    two zones.
-   - Good: a week-grouping test in UTC where the current time is 00:30
-     on a Monday at UTC+2, still Sunday in UTC, and another at 21:00
-     on a Sunday at UTC-5, already Monday in UTC.
+   - Good: each test's moment falls on different dates in its zone and
+     the computation's; such as a week-grouping test in UTC where the
+     current time is 00:30 on a Monday at UTC+2, still Sunday in UTC,
+     and another at 21:00 on a Sunday at UTC-5, already Monday in UTC,
+     or an invoice-dating test in the seller's Stockholm zone with
+     `2026-12-31T23:30:00Z`, already the new year there, and
+     `2027-01-01T00:30:00+03:00`, still the old year there.
    - Bad: every test builds its times in UTC, so a computation that
      relies on the values' own zone passes.
 6. Run the tests of every code path that reads the clock and turns
    the result into a date or a time of day with the machine's zone
    set east of UTC and again west of it.
-   - Good: the suite runs with the machine's zone set to UTC+2 and to
-     UTC-5, so a path that leaves the clock in the machine's zone fails
-     on the cases step 5 put on that side.
+   - Good: the real clock is read under a machine zone on each side of
+     UTC; such as the whole suite run twice, with the machine's zone set
+     to UTC+2 and to UTC-5, or each clock-reading test setting the
+     process's zone to each side before it runs, so a path that leaves
+     the clock in the machine's zone fails on the cases step 5 put on
+     that side.
    - Bad: the tests and the machine are both set to UTC, so a path
      that never converts the clock passes.
 

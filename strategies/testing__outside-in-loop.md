@@ -16,6 +16,9 @@ codes, user-safe messages, sanitized errors that don't leak internals.
    feature's success path through its public interface. This test
    fails — the feature doesn't exist yet. The failing test defines
    "done."
+   - Good: the test enters where a user would, through the feature's
+     entry point; such as an HTTP request to the handler, or a message
+     published to the consumer's queue.
 2. Write coordinator tests. The integration test implies a top-level
    coordinator. Write unit tests for it first, mocking every
    collaborator. Each mocked collaborator is a contract: "I need
@@ -26,6 +29,8 @@ codes, user-safe messages, sanitized errors that don't leak internals.
    exists because a coordinator wants to collaborate with it. Errors
    propagate mechanically — every error is returned, never ignored, but
    no effort goes into user-facing messages or graceful degradation.
+   - Bad: a node that catches a collaborator's error and
+     turns it into a friendly message during the happy path.
 4. Run all tests after each unit is complete, including the outer
    integration test. The integration test may still fail, but the
    failure message changes as more pieces connect. A changing failure
@@ -40,9 +45,15 @@ codes, user-safe messages, sanitized errors that don't leak internals.
    2–4 again.
    When an existing test already covers the same failure scenario,
    prefer reusing it over adding a new one.
+   - Good: the failure scenario gets one integration test, not one per
+     cause; such as a new test that the user sees a designed error when
+     the fraud service is unreachable, or an existing failure test
+     whose data is tightened to sit just outside a new boundary.
    - If the "error handling" introduces new business logic (new
      thresholds, fallback behaviors, alternative flows), it's a
      separate feature — give it its own loop from step 1.
+   - Bad: adding "let payments under $5 through when the fraud service
+     is down" as the payment feature's error handling.
 
 OUTCOMES:
 - The integration test exists before any implementation code.
