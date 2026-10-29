@@ -78,8 +78,9 @@ package root as shared domain vocabulary.
 This tenet is foundational because it determines your entire testing
 strategy. Once you classify code, you know:
 - Whether to use mocks (coordination) or real values (computation)
-- How many tests to expect (~2 per collaborator for coordination, thorough
-  coverage for computation)
+- How many tests to expect (N+1 for a coordinator with N collaborators that
+  can fail: one error-path test for each, plus one happy path they share;
+  thorough coverage for computation)
 - What a failure means (wiring problem vs. logic problem)
 
 Every other testing tenet builds on this classification.
