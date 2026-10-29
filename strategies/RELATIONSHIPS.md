@@ -33,6 +33,7 @@ graph TD
         SOE["Scrub on Entry"]
         SIO["Say It Once"]
         FI["Failure Identity"]
+        UTC["UTC Computation"]
     end
 
     subgraph evolution [Evolution]
@@ -52,6 +53,8 @@ graph TD
     SIO --> EA
     BC <--> FI
     SOE --> FI
+    SOE <--> UTC
+    UTC <--> TDB
     UT <--> DFP
 ```
 
@@ -67,7 +70,7 @@ cross-references are authoritative, not this diagram.
 │  DFP  ·  IP    ┃  TLS  ·  UT  ·  BBIB     ┃  GDB  ·  FYC     │
 │                ┃  OILD  ·  CT             ┃  ToC             │
 │  SOE  ·  SIO   ┃  ITE  ·  TDB  ·  PAST    ┃                  │
-│  FI            ┃  PTS  ·  WOA  ·  CTS     ┃                  │
+│  FI  ·  UTC    ┃  PTS  ·  WOA  ·  CTS     ┃                  │
 │                ┃                          ┃                  │
 │           BC ··╂··························╂·· EA             │
 │                ┃                          ┃                  │
@@ -75,8 +78,8 @@ cross-references are authoritative, not this diagram.
 ```
 
 **Structure** — how code is organized: domains, boundaries, visibility,
-validation, how failures are told apart, and where its reasoning is
-written down.
+validation, which time zone computations use, how failures are told
+apart, and where its reasoning is written down.
 
 **Testing** — how code is verified: test layer selection, case structure,
 data builders, assertions.

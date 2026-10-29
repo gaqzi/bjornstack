@@ -44,3 +44,36 @@ restatement of DFB or a speculative tutorial.
 
 What would unblock it: actually implementing e2e/RUM/synthetic monitoring
 on a real system and discovering which technique worked.
+
+## Canonical Form
+
+**Bead**: bs-i4w
+**Tenet**: Consistent Beats Correct
+**Generalises**: UTC Computation (utc-computation.md)
+**Would be**: strategies/canonical-form.md
+
+Some values have more than one representation: a time in different
+zones, text in different encodings, a quantity in different units, a
+word compared under different locales. The shape that handles time
+looks general: convert to one form where the value enters, compute
+only in that form, convert on the way out, and where a computation
+needs another form, make that form an input of the computation and
+write down why.
+
+What we know:
+- **Time**: the evidenced case. A computation that mixed a local
+  current time with UTC timestamps grouped entries into the wrong week
+  with no error. UTC Computation is written from that.
+- **Encodings, units, locales**: the same shape seems to apply, and
+  locale-dependent case and ordering look like the zone-dependent
+  calendar grouping in time. None of this has been seen in a defect or
+  a design.
+
+Why it's not ready: one case. Earned Abstraction asks for repetition
+before abstracting. A general strategy written now would also demote
+time's specific rules, such as treating the clock as an input, to
+examples, and a protocol generated from it would leave them out.
+
+What would unblock it: a defect or design decision in a second domain,
+such as encodings, units or locales, that the same steps would have
+prevented or settled.

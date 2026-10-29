@@ -238,3 +238,8 @@ concept, not a reason for a shared base class.
   in a shared package (step 2), not per-domain. DFP governs the
   domain types builders construct, not where builders themselves
   live.
+- **UTC Computation**: a builder's edge cases (step 6) can include
+  timestamps in other zones; UTC Computation step 5 says which moments
+  they need when the type reaches a computation that turns times into
+  dates: one on each side of the computation's zone, falling on
+  different dates in the two.

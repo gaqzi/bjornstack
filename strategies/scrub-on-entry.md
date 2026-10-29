@@ -85,3 +85,10 @@ belongs at the package boundary — the entry point that external callers
 use. It should not be scattered through internal domain logic. The domain
 package's public API accepts domain types (already validated); the boundary
 adapter accepts external types and converts them.
+
+### Cross-references
+
+- **UTC Computation**: the entry point where this strategy builds the
+  domain object is also where UTC Computation converts every instant,
+  the current time included, to UTC (its step 2), so the domain object
+  holds UTC from the start.
