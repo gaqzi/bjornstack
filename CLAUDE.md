@@ -79,8 +79,11 @@ When drafting or changing a tenet, strategy, protocol or guard:
   - Consistency check: reads the draft against its bead and the
     neighbouring layers, Rationale sections included, for
     contradictions and stale text.
-  - Adversarial pass, when rules interact or the change is large:
-    the strongest model, ideally against a worked example.
+  - Adversarial pass, always: a strong model reads each change
+    against the layer's own text and its neighbours, and reports
+    where it narrows, widens or contradicts the intent, ideally
+    against a worked example. Escalate to the strongest model when
+    reviewers disagree or a rule resists being expressed clearly.
 - When a change is hard to judge in the abstract, have one subagent
   build a worked example, another review it, and show the owner.
 - Select findings; don't apply them all. Rounds converge on edge
