@@ -57,7 +57,9 @@ point of failure is infinitely more useful than wrong data three layers later.
 possible moment. Batching validation errors (returning all 5 form errors at
 once instead of stopping at the first) is not a violation — you're still
 surfacing everything, you're just batching the surface. The violation is when
-errors are silently absorbed, not when they're collected.
+errors are silently absorbed, not when they're collected. Scrub on Entry
+makes this operational at system boundaries; a report cut short for a large
+input that says so is still not silent absorption.
 
 ### What "loud" means
 

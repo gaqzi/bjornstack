@@ -8,13 +8,14 @@ TENET: Fail Early and Loud
 3. For every acted-on field, define what values are valid — including relationships between fields. The constraints are whatever your domain logic assumes to be true.
    - Good: each assumption the domain makes, written down; such as a
      quantity above zero, or an end date after the start date.
-4. Validate all acted-on fields at the boundary. Collect every violation before rejecting — surface the full picture in one pass, not a fix-one-resubmit loop.
+4. Validate all acted-on fields at the boundary. Check each record in full and report every violation, naming the fields it involves, so the caller can fix them all in one round.
+   - When the input holds many records, a project may cap how many records it reports, such as the first 10. Each reported record still lists every violation in it, and a capped rejection must say it was cut short.
 5. Discard fields you don't act on. They aren't part of your domain — don't model what you don't use.
 6. Construct a domain object from validated data. After this point, domain logic never questions whether its inputs are valid.
 
 OUTCOMES:
 - Domain logic contains no defensive nil-checks, type coercions, or "just in case" defaults for external data.
-- Rejections identify every invalid field and the constraint it violated — a single response surfaces the full picture.
+- Each reported record names every invalid field and the constraint it violated; a rejection that leaves out failing records says so.
 - Fields you don't act on are excluded from validation — rejections only fire on things that would actually cause failures.
 
 MISAPPLICATIONS:
@@ -48,12 +49,20 @@ domain stays focused on what it actually needs.
 
 ### Why collect then reject
 
-Step 4 recommends collecting all violations before rejecting. This is a
+Step 4 reports every violation in a record before rejecting. This is a
 kindness to your users: discovering one error, fixing it, resubmitting, and
 discovering another is a miserable experience. A single rejection that
 surfaces every problem lets them fix everything in one pass. This is still
 failing early and loud — you're just being loud about *everything* at once
 rather than drip-feeding errors.
+
+A large input, such as a file of thousands of rows, can fail in thousands
+of places. A list that long is costly to build and send, and nobody reads
+past the first screen of it. Capping the number of records reported keeps
+the rejection useful; saying it was cut short keeps it honest, since the
+caller knows to expect more errors after fixing these. The cap falls
+between records, never inside one, so each record shown can be fixed in
+one go.
 
 ### Pass-through services
 
