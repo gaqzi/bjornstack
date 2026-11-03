@@ -14,7 +14,7 @@ Code either performs computation (business logic) or orchestrates collaborators 
 
 VIOLATIONS:
 - Mixed computation and coordination — a function that depends on
-  collaborators AND contains conditional business logic. Computation
+  collaborators AND contains business logic, conditional or not. Computation
   is a pure function; anything with side effects or collaborator
   dependencies is coordination. When both appear together, the logic
   can't be tested without the wiring.
@@ -69,11 +69,12 @@ concerns and should be refactored.
 
 A coordinator that does `result := svcA.Get(id); name := strings.ToUpper(result.Name); return svcB.Save(name)` — is `strings.ToUpper` "computation"?
 
-No. A trivial inline transform (a single expression with no conditionals) is
-still coordination. The test: if removing the transform doesn't change the
-test structure (you'd still mock the same collaborators), it's not computation.
-If the transform has conditionals, branches, or error cases of its own, extract
-it.
+No. A trivial inline transform (one operation or a short chain of them) is
+still coordination: its result shows up in what the coordinator passes on
+or returns, so the coordinator's own tests already cover it. A transform
+that needs test cases of its own is computation, even when it fits on one
+line; the usual causes are conditionals, branches, error cases, or a rule the domain
+defines, such as a total from quantity, price and tax.
 
 ### Where domain types live
 

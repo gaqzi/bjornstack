@@ -40,7 +40,9 @@ TENET: Compute or Coordinate
       call that only says how or for whom to do the work — which
       tenant it serves, how many items to fetch at a time — is chosen
       while setting up the work: build it into the collaborator that
-      uses it, so the coordinator never hands it on. Values one
+      uses it, so the coordinator never hands it on. Where a value
+      travels, as its own argument or inside the
+      request, does not change which kind it is. Values one
       collaborator returns and the coordinator passes to another are
       its work, not its signature.
    3. Replace every direct collaborator with a test double. All of them,
@@ -55,8 +57,9 @@ TENET: Compute or Coordinate
       user-safe messages), either directly or via a formatting
       collaborator.
    5. If the test count significantly exceeds N+1, or the coordinator
-      contains conditionals beyond error checks, it's likely mixing
-      computation into coordination — extract the logic.
+      contains conditionals beyond error checks or a transform that
+      needs test cases of its own, it's likely mixing computation into
+      coordination — extract the logic.
 
 OUTCOMES:
 - Computation tests use real values only — no test doubles.
@@ -157,18 +160,25 @@ most common way the strategy goes wrong in practice.
 A coordinator that does `result := svc.Get(id); name := toUpper(result.Name);
 svc2.Save(name)` — is `toUpper` computation? Is it a hidden collaborator?
 
-Neither. A trivial inline transform (a single expression, no conditionals)
-is still coordination. The test: if removing the transform doesn't change
-the test structure — you'd still mock the same collaborators — it's not
-computation worth extracting. More importantly, the transform's effect is
-visible in what gets passed to the next collaborator. If `toUpper`
-disappeared or was wrong, the mock expectation on `svc2.Save` would catch
-it — the test already covers this behavior without separate logic tests.
+Neither. A trivial inline transform (one operation or a short chain of
+them) is still coordination. Its effect is checked where its result goes:
+in what the coordinator passes to the next collaborator, or in the result
+it returns, which the test compares as a whole. If `toUpper` disappeared or was wrong, the mock expectation on
+`svc2.Save` would catch it — the test already covers this behavior without
+separate logic tests.
 
-Forcing extraction of every inline transform violates Practicality Beats
-Purity. The boundary is conditionals: if the transform has branches, error
-cases, or multi-step logic, it's computation hiding inside coordination.
-Extract it. If it's a single expression, leave it.
+A transform is computation when checking it needs test cases of its own:
+coordinator tests that vary the input only to see what the transform makes
+of it. Then it's computation hiding inside coordination: extract it and
+name it. The usual causes are branches, error cases, and values combined by
+a rule the domain defines, such as a total from quantity, price and tax.
+Less obvious ones count too: converting a price to cents needs rounding
+cases, and a lookup table needs a case for the missing key. Forcing
+extraction of every inline transform violates Practicality Beats Purity: a
+chain of operations that needs no cases of its own, such as trimming a name
+and lower-casing it, or joining a first and last name, is still a trivial
+transform, whether nested in one expression or split across statements:
+leave it.
 
 ### Coordinators that scrub
 
