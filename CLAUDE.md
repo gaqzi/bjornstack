@@ -65,8 +65,10 @@ Load the /beads-workflow skill before any `bd` command, when a bead ID appears i
 
 When drafting or changing a tenet, strategy, protocol or guard:
 
-- Draft it yourself from a two-sentence statement of the finding.
-  Subagents review; they don't write.
+- Draft it yourself from a two-sentence statement of the finding,
+  with the layer's editor skill loaded where one exists (such as
+  tenet-editor or strategy-editor). Subagents review; they don't
+  write.
 - Write in plain words a reader without this session's context can
   follow: no invented terms, no references to removed text, no
   rationale that only makes sense if you know the discussion — that
@@ -75,10 +77,12 @@ When drafting or changing a tenet, strategy, protocol or guard:
   - Blind reader: sees only the draft (and the tenet it serves),
     applies it to concrete cases you supply, and reports what it
     decided versus guessed. Use a small, fast model on purpose:
-    where it guesses, the text relies on judgment.
+    where it guesses, the text relies on judgment. It loads no
+    editor skill, so it reads the text cold.
   - Consistency check: reads the draft against its bead and the
     neighbouring layers, Rationale sections included, for
-    contradictions and stale text.
+    contradictions and stale text, and against the rules of the
+    layer's editor skill.
   - Adversarial pass, always: a strong model reads each change
     against the layer's own text and its neighbours, and reports
     where it narrows, widens or contradicts the intent, ideally
