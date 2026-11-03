@@ -9,13 +9,13 @@ TENET: Fail Early and Loud
    - Good: each assumption the domain makes, written down; such as a
      quantity above zero, or an end date after the start date.
 4. Validate all acted-on fields at the boundary. Check each record in full and report every violation, naming the fields it involves, so the caller can fix them all in one round.
-   - When the input holds many records, a project may cap how many records it reports, such as the first 10. Each reported record still lists every violation in it, and a capped rejection must say it was cut short.
+   - When the input holds many records, a project may cap how many records it reports, at a number that suits who reads the rejection, or stop checking early, between records. Each reported record still lists every violation in it, and a capped rejection must say how many errors it found after checking how many records, and how many it shows, such as "1,200 errors in 5,000 rows; first 20 shown" or "25 errors in the first 400 rows, all shown; stopped checking".
 5. Discard fields you don't act on. They aren't part of your domain — don't model what you don't use.
 6. Construct a domain object from validated data. After this point, domain logic never questions whether its inputs are valid.
 
 OUTCOMES:
 - Domain logic contains no defensive nil-checks, type coercions, or "just in case" defaults for external data.
-- Each reported record names every invalid field and the constraint it violated; a rejection that leaves out failing records says so.
+- Each reported record names every invalid field and the constraint it violated; a capped rejection states how many errors it found after checking how many records, and how many it shows.
 - Fields you don't act on are excluded from validation — rejections only fire on things that would actually cause failures.
 
 MISAPPLICATIONS:
@@ -57,12 +57,21 @@ failing early and loud — you're just being loud about *everything* at once
 rather than drip-feeding errors.
 
 A large input, such as a file of thousands of rows, can fail in thousands
-of places. A list that long is costly to build and send, and nobody reads
-past the first screen of it. Capping the number of records reported keeps
-the rejection useful; saying it was cut short keeps it honest, since the
-caller knows to expect more errors after fixing these. The cap falls
-between records, never inside one, so each record shown can be fixed in
-one go.
+of places. Whether to cap, and where, depends on who reads the rejection:
+a program calling an API can take every error and sort them itself, while
+a person uploading a file is better served by the first few. Ten records
+can be a lot in one place and a hundred too few in another, so the
+strategy names no number. Where a cap helps, it keeps the rejection
+readable; saying how many errors were found after checking how many
+records, and how many are shown, keeps it honest, since the caller knows
+how much is left and whether checking stopped early. The cap falls between
+records, never inside one, so each record shown can be fixed in one go.
+
+Stopping the checking itself early is a separate call. When checking is
+expensive and a large share of the records so far have failed, the input
+is likely wrong as a whole, such as the wrong file or shifted columns, and
+checking the rest only repeats the same error: stop between records, and
+say how many errors you found after checking how many records.
 
 ### Pass-through services
 
