@@ -40,10 +40,27 @@ large step of equivalent scope.
 
 ### What "small enough" means
 
-Small enough that a single rollback undoes a single concern. The heuristic:
-if you need "and" in the commit message to explain the change, it's too
-large. Each step is either a structural change (refactoring, reorganizing)
-or a behavioral change (new/modified functionality), never both.
+Small enough that a single rollback undoes a single concern. An "and" in
+the commit message is a cue to ask whether the change holds two concerns,
+not a verdict. Take the first of these that fits:
+
+- **One step** when one half adds no logic of its own and only shows that
+  the other works; such as a write and the plain read that proves it, or
+  a fix and the test that pins it.
+- **Two steps, in order,** when neither half could be reversed without
+  breaking the other but the halves deploy separately, such as an API and
+  its clients: first teach the receiving side to accept both the old and
+  the new form, then change the sender and mark which form it sends, so
+  either half can still be rolled back.
+- **One step** when neither half could be reversed without breaking the
+  other; such as a rename and the callers it updates.
+- **Two steps** when one half could land and be reversed on its own while
+  the other keeps working, even if it builds on the other; such as
+  recording payments and adding a monthly revenue report.
+
+Whatever the answer, each step is either a structural change
+(refactoring, reorganizing) or a behavioral change (new/modified
+functionality), never both.
 
 ### Walking skeletons are valid small steps
 
