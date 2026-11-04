@@ -156,6 +156,10 @@ experience are the richest source material.
 - **Rationale**: write for someone reading this for the first time who doesn't
   know the author. No first-person ("I", "my colleague"). No corporate
   jargon ("stakeholder alignment", "peer agreement"). Say it plainly.
+- **Overlapping cases**: when a rule has cases that overlap, write them as
+  a list in the order to try them and say so ("take the first that fits"),
+  not as one sentence of "unless" clauses. Exceptions go first. "What
+  small enough means" in `tenets/many-more-much-smaller-steps.md` does this.
 
 The test: read it aloud. If it sounds like a memo, rewrite it.
 

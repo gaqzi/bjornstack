@@ -61,6 +61,10 @@ Each step states its procedure first. Good and Bad cases under a step
 illustrate the procedure and never replace it: a reader should be able
 to follow the step with the cases deleted.
 
+When a step has cases that overlap, write them as a list in the order to
+try them and say so ("take the first that fits"), not as one sentence of
+"unless" clauses. Exceptions go first.
+
 ### Forked strategies
 
 When step 1 is a classification that leads to fundamentally different paths,

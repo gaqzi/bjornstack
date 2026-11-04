@@ -73,6 +73,9 @@ When drafting or changing a tenet, strategy, protocol or guard:
   follow: no invented terms, no references to removed text, no
   rationale that only makes sense if you know the discussion — that
   history belongs in the bead.
+- When a rule has cases that overlap, write them as a list in the
+  order to try them and say so ("take the first that fits"), not as
+  one sentence of "unless" clauses. Exceptions go first.
 - Review with independent subagents, each in its own role:
   - Blind reader: sees only the draft (and the tenet it serves),
     applies it to concrete cases you supply, and reports what it
