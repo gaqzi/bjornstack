@@ -51,7 +51,7 @@ and a "covered by C" row those of the C row it names. Drop rows, and
 | <a id="row-5"></a>5 | U Pointers to Interfaces (:124-125) | For interface methods to change the underlying data, the interface holds a pointer | covered by C | C1 [row 100](google-guide-decisions.md#row-100) (recv-type): a method that mutates has a pointer receiver, so only a pointer satisfies the interface | [recv-type](google-guide-decisions.md#rule-recv-type) | For the protocols | judgment |
 | <a id="row-6"></a>6 | U Verify Interface Compliance (:129-135, :177-178) | Assert interface compliance at compile time, `var _ http.Handler = (*Handler)(nil)`, where breaking it would break users | keep | Go-specific; no C row covers it. The source's three cases are kept as the test of "where appropriate" | [iface-assert](#rule-iface-assert) | For the protocols | judgment |
 | <a id="row-7"></a>7 | U Verify Interface Compliance (:180-182) | The assertion's right-hand side is the zero value of the asserted type | keep | Same | [iface-assert](#rule-iface-assert) | For the protocols | guard candidate |
-| <a id="row-8"></a>8 | U Zero-value Mutexes are Valid (:277-298) | A zero `sync.Mutex` is ready to use: `var mu sync.Mutex`, not `new(sync.Mutex)` | covered by C | C2 [row 86](google-best-practices.md#row-86) (var-decl): an empty value ready to use is `var x T` | [var-decl](google-best-practices.md#rule-var-decl) | For the protocols | guard candidate |
+| <a id="row-8"></a>8 | U Zero-value Mutexes are Valid (:277-298) | A zero `sync.Mutex` is ready to use: `var mu sync.Mutex`, not `new(sync.Mutex)` | covered by C | C2 [row 86](google-best-practices.md#row-86) (var-decl): an empty value ready to use is `var x T`; [row 88](google-best-practices.md#row-88) (var-pointer) keeps a mutex field a value | [var-decl](google-best-practices.md#rule-var-decl) | For the protocols | guard candidate |
 | <a id="row-9"></a>9 | U Zero-value Mutexes are Valid (:300-301) | A struct used by pointer holds its mutex as a non-pointer field | covered by C | C2 [row 88](google-best-practices.md#row-88) (var-pointer) | [var-pointer](google-best-practices.md#rule-var-pointer) | For the protocols | guard candidate |
 | <a id="row-10"></a>10 | U Zero-value Mutexes are Valid (:301, :356-362); Embedding in Structs (:2931) | Never embed a mutex, even in an unexported type | keep | Go-specific: embedding puts `Lock` and `Unlock` in the outer type's method set; stated twice in the source, one rule | [embed](#rule-embed) | For the protocols | guard candidate |
 | <a id="row-11"></a>11 | U Copy Slices and Maps at Boundaries (:369-415) | A slice or map received and stored still shares data with the caller; copy it when that is not meant | keep | Go aliasing trap; the source says "be wary", so it stays a judgment, not "always copy". Related: bjornstack.md compliance-suite checks returned values don't share stored state ([row 100](bjornstack.md#row-100)) | [slice-map-alias](#rule-slice-map-alias) | Go pitfalls | judgment |
@@ -62,7 +62,7 @@ and a "covered by C" row those of the C row it names. Drop rows, and
 | <a id="row-16"></a>16 | U Use `"time"` to handle time (:623-651) | Instants are `time.Time`, compared and shifted with its methods | keep | Go-specific; no C row covers it | [time-types](#rule-time-types) | For the protocols | judgment |
 | <a id="row-17"></a>17 | U Use `time.Duration` for periods of time (:653-687) | Periods are `time.Duration`, not an `int` of unknown unit | keep | Same | [time-types](#rule-time-types) | For the protocols | judgment |
 | <a id="row-18"></a>18 | U Use `time.Duration` for periods of time (:689-698) | `AddDate` for the same time on the next calendar day, `Add` for an exact duration, by intent | adapt | `AddDate` works on the calendar of the value's own zone; UTC Computation step 3 converts into the computation's zone before turning a value into a date | [time-add](#rule-time-add) | Go pitfalls | judgment |
-| <a id="row-19"></a>19 | U Use `time.Time` and `time.Duration` with external systems (:700-712) | Use `time.Time` and `time.Duration` with flags, JSON, SQL and YAML where possible | adapt | UTC Computation step 2 converts every instant to UTC where it enters, parsed input and storage included | [time-external](#rule-time-external) | Pattern mappings | judgment |
+| <a id="row-19"></a>19 | U Use `time.Time` and `time.Duration` with external systems (:700-712) | Use `time.Time` and `time.Duration` with flags, JSON, SQL and YAML where possible | adapt | UTC Computation step 2 converts an instant to UTC where it enters, except a value step 1 keeps local, which crosses as local date and time plus zone name, never as a bare `time.Time`; code that passes a timestamp on without reading it is UTC Computation's SKIP WHEN | [time-external](#rule-time-external) | Pattern mappings | judgment |
 | <a id="row-20"></a>20 | U Use `time.Time` and `time.Duration` with external systems (:714-742) | Where a format has no `Duration`, use `int` or `float64` with the unit in the field name (`IntervalMillis`) | keep | Go spelling of a wire field; no conflict | [time-external](#rule-time-external) | Pattern mappings | judgment |
 | <a id="row-21"></a>21 | U Use `time.Time` and `time.Duration` with external systems (:744-747) | Where a format has no `time.Time`, use an RFC 3339 string, unless another format is agreed | adapt | UTC Computation step 4: output programs read is UTC with the offset written out, or local time with its zone's name for values step 1 keeps local | [time-external](#rule-time-external) | Pattern mappings | judgment |
 | <a id="row-22"></a>22 | U Use `time.Time` and `time.Duration` with external systems (:749-753) | The `time` package ignores leap seconds | drop | A fact that asks nothing of the code; the source says it is rarely a problem | [dropped](#drop-22) | — | - |
@@ -70,32 +70,32 @@ and a "covered by C" row those of the C row it names. Drop rows, and
 | <a id="row-24"></a>24 | U Error Types (:765-768, :772-775) | An error no caller matches is `errors.New` for a fixed message, `fmt.Errorf` for one with values | keep | The other half of the source's table; no C row picks the constructor | [err-plain](#rule-err-plain) | For the protocols | judgment |
 | <a id="row-25"></a>25 | U Error Types (:886-887) | An exported error variable or type is part of the package's public API | keep | Failure Identity step 2 documents an identity with its operation, and its rationale ("Why not every failure gets an identity") puts it under Grow Don't Break | [err-contract](#rule-err-contract) | Pattern mappings | judgment |
 | <a id="row-26"></a>26 | U Error Wrapping (:897-900) | Return the error as it is when there is no context to add | covered by C | C2 [row 39](google-best-practices.md#row-39) (err-annotate), which keeps bjornstack.md err-wrap-where | [err-annotate](google-best-practices.md#rule-err-annotate) | Pattern mappings | guard candidate |
-| <a id="row-27"></a>27 | U Error Wrapping (:902-904) | Otherwise add context: "call service foo: connection refused" | already ours | bjornstack.md [row 121](bjornstack.md#row-121) (err-wrap-where) says where: errors from another unit's public function | [err-wrap-where](bjornstack.md#rule-err-wrap-where) | Go pitfalls | judgment |
+| <a id="row-27"></a>27 | U Error Wrapping (:902-904) | Otherwise add context: "call service foo: connection refused" | already ours | bjornstack.md [row 121](bjornstack.md#row-121) (err-wrap-where) says where: errors from another unit's public function. Ours is narrower: a private helper's error goes back unwrapped, where Uber adds context "where possible" | [err-wrap-where](bjornstack.md#rule-err-wrap-where) | Go pitfalls | judgment |
 | <a id="row-28"></a>28 | U Error Wrapping (:906-918) | `%w` when the caller should reach the cause, a good default; `%v` to hide it | already ours | bjornstack.md [row 48](bjornstack.md#row-48) (err-wrap-verb): `%v` at the edge, a single `%w` above it | [err-wrap-verb](bjornstack.md#rule-err-wrap-verb) | Go pitfalls | judgment |
 | <a id="row-29"></a>29 | U Error Wrapping (:913-915) | A wrapped known variable or type is documented and tested as part of the function's contract | covered by C | C2 [row 75](google-best-practices.md#row-75) (err-doc) documents it; Failure Identity step 6 tests it | [err-doc](google-best-practices.md#rule-err-doc) | Pattern mappings | judgment |
 | <a id="row-30"></a>30 | U Error Wrapping (:920-960) | Keep added context short; no "failed to" | covered by C | C2 [row 40](google-best-practices.md#row-40) (err-annotate) | [err-annotate](google-best-practices.md#rule-err-annotate) | Pattern mappings | guard candidate |
 | <a id="row-31"></a>31 | U Error Wrapping (:962-963) | Once an error goes to another system, such as a log, mark it as an error (an `err` tag, a "Failed" prefix) | keep | No C row says it; C2 log-errors covers what a log line says, not how it is marked | [log-err-mark](#rule-log-err-mark) | For the protocols | judgment |
 | <a id="row-32"></a>32 | U Error Naming (:969-989) | Package-level error values are named `ErrX` when exported, `errX` when not | keep | Go naming convention; no C row covers it | [err-naming](#rule-err-naming) | For the protocols | guard candidate |
-| <a id="row-33"></a>33 | U Error Naming (:991-1018) | Custom error types end in `Error` | keep | Same | [err-naming](#rule-err-naming) | For the protocols | guard candidate |
+| <a id="row-33"></a>33 | U Error Naming (:991-1018) | Custom error types end in `Error` | keep | Same. bjornstack.md [row 87](bjornstack.md#row-87) adopts the test-design example `cart.UnknownTaxRate`, which this rule would name `UnknownTaxRateError` | [err-naming](#rule-err-naming) | For the protocols | guard candidate |
 | <a id="row-34"></a>34 | U Handle Errors Once (:1037-1065) | Handle each error once; don't log an error and return it | covered by C | C2 [row 52](google-best-practices.md#row-52) (log-errors) | [log-errors](google-best-practices.md#rule-log-errors) | For the protocols | judgment |
 | <a id="row-35"></a>35 | U Handle Errors Once (:1031-1032, :1086-1101) | An error from an operation that is not strictly needed may be logged while the work carries on | keep | Failure Identity step 1's own example: a background job logs a failed cache refresh and carries on | [err-degrade](#rule-err-degrade) | Pattern mappings | judgment |
 | <a id="row-36"></a>36 | U Handle Errors Once (:1028-1030, :1104-1127) | Match one recoverable error the callee's contract defines and degrade; wrap and return the rest | adapt | The branch goes in a unit whose job is handling that failure: bjornstack.md coord-logic ([row 105](bjornstack.md#row-105)) and Failure Identity step 3 | [err-degrade](#rule-err-degrade) | Pattern mappings | judgment |
 | <a id="row-37"></a>37 | U Handle Type Assertion Failures (:1132-1156) | Always use the comma-ok form of a type assertion | keep | Go-specific; no C row covers it | [type-assert](#rule-type-assert) | For the protocols | guard candidate |
 | <a id="row-38"></a>38 | U Don't Panic (:1163-1205) | Production code returns errors and lets the caller decide; it does not panic | covered by C | C1 [row 82](google-guide-decisions.md#row-82) (err-no-panic) | [err-no-panic](google-guide-decisions.md#rule-err-no-panic) | Pattern mappings | judgment |
-| <a id="row-39"></a>39 | U Don't Panic (:1207-1214) | Panic only for the irrecoverable; program start-up may panic (`template.Must`) | covered by C | C2 [row 67](google-best-practices.md#row-67) (panic-scope); C1 [row 84](google-guide-decisions.md#row-84) (must-funcs) | [panic-scope](google-best-practices.md#rule-panic-scope) | For the protocols | judgment |
-| <a id="row-40"></a>40 | U Don't Panic (:1216-1245) | In tests, fail with `t.Fatal` or `t.FailNow`, not `panic` | adapt | Spelled with `require` (bjornstack.md test-require); builders-a's panic for a state not written yet stays, since `Build()` takes no `t` | [test-no-panic](#rule-test-no-panic) | Pattern mappings | judgment |
-| <a id="row-41"></a>41 | U Use go.uber.org/atomic (:1247-1300) | Use `go.uber.org/atomic`'s typed values instead of raw integers with `sync/atomic` functions | adapt | Typed atomics kept; the package follows C1 least-mechanism ([row 4](google-guide-decisions.md#row-4)): standard library before a new dependency | [atomic-typed](#rule-atomic-typed) | For the protocols | guard candidate |
-| <a id="row-42"></a>42 | U Avoid Mutable Globals (:1302-1377) | Don't mutate globals, function pointers included; inject dependencies | already ours | bjornstack.md [row 69](bjornstack.md#row-69) (coord-inject); the `time.Now` example is [row 74](bjornstack.md#row-74) (clock-inject) | [coord-inject](bjornstack.md#rule-coord-inject) | Pattern mappings | judgment |
-| <a id="row-43"></a>43 | U Avoid Embedding Types in Public Structs (:1379-1508) | Don't embed types in exported structs; write the delegating methods | keep | Embedding exports the inner type's methods without the check Intentionally Public step 3 asks for, and the embedded type can't change without a subtractive change (Grow Don't Break step 1). The source's own `Book` example embeds in an exported struct, so the rule is the litmus of row 82, not a ban | [embed](#rule-embed) | Pattern mappings | judgment |
-| <a id="row-44"></a>44 | U Avoid Using Built-In Names (:1510-1599) | No predeclared identifier as a variable, parameter or field name | keep | Go-specific; the source names `go vet` as the check | [builtin-names](#rule-builtin-names) | For the protocols | tool: go vet (named by the source) |
-| <a id="row-45"></a>45 | U Avoid `init()` (:1601-1620, :1708-1714) | Avoid `init()`; when used, deterministic, order-independent, no global or environment state, no I/O; the source's fitting uses kept | keep | Go-specific; exceptions kept | [no-init](#rule-no-init) | For the protocols | judgment |
+| <a id="row-39"></a>39 | U Don't Panic (:1207-1214) | Panic only for the irrecoverable; program start-up may panic (`template.Must`) | covered by C | C2 [row 67](google-best-practices.md#row-67) (panic-scope); C1 [row 84](google-guide-decisions.md#row-84) (must-funcs). By owner ruling 2026-11-16 (bs-f3o.2), panic-scope moves from log-and-exit to Uber's side: a broken invariant whose failure leaves state unrecoverable panics with a message naming it, and nothing recovers to carry on | [panic-scope](google-best-practices.md#rule-panic-scope) | For the protocols | judgment |
+| <a id="row-40"></a>40 | U Don't Panic (:1216-1245) | In tests, prefer failing with `t.Fatal` or `t.FailNow` over `panic` | adapt | Spelled with `require` (bjornstack.md test-require); `require` and `t.FailNow` work only on the test goroutine, so code running elsewhere reports with `t.Error`; builders-a's panic for a state not written yet stays, since `Build()` takes no `t` | [test-no-panic](#rule-test-no-panic) | Pattern mappings | judgment |
+| <a id="row-41"></a>41 | U Use go.uber.org/atomic (:1247-1300) | Use `go.uber.org/atomic`'s typed values instead of raw integers with `sync/atomic` functions | adapt | Typed atomics kept for values used atomically, not for all shared state; the package follows C1 least-mechanism ([row 4](google-guide-decisions.md#row-4)): standard library before a new dependency, as jetbrains-modern [rows 58-59](jetbrains-modern.md#row-58) also reach. Owner ruling 2026-11-16 on migrations: new code uses typed atomics, existing code stays until a migration is asked for | [atomic-typed](#rule-atomic-typed) | For the protocols | guard candidate |
+| <a id="row-42"></a>42 | U Avoid Mutable Globals (:1302-1377) | Don't mutate globals, function pointers included; inject dependencies | already ours | bjornstack.md [row 69](bjornstack.md#row-69) (coord-inject); the `time.Now` example is [row 74](bjornstack.md#row-74) (clock-inject). Ours is looser: coord-globals ([row 107](bjornstack.md#row-107)) allows diagnostic logging and metrics as globals | [coord-inject](bjornstack.md#rule-coord-inject) | Pattern mappings | judgment |
+| <a id="row-43"></a>43 | U Avoid Embedding Types in Public Structs (:1379-1508) | Don't embed types in exported structs; write the delegating methods | keep | Embedding exports the inner type's methods without the check Intentionally Public step 3 asks for, and the embedded type can't change without a subtractive change (Grow Don't Break step 1). The source calls such embedding "rarely necessary" (:1448), so in an exported struct a named field is the default; its `Book` example illustrates zero values, not a licence | [embed](#rule-embed) | Pattern mappings | judgment |
+| <a id="row-44"></a>44 | U Avoid Using Built-In Names (:1510-1599) | No predeclared identifier as a variable, parameter or field name | keep | Go-specific. The source only hedges that `go vet` "should correctly point out" such names (:1598), and default `go vet` is not known to check them, so no named check enforces it; revive's `redefines-builtin-id` might (unchecked) | [builtin-names](#rule-builtin-names) | For the protocols | guard candidate |
+| <a id="row-45"></a>45 | U Avoid `init()` (:1601-1620, :1708-1714) | Avoid `init()`; when used, it should attempt to be deterministic, order-independent, not access or change global or environment state, and do no I/O; such code likely belongs in `main`; the source's fitting uses kept | keep | Go-specific; the source's "should attempt to" and "likely belongs" kept, and its exceptions; registering a hook writes global state and is allowed | [no-init](#rule-no-init) | For the protocols | judgment |
 | <a id="row-46"></a>46 | U No goroutines in `init()` (:2069-2072) | `init()` starts no goroutines | keep | Same | [no-init](#rule-no-init) | For the protocols | guard candidate |
-| <a id="row-47"></a>47 | U Exit in Main (:1716-1789) | `os.Exit` and `log.Fatal` only in `main`; other functions return errors | covered by C | C2 [rows 58](google-best-practices.md#row-58) (main-exit) and [59](google-best-practices.md#row-59) (panic-scope); panic-scope also lets an invariant check end the program away from `main` | [main-exit](google-best-practices.md#rule-main-exit) | For the protocols | judgment |
+| <a id="row-47"></a>47 | U Exit in Main (:1716-1789) | `os.Exit` and `log.Fatal` only in `main`; other functions return errors | adapt | C has no "exit only in `main`": C2 main-exit ([row 58](google-best-practices.md#row-58)) routes start-up errors to `main`, and err-no-panic and panic-scope allow an end from initialization or an invariant check. Kept in main-run, with panic-scope's invariant panic as the exception | [main-run](#rule-main-run) | For the protocols | guard candidate |
 | <a id="row-48"></a>48 | U Exit Once (:1790-1906) | Exit at most once in `main`; the logic goes in a `run` function returning an error or exit code | keep | Go-specific; "if possible, prefer" keeps it a judgment | [main-run](#rule-main-run) | For the protocols | judgment |
 | <a id="row-49"></a>49 | U Use field tags in marshaled structs (:1908-1954) | Every marshaled field carries a tag naming it | keep | The serialized form is a contract (Boundary Communication step 3); the tag keeps it fixed when the Go field is renamed. Such types live in the boundary adapter (bjornstack.md scrub-boundary, [row 20](bjornstack.md#row-20)) | [wire-tags](#rule-wire-tags) | Pattern mappings | guard candidate |
-| <a id="row-50"></a>50 | U Don't fire-and-forget goroutines (:1967, :1971-1977) | Every goroutine has a predictable end or a stop signal, and a way to wait for it | covered by C | C1 [row 86](google-guide-decisions.md#row-86) (go-lifetime) | [go-lifetime](google-guide-decisions.md#rule-go-lifetime) | Pattern mappings | judgment |
+| <a id="row-50"></a>50 | U Don't fire-and-forget goroutines (:1967, :1971-1977) | Every goroutine has a predictable end or a stop signal, and a way to wait for it | keep | C1 [row 86](google-guide-decisions.md#row-86) (go-lifetime) accepts documenting when a goroutine exits instead of a way to wait; Uber's requirement is kept on top of it, as go-owner already does for background goroutines | [go-wait](#rule-go-wait) | Pattern mappings | judgment |
 | <a id="row-51"></a>51 | U Don't fire-and-forget goroutines (:1968-1969) | Test packages that may start goroutines for leaks with `go.uber.org/goleak` | keep | A check the source names | [tool-goleak](#rule-tool-goleak) | Tooling | tool: goleak (named by the source) |
-| <a id="row-52"></a>52 | U Wait for goroutines to exit (:2036-2067) | `sync.WaitGroup` for several goroutines, a `done` channel for one | covered by C | C1 [row 86](google-guide-decisions.md#row-86) (go-lifetime) names the `WaitGroup` | [go-lifetime](google-guide-decisions.md#rule-go-lifetime) | Pattern mappings | judgment |
+| <a id="row-52"></a>52 | U Wait for goroutines to exit (:2036-2067) | `sync.WaitGroup` for several goroutines, a `done` channel for one | keep | The `WaitGroup` is already in C1 [row 86](google-guide-decisions.md#row-86) (go-lifetime); the `done` channel for a single goroutine is not | [go-wait](#rule-go-wait) | Pattern mappings | judgment |
 | <a id="row-53"></a>53 | U No goroutines in `init()` (:2074-2078) | A package's background goroutine is owned by an object the user creates, whose `Close`, `Stop` or `Shutdown` signals it and waits | keep | Adds an owner to go-lifetime; no C row says it | [go-owner](#rule-go-owner) | For the protocols | judgment |
 | <a id="row-54"></a>54 | U Performance (:2150); Prefer strconv over fmt (:2152-2155) | On the hot path, `strconv` over `fmt` for primitives | keep | Hot-path scope kept | [perf-hot-path](#rule-perf-hot-path) | For the protocols | judgment |
 | <a id="row-55"></a>55 | U Performance (:2150); Avoid repeated string-to-byte conversions (:2192-2195) | On the hot path, convert a fixed string to `[]byte` once | keep | Same | [perf-hot-path](#rule-perf-hot-path) | For the protocols | judgment |
@@ -119,7 +119,7 @@ and a "covered by C" row those of the C row it names. Drop rows, and
 | <a id="row-73"></a>73 | U Function Grouping and Ordering (:2671) | Functions sorted in rough call order | keep | Go convention; no C row covers it | [file-order](#rule-file-order) | For the protocols | judgment |
 | <a id="row-74"></a>74 | U Function Grouping and Ordering (:2672, :2680-2681) | Functions grouped by receiver; plain utility functions toward the end | keep | Same | [file-order](#rule-file-order) | For the protocols | judgment |
 | <a id="row-75"></a>75 | U Function Grouping and Ordering (:2674-2675) | `struct`, `const` and `var` definitions first, then exported functions | keep | Same | [file-order](#rule-file-order) | For the protocols | guard candidate |
-| <a id="row-76"></a>76 | U Function Grouping and Ordering (:2677-2678) | A constructor follows its type, before the type's methods | keep | Same | [file-order](#rule-file-order) | For the protocols | guard candidate |
+| <a id="row-76"></a>76 | U Function Grouping and Ordering (:2677-2678) | A constructor may follow its type, before the type's methods | keep | Same; the source says "may appear", so it is a judgment | [file-order](#rule-file-order) | For the protocols | judgment |
 | <a id="row-77"></a>77 | U Reduce Nesting (:2725-2769) | Handle errors and special cases first; return early or `continue` | covered by C | C1 [row 60](google-guide-decisions.md#row-60) (err-indent-flow) | [err-indent-flow](google-guide-decisions.md#rule-err-indent-flow) | For the protocols | guard candidate |
 | <a id="row-78"></a>78 | U Unnecessary Else (:2771-2800) | A variable set in both branches of an `if` gets a default and a single `if` | keep | C1 err-indent-flow covers `else` after a return, not this | [if-default](#rule-if-default) | For the protocols | guard candidate |
 | <a id="row-79"></a>79 | U Top-level Variable Declarations (:2802-2843) | Top-level variables use `var` and leave the type out unless it differs from the expression's | keep | Go convention; C2 var-decl covers locals only | [top-var](#rule-top-var) | For the protocols | guard candidate |
@@ -134,7 +134,7 @@ and a "covered by C" row those of the C row it names. Drop rows, and
 | <a id="row-88"></a>88 | U nil is a valid slice (:3203-3205) | A nil slice and an empty one can be treated differently, such as in serialization | keep | The exception to row 85, kept with it | [nil-slice-return](#rule-nil-slice-return) | For the protocols | judgment |
 | <a id="row-89"></a>89 | U Reduce Scope of Variables (:3207-3233) | Narrow a variable's scope, as in an `if` initializer, unless that adds nesting | keep | C1 err-indent-flow covers only the opposite case (row 90) | [var-scope](#rule-var-scope) | For the protocols | judgment |
 | <a id="row-90"></a>90 | U Reduce Scope of Variables (:3235-3274) | A result needed after the `if` is declared before it | covered by C | C1 [row 61](google-guide-decisions.md#row-61) (err-indent-flow) | [err-indent-flow](google-guide-decisions.md#rule-err-indent-flow) | For the protocols | judgment |
-| <a id="row-91"></a>91 | U Reduce Scope of Variables (:3276-3308) | A constant is local unless several functions or files use it or it is part of the package's contract | keep | Go convention; no C row covers it | [var-scope](#rule-var-scope) | For the protocols | judgment |
+| <a id="row-91"></a>91 | U Reduce Scope of Variables (:3276-3308) | A constant need not be package-level unless several functions or files use it or it is part of the package's contract | keep | Go convention; no C row covers it; the source's "do not need to be global" kept | [var-scope](#rule-var-scope) | For the protocols | judgment |
 | <a id="row-92"></a>92 | U Avoid Naked Parameters (:3310-3335) | Comment unclear arguments in the call: `true /* isLocal */` | covered by C | C1 [row 75](google-guide-decisions.md#row-75) (fmt-arg-comments): no inline comments on call arguments | [fmt-arg-comments](google-guide-decisions.md#rule-fmt-arg-comments) | For the protocols | judgment |
 | <a id="row-93"></a>93 | U Avoid Naked Parameters (:3337-3358) | Better, replace a naked `bool` with a named type | keep | No C row covers it | [bool-param](#rule-bool-param) | For the protocols | judgment |
 | <a id="row-94"></a>94 | U Use Raw String Literals to Avoid Escaping (:3360-3382) | Raw string literals instead of hand-escaped strings | keep | C2 string-build covers multi-line constants, not escaping | [raw-strings](#rule-raw-strings) | For the protocols | guard candidate |
@@ -149,15 +149,15 @@ and a "covered by C" row those of the C row it names. Drop rows, and
 | <a id="row-103"></a>103 | U Format Strings outside Printf (:3612-3637) | A format string declared outside the call is a `const`, so `go vet` can check it | keep | Go-specific; the source names `go vet` as what checks the format, not as a check of this rule | [printf-vet](#rule-printf-vet) | For the protocols | guard candidate |
 | <a id="row-104"></a>104 | U Naming Printf-style Functions (:3639-3656) | A Printf-style function uses a standard name or one ending in `f` | keep | Same | [printf-vet](#rule-printf-vet) | For the protocols | guard candidate |
 | <a id="row-105"></a>105 | U Test Tables (:3662-3667, :3795-3799) | Use a table test when cases vary only in inputs and outputs | covered by C | C1 [row 155](google-guide-decisions.md#row-155), dropped: Parameterized Test Structure step 1 says it for every language | [dropped in C1](google-guide-decisions.md#drop-155) | — | - |
-| <a id="row-106"></a>106 | U Test Tables (:3746-3762) | The case slice is `tests`, each case `tt`; inputs prefixed `give`, expectations `want` | keep | A naming convention nothing else fixes | [test-table-names](#rule-test-table-names) | Pattern mappings | guard candidate |
+| <a id="row-106"></a>106 | U Test Tables (:3746-3762) | The case slice is `tests`, each case `tt`; inputs prefixed `give`, expectations `want` | keep | A naming convention nothing else fixes. The source only "encourage[s]" the prefixes (:3747), and under bjornstack.md test-table (owner ruling 2026-11-16) a case often carries an assertion function instead of `want` fields, so the prefixes are a preference | [test-table-names](#rule-test-table-names) | Pattern mappings | judgment |
 | <a id="row-107"></a>107 | U Avoid Unnecessary Complexity in Table Tests (:3764-3774) | No table test where subtests need conditional or complex logic; split it | already ours | bjornstack.md [row 64](bjornstack.md#row-64) (test-table): the body has no conditionals | [test-table](bjornstack.md#rule-test-table) | Pattern mappings | guard candidate |
 | <a id="row-108"></a>108 | U Avoid Unnecessary Complexity in Table Tests (:3780-3781) | Every table field is used in every case, and all test logic runs for every case | already ours | bjornstack.md [rows 64](bjornstack.md#row-64) and [65](bjornstack.md#row-65) (test-table) | [test-table](bjornstack.md#rule-test-table) | Pattern mappings | guard candidate |
 | <a id="row-109"></a>109 | U Avoid Unnecessary Complexity in Table Tests (:3778-3779, :3783-3788) | Aim for the narrowest unit of behaviour and a shallow "test depth" | drop | Aims the source states as ideals, not rules; test-whole-value's single `require.Equal` already keeps a check to one comparison | [dropped](#drop-109) | — | - |
-| <a id="row-110"></a>110 | U Avoid Unnecessary Complexity in Table Tests (:3790-3793) | Functions inside the table (`setupMocks func(*FooMock)`) make it confusing | drop | bjornstack.md test-table ([row 64](bjornstack.md#row-64), owner ruling 2026-11-16) keeps an assertion function per case; the source's example is mock setup, and coordinator tests follow Unit Testing's N+1 instead of a table (Parameterized Test Structure SKIP WHEN) | [dropped](#drop-110) | — | - |
+| <a id="row-110"></a>110 | U Avoid Unnecessary Complexity in Table Tests (:3790-3793) | Functions inside the table (`setupMocks func(*FooMock)`) make it confusing | adapt | The setup half is already ours: cases with different setup are separate tests (Parameterized Test Structure step 1), and coordinator tests follow Unit Testing's N+1 (its SKIP WHEN), as the source's own Good example (:3860-3887) does. Only assertion functions differ: bjornstack.md test-table ([row 64](bjornstack.md#row-64), owner ruling 2026-11-16) keeps one per case | [test-table-funcs](#rule-test-table-funcs) | Pattern mappings | judgment |
 | <a id="row-111"></a>111 | U Avoid Unnecessary Complexity in Table Tests (:3801-3803) | A short test body may branch once on a `shouldErr` field | covered by C | C1 [row 157](google-guide-decisions.md#row-157), dropped: contradicts bjornstack.md test-table | [dropped in C1](google-guide-decisions.md#drop-157) | — | - |
-| <a id="row-112"></a>112 | U Parallel Tests (:3896-3922) | With `t.Parallel()`, assign the loop variable inside the loop | drop | The source's own example assigns nothing: each iteration already has its own `tt` | [dropped](#drop-112) | — | - |
-| <a id="row-113"></a>113 | U Functional Options (:3926-4009) | Variadic options for optional arguments of constructors and public APIs expected to grow, especially at three or more arguments | covered by C | C2 [row 99](google-best-practices.md#row-99) (func-options): when to use variadic options | [func-options](google-best-practices.md#rule-func-options) | Pattern mappings | judgment |
-| <a id="row-114"></a>114 | U Functional Options (:4011-4071) | Implement options as an `Option` interface with an unexported `apply` method on an unexported `options` struct, not closures | keep | C2 func-options says when, not how; no conflict | [option-iface](#rule-option-iface) | For the protocols | judgment |
+| <a id="row-112"></a>112 | U Parallel Tests (:3896-3922) | With `t.Parallel()`, assign the loop variable inside the loop | drop | Since Go 1.22, in a module declaring `go 1.22` or later, each iteration has its own loop variable; jetbrains-modern [row 27](jetbrains-modern.md#row-27) already decides redundant `v := v` copies | [dropped](#drop-112) | — | - |
+| <a id="row-113"></a>113 | U Functional Options (:3926-4009) | Variadic options for optional arguments of constructors and public APIs expected to grow, especially at three or more arguments | covered by C | C2 [row 99](google-best-practices.md#row-99) (func-options): C's criteria (most callers pass none, the options are many or take arguments, an option can fail, other packages define their own) replace Uber's "expected to grow, three or more arguments" | [func-options](google-best-practices.md#rule-func-options) | Pattern mappings | judgment |
+| <a id="row-114"></a>114 | U Functional Options (:4011-4071) | Implement options as an `Option` interface with an unexported `apply` method on an unexported `options` struct, not closures | adapt | The source calls it "our suggested way" (:4011), so it is a preference. It clashes with C2 func-options where other packages may define options: an unexported `apply` method rules that out, so there the option type stays open to them | [option-iface](#rule-option-iface) | For the protocols | judgment |
 | <a id="row-115"></a>115 | U Linting (:4083-4096) | Lint consistently, with at least `errcheck`, `goimports`, `revive`, `govet` and `staticcheck` | keep | Extends tool-finish (bjornstack.md [row 78](bjornstack.md#row-78)); `errcheck` checks C1 err-handle | [tool-lint](#rule-tool-lint) | Tooling | tool: errcheck, goimports, revive, go vet, staticcheck (named by the source) |
 | <a id="row-116"></a>116 | U Lint Runners (:4098-4103) | Run the linters with `golangci-lint` | keep | Same | [tool-lint](#rule-tool-lint) | Tooling | tool: golangci-lint (named by the source) |
 
@@ -204,17 +204,20 @@ read 2026-11-16.
 
 <a id="rule-time-external"></a>**time-external.** Exchange times with outside systems as `time.Time`
 and `time.Duration` where the format supports them (flags, JSON, SQL,
-YAML), and convert each instant to UTC where it enters (UTC Computation
-step 2). Where a format cannot carry a `time.Duration`, use an `int` or
-`float64` with the unit in the field name: `IntervalMillis`. Where it
-cannot carry a `time.Time`, write an RFC 3339 string in UTC (UTC
-Computation step 4), unless another format is agreed; a value that UTC
-Computation step 1 keeps as local time is written as local date and
-time with its zone's name.
+YAML). Code that reads an instant converts it to UTC where it enters
+(UTC Computation step 2); code that only passes a timestamp on without
+reading it leaves it as it is (UTC Computation, SKIP WHEN). A value
+that UTC Computation step 1 keeps as local time crosses as local date
+and time plus its zone's name, never as a bare `time.Time`, whose
+RFC 3339 form carries an offset but no zone name. Where a format
+cannot carry a `time.Duration`, use an `int` or `float64` with the
+unit in the field name: `IntervalMillis`. Where it cannot carry a
+`time.Time`, write an RFC 3339 string in UTC (UTC Computation step 4),
+unless another format is agreed.
 Source: U "Use `time.Time` and `time.Duration` with external systems"
 (:700-747), `1d60a91aa5e8`, read 2026-11-16.
-Differs: Uber writes RFC 3339 in any offset and does not convert on
-entry.
+Differs: Uber writes RFC 3339 in any offset, does not convert on
+entry, and sends every time as `time.Time` where the format allows.
 ↩ rows [19](#row-19), [20](#row-20), [21](#row-21)
 
 <a id="rule-err-contract"></a>**err-contract.** An exported sentinel or error type is part of the
@@ -241,10 +244,13 @@ Differs: Uber matches and recovers inline, wherever the error is
 received.
 ↩ rows [35](#row-35), [36](#row-36)
 
-<a id="rule-test-no-panic"></a>**test-no-panic.** A test, and code it calls to set up, fails through
-`t` with `require` (test-require), never with `panic`, so the test is
-marked failed. The exception is builders-a's panic for a state not
-written yet, since `Build()` takes no `*testing.T`.
+<a id="rule-test-no-panic"></a>**test-no-panic.** A test, and code it calls to set up, prefers
+failing through `t` with `require` (test-require) over `panic`, so the
+test is marked failed. `require` and `t.FailNow` work only on the test
+goroutine; code that runs elsewhere, such as an `httptest` handler or
+a double the code under test calls, reports with `t.Error`. Exception:
+builders-a's panic for a state not written yet, since `Build()` takes
+no `*testing.T`.
 Source: U "Don't Panic" (:1216-1245), `1d60a91aa5e8`, read 2026-11-16.
 Differs: Uber names `t.Fatal` and `t.FailNow`; we use `require`, which
 fails through `t.FailNow`.
@@ -256,7 +262,8 @@ that counts the bytes it passes on; otherwise hold it in a named field
 and write the delegating methods. Embedding must not make the outer
 type harder to build or use, spoil a useful zero value, change its
 copy semantics, expose unexported types or internals, or change what
-the inner methods do in a surprising way. In an exported struct the
+the inner methods do in a surprising way. In an exported struct,
+default to a named field with delegating methods: there the
 embedded type joins the contract (Intentionally Public step 3):
 adding methods to an embedded interface, removing methods from an
 embedded struct, or removing or replacing the embedded type breaks
@@ -278,10 +285,23 @@ Source: U "Use field tags in marshaled structs" (:1908-1954),
 ↩ row [49](#row-49)
 
 <a id="rule-test-table-names"></a>**test-table-names.** In a table test the slice of cases is `tests`
-and each case `tt`. Input fields start with `give` and expected values
-with `want`.
+and each case `tt`. Prefer `give` as the prefix of input fields and
+`want` for expected-value fields; a case that carries an assertion
+function (test-table) may have no `want` field.
 Source: U "Test Tables" (:3743-3762), `1d60a91aa5e8`, read 2026-11-16.
 ↩ row [106](#row-106)
+
+<a id="rule-test-table-funcs"></a>**test-table-funcs.** A table carries no setup or
+mock-expectation functions: cases that need different setup are
+separate tests (Parameterized Test Structure step 1), and coordinator
+tests with one case per collaborator's failure follow Unit Testing's
+N+1 pattern (Parameterized Test Structure, SKIP WHEN). A case may
+carry an assertion function (test-table).
+Source: U "Avoid Unnecessary Complexity in Table Tests" (:3790-3793,
+:3860-3887), `1d60a91aa5e8`, read 2026-11-16.
+Differs: Uber counts any function in the table as confusing, an
+assertion function included.
+↩ row [110](#row-110)
 
 ### Go pitfalls
 
@@ -370,10 +390,12 @@ Source: U "Handle Type Assertion Failures" (:1132-1159),
 `1d60a91aa5e8`, read 2026-11-16.
 ↩ row [37](#row-37)
 
-<a id="rule-atomic-typed"></a>**atomic-typed.** Hold a value shared between goroutines in a typed
-atomic, such as `atomic.Bool`, not in a plain integer read and written
-with `sync/atomic` functions, where one plain read is a race. Take the
-type from `sync/atomic` (least-mechanism).
+<a id="rule-atomic-typed"></a>**atomic-typed.** Where new code reads and writes a value
+atomically, use a typed atomic from `sync/atomic`, such as
+`atomic.Bool`, not a plain integer passed to the `sync/atomic`
+functions, where one plain read is a race (least-mechanism). Code
+already on the functions stays on them until a migration is asked
+for; say that it is on the old form, so a migration can be considered.
 Source: U "Use go.uber.org/atomic" (:1247-1300), `1d60a91aa5e8`, read
 2026-11-16.
 Differs: Uber uses `go.uber.org/atomic`.
@@ -386,24 +408,28 @@ Source: U "Avoid Using Built-In Names" (:1510-1599), `1d60a91aa5e8`,
 read 2026-11-16.
 ↩ row [44](#row-44)
 
-<a id="rule-no-init"></a>**no-init.** Avoid `init()`. Where it is unavoidable, it is
-deterministic, does not depend on the order or effects of other
-`init()` functions, reads no global or environment state (environment
-variables, working directory, arguments), does no I/O, and starts no
-goroutines; otherwise the work is a function called from `main`.
-Fitting uses: a value no single expression can build, registering a
-pluggable hook such as a `database/sql` driver, and deterministic
-precomputation.
+<a id="rule-no-init"></a>**no-init.** Avoid `init()`. Where it is unavoidable, it aims to be
+deterministic, to not depend on the order or effects of other `init()`
+functions, to not read or change global or environment state
+(environment variables, working directory, arguments), and to do no
+I/O; code that can't meet these likely belongs in a function called
+from `main`. It never starts goroutines. Fitting uses: a value no
+single expression can build, registering a pluggable hook such as a
+`database/sql` driver, which writes global state and is allowed, and
+deterministic precomputation.
 Source: U "Avoid `init()`" (:1601-1714), "No goroutines in `init()`"
 (:2069-2072), `1d60a91aa5e8`, read 2026-11-16.
 ↩ rows [45](#row-45), [46](#row-46)
 
-<a id="rule-main-run"></a>**main-run.** Where possible, `main` ends the process in one place: it
-calls a function, such as `run`, that returns an error or an exit
-code, and exits once on failure. The function's name and signature are
-free.
-Source: U "Exit Once" (:1790-1906), `1d60a91aa5e8`, read 2026-11-16.
-↩ row [48](#row-48)
+<a id="rule-main-run"></a>**main-run.** Only `main` calls `os.Exit` or `log.Fatal`; other
+functions return errors. The exception is panic-scope's panic on a
+broken invariant. Where possible, `main` ends the process in one
+place: it calls a function, such as `run`, that returns an error or an
+exit code, and exits once on failure. The function's name and
+signature are free.
+Source: U "Exit in Main" (:1716-1789), "Exit Once" (:1790-1906),
+`1d60a91aa5e8`, read 2026-11-16.
+↩ rows [47](#row-47), [48](#row-48)
 
 <a id="rule-go-owner"></a>**go-owner.** A package that needs a background goroutine starts it
 only when the user creates the object that owns it. That object has a
@@ -412,6 +438,16 @@ goroutine to stop and waits for it to exit.
 Source: U "No goroutines in `init()`" (:2069-2146), `1d60a91aa5e8`,
 read 2026-11-16.
 ↩ row [53](#row-53)
+
+<a id="rule-go-wait"></a>**go-wait.** Every goroutine has a predictable end or a signal that
+stops it, and the code that starts it has a way to wait for it to
+exit: a `sync.WaitGroup` for several goroutines, a `done` channel the
+goroutine closes for one.
+Source: U "Don't fire-and-forget goroutines" (:1967-1977), "Wait for
+goroutines to exit" (:2036-2067), `1d60a91aa5e8`, read 2026-11-16.
+Differs: C1 go-lifetime also accepts documenting when the goroutine
+exits; we require a way to wait.
+↩ rows [50](#row-50), [52](#row-52)
 
 <a id="rule-perf-hot-path"></a>**perf-hot-path.** On a hot path only: convert primitives to and from
 strings with `strconv`, not `fmt`, and convert a fixed string to
@@ -440,8 +476,8 @@ Source: U "Import Aliasing" (:2622-2634), `1d60a91aa5e8`, read
 
 <a id="rule-file-order"></a>**file-order.** In a file, types, constants and variables come first,
 then exported functions, then the rest, sorted roughly in call order.
-Functions with the same receiver sit together, the constructor right
-after its type and before its methods; plain functions come last.
+Functions with the same receiver sit together; a constructor may
+follow its type, before its methods; plain functions come last.
 Source: U "Function Grouping and Ordering" (:2669-2723),
 `1d60a91aa5e8`, read 2026-11-16.
 ↩ rows [73](#row-73), [74](#row-74), [75](#row-75), [76](#row-76)
@@ -469,9 +505,8 @@ Source: U "nil is a valid slice" (:3111-3205), `1d60a91aa5e8`, read
 
 <a id="rule-var-scope"></a>**var-scope.** Narrow a variable's scope where that adds no nesting:
 `if err := os.WriteFile(name, data, 0o644); err != nil`. A constant
-used by one function is declared in it; it is package-level only when
-several functions or files use it or it is part of the package's
-contract.
+need not be package-level unless several functions or files use it or
+it is part of the package's contract.
 Source: U "Reduce Scope of Variables" (:3207-3308), `1d60a91aa5e8`,
 read 2026-11-16.
 ↩ rows [89](#row-89), [91](#row-91)
@@ -507,12 +542,17 @@ Source: U "Format Strings outside Printf" and "Naming Printf-style
 Functions" (:3612-3656), `1d60a91aa5e8`, read 2026-11-16.
 ↩ rows [103](#row-103), [104](#row-104)
 
-<a id="rule-option-iface"></a>**option-iface.** Implement functional options as an `Option`
-interface with an unexported `apply(*options)` method that records
-into an unexported `options` struct, not as closures: options can then
-be compared in tests and can implement `fmt.Stringer`.
+<a id="rule-option-iface"></a>**option-iface.** Prefer implementing functional options as an
+`Option` interface with an unexported `apply(*options)` method that
+records into an unexported `options` struct, over closures: options
+can then be compared in tests and can implement `fmt.Stringer`. Where
+other packages are meant to define options (func-options), use
+exported option functions instead, since the unexported `apply`
+method keeps other packages from implementing `Option`.
 Source: U "Functional Options" (:4011-4071), `1d60a91aa5e8`, read
 2026-11-16.
+Differs: Uber gives the interface as its suggested way without the
+case of options defined in other packages.
 ↩ row [114](#row-114)
 
 ## Dropped
@@ -560,46 +600,31 @@ Dropped because: The source states them as ideals, not rules. The two concrete i
 
 ↩ row [109](#row-109)
 
-### <a id="drop-110"></a>Row 110: No functions in the table
-
-Source: U "Avoid Unnecessary Complexity in Table Tests" (:3790-3793): table tests become confusing if they "place functions inside the table (e.g. `setupMocks func(*FooMock)`)".
-
-In practice: A table carries no function fields; cases that need different checks become separate tests.
-
-Dropped because: bjornstack.md test-table (row 64, owner ruling 2026-11-16) keeps an assertion function per case. The source's example is mock setup, and coordinator tests follow Unit Testing's N+1 pattern instead of a table (Parameterized Test Structure, SKIP WHEN).
-
-↩ row [110](#row-110)
-
 ### <a id="drop-112"></a>Row 112: Copy the loop variable for parallel subtests
 
 Source: U "Parallel Tests" (:3898-3901): parallel tests "must take care to explicitly assign loop variables within the loop's scope to ensure that they hold the expected values."
 
 In practice: Each loop starts with `tt := tt` before `t.Run`.
 
-Dropped because: The source's own example (:3911-3916) assigns nothing and says "we must declare a `tt` variable scoped to the loop iteration", which the `for` statement already does: each iteration has its own `tt`.
+Dropped because: Since Go 1.22, in a module whose `go.mod` declares `go 1.22` or later, each loop iteration has its own variable, so the copy is redundant. jetbrains-modern [row 27](jetbrains-modern.md#row-27) already decides redundant `v := v` copies.
 
 ↩ row [112](#row-112)
 
 ## Open for owner
 
-Rows whose decision rests on reading a strategy or an owner ruling
-against this source, where another reading is possible:
+Decisions still open after the 2026-11-16 review (bs-f3o.2, owner
+rulings):
 
-1. **Recovering from one identified failure (row 36).** Uber matches
-   the error and falls back inline; err-degrade moves that branch into
-   a unit whose job is handling the failure, reading coord-logic and
-   Failure Identity step 3 as covering a fallback, not only a retry or
-   a status.
-2. **Panics in tests (row 40).** test-no-panic keeps builders-a's
-   panic for a state not written yet, against Uber's "prefer
-   `t.Fatal` over panics".
-3. **Typed atomics (row 41).** atomic-typed takes the types from
-   `sync/atomic`, on least-mechanism; the source names only
-   `go.uber.org/atomic`, so the standard-library types were not
-   checked against a pinned source.
-4. **Linters (rows 115-116).** tool-lint adds `errcheck`, `revive`,
+1. **goleak (row 51).** tool-goleak adds `go.uber.org/goleak` as a
+   test dependency. Suggested: a guard candidate, not part of
+   tool-finish.
+2. **Linters (rows 115-116).** tool-lint adds `errcheck`, `revive`,
    `staticcheck` and `golangci-lint` beside tool-finish. That is a
    tooling choice and a set of dependencies, not only a style rule.
-5. **`_` prefix for unexported globals (row 80).** C1 name-underscores
-   rules it out; Uber's reason, a local variable silently shadowing a
-   package-level one, is C2 shadow-block's concern.
+   Suggested: guard candidates, not part of tool-finish.
+   community-skills.md defines the same rule id, tool-lint, so the
+   two must be merged before go.md is assembled.
+3. **Grouping local variables (row 63).** C has no rule on grouping
+   locals, and C2 var-decl conflicts only for initialised variables,
+   so grouping adjacent zero-value variables (`var err error`) is left
+   undecided. Suggested: drop.
