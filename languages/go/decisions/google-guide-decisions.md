@@ -31,141 +31,147 @@ is enforced: "tool" when the pinned source itself names a check that
 enforces it, "guard candidate" when the rule is mechanical but no
 check is named, "judgment" when a person or an agent has to decide.
 For "already ours" rows it repeats the check bjornstack.md gives.
-Drop rows have "-".
+Drop rows have "-". Rows that are ordinary Go conventions are dropped
+under the go-conventions rule (owner ruling 2026-11-16). A source item
+holding two rules is split into rows "Na" and "Nb", keeping row numbers
+stable; a row marked "open" waits for an owner pick.
 
 | # | Source | Item | Decision | Reason | Rule id | Section | Check |
 |---|---|---|---|---|---|---|---|
 | <a id="row-1"></a>1 | G:23-41, G:365-378 | Principles in order clarity, simplicity, concision, maintainability, consistency; consistency only breaks ties | drop | Contradicts the Consistent Beats Correct tenet, which puts following established patterns above a locally better approach | [dropped](#drop-1) | — | - |
-| <a id="row-2"></a>2 | G:79-105 | Comments explain why, not what; don't restate the code | drop | Same rule as bjornstack.md row 70, dropped there as language-neutral; bs-cbr's strategy owns where reasoning lives | [dropped](#drop-2) | — | - |
+| <a id="row-2"></a>2 | G:79-105 | Comments explain why, not what; don't restate the code | drop | Same rule as bjornstack.md row 70, dropped there as language-neutral; Say It Once step 3 owns where implementation reasoning lives | [dropped](#drop-2) | — | - |
 | <a id="row-3"></a>3 | G:155-180 | Add complexity deliberately and document it, with tests and examples | drop | Language-neutral principle with nothing Go-specific | [dropped](#drop-3) | — | - |
 | <a id="row-4"></a>4 | G:184-197 | Least mechanism: core language construct, then standard library, then an existing core library, before a new dependency | adapt | Google's third tier is its internal codebase; ours is a dependency the module already has | [least-mechanism](#rule-least-mechanism) | For the protocols | judgment |
 | <a id="row-5"></a>5 | G:199-203 | Tests override a flag-bound variable directly rather than with `flag.Set` | drop | Flags live only in `package main` (row 109); tests reach a binary through its command line (bjornstack.md bb-package) and a package only through its exports (test-pkg) | [dropped](#drop-5) | — | - |
 | <a id="row-6"></a>6 | G:205-208 | A set is a `map[T]bool` unless it needs operations a map makes hard | keep | Go form of least mechanism | [least-mechanism](#rule-least-mechanism) | For the protocols | judgment |
 | <a id="row-7"></a>7 | G:250-260 | Point out an unusual error check, such as `err == nil`, with a comment | keep | Go-specific: the reader expects `if err != nil` | [err-boost-signal](#rule-err-boost-signal) | For the protocols | judgment |
 | <a id="row-8"></a>8 | G:295-340 | Where one character decides a line's meaning (`=` vs `:=`, a `!`), write it out or comment it | keep | Go-specific trap with `=` and `:=` | [explicit-critical](#rule-explicit-critical) | For the protocols | judgment |
-| <a id="row-9"></a>9 | G:346-351 | Parameters and receivers for the same concept share a name | keep | Consistent Beats Correct, spelled for Go names | [name-predictable](#rule-name-predictable) | For the protocols | judgment |
-| <a id="row-10"></a>10 | G:396-399 | All Go files are formatted by `gofmt` | already ours | bjornstack.md row 78 (tool-finish) | [tool-finish](bjornstack.md#rule-tool-finish) | Tooling | tool: gofmt (named by the source) |
-| <a id="row-11"></a>11 | G:400-401 | Generated code is formatted too, e.g. with `format.Source` | keep | Not covered by tool-finish, which checks files on disk only after generation | [fmt-generated](#rule-fmt-generated) | Tooling | guard candidate |
-| <a id="row-12"></a>12 | G:408-426 | MixedCaps for multi-word names, even against other languages' conventions | keep | Core Go convention; exemptions kept | [name-mixedcaps](#rule-name-mixedcaps) | For the protocols | guard candidate |
-| <a id="row-13"></a>13 | G:432-442 | No fixed line length; refactor rather than split; don't split before an indentation change or inside a long string | keep | Go convention; no conflict | [fmt-line-length](#rule-fmt-line-length) | For the protocols | judgment |
+| <a id="row-9"></a>9 | G:346-351 | Parameters and receivers for the same concept typically share a name | keep | Consistent Beats Correct, spelled for Go names | [name-predictable](#rule-name-predictable) | For the protocols | judgment |
+| <a id="row-10"></a>10 | G:396-399 | All Go files are formatted by `gofmt` | already ours | bjornstack.md row 78 (tool-finish) | [tool-finish](bjornstack.md#rule-tool-finish) | Tooling | tool: gofmt (tool-finish) |
+| <a id="row-11"></a>11 | G:400-401 | Generated code is formatted too, e.g. with `format.Source` | already ours | bjornstack.md row 78 (tool-finish): `gofmt -l .` already catches generated files on disk | [tool-finish](bjornstack.md#rule-tool-finish) | Tooling | tool: gofmt (tool-finish) |
+| <a id="row-12"></a>12 | G:408-426 | MixedCaps for multi-word names, even against other languages' conventions | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-13"></a>13 | G:432-442 | No fixed line length; refactor rather than split; don't split before an indentation change or inside a long string | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-14"></a>14 | G:463-481 | Where the guide is silent, follow nearby code's consistent stance | drop | Consistent Beats Correct says it for every language | [dropped](#drop-14) | — | - |
 | <a id="row-15"></a>15 | G:483-489 | A change may not worsen a style deviation; clean up in the same change or refactor first | drop | Language-neutral: Consistent Beats Correct's "changed everywhere it appears" and Tidy or Change's structural-first commits cover it | [dropped](#drop-15) | — | - |
-| <a id="row-16"></a>16 | D:58-73, D:92-110 | No underscores in names, with exceptions: test function names, packages only generated code imports, `_test` packages, OS/cgo interop; file names may have them | keep | Go convention; exceptions kept | [name-underscores](#rule-name-underscores) | For the protocols | guard candidate |
+| <a id="row-16"></a>16 | D:58-73, D:92-110 | No underscores in names, with exceptions: test function names, packages only generated code imports, `_test` packages, OS/cgo interop; file names may have them | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-17"></a>17 | D:83-86 | Package names lower-case letters and digits, multi-word names unbroken (`tabwriter`) | already ours | bjornstack.md row 1 (pkg-naming: short lower-case noun) | [pkg-naming](bjornstack.md#rule-pkg-naming) | Pattern mappings | judgment |
 | <a id="row-18"></a>18 | D:88-90 | Avoid package names a common local variable would shadow (`usercount`, not `count`) | keep | Not in pkg-naming; fits Domain-First Packaging step 2's domain noun | [pkg-name-shadow](#rule-pkg-name-shadow) | Pattern mappings | judgment |
 | <a id="row-19"></a>19 | D:117-123 | Avoid uninformative package names: `util`, `common`, `helper`, `model`, `testhelper` | already ours | bjornstack.md rows 3 and 71 (proto-packages) | [proto-packages](bjornstack.md#rule-proto-packages) | For the protocols | guard candidate |
-| <a id="row-20"></a>20 | D:92-94, D:125-130, D:887-899 | Imports are not renamed, except on a collision (rename the most local one); a local name follows package-name rules and is the same in every file | keep | Go convention | [import-rename](#rule-import-rename) | For the protocols | guard candidate |
-| <a id="row-21"></a>21 | D:901-912 | Generated protobuf packages are renamed without underscores and with a `pb` suffix | keep | We use protobuf (bjornstack.md test-protobuf) | [import-rename](#rule-import-rename) | For the protocols | guard candidate |
-| <a id="row-22"></a>22 | D:914-926 | An uninformative import name (`util`, `v1`) may be renamed, sparingly; prefer fixing the package's name | keep | Go convention | [import-rename](#rule-import-rename) | For the protocols | judgment |
-| <a id="row-23"></a>23 | D:928-933 | An import that collides with a needed local variable is renamed with a `pkg` suffix (`urlpkg`) | keep | Go convention | [import-rename](#rule-import-rename) | For the protocols | guard candidate |
-| <a id="row-24"></a>24 | D:148-160 | Receiver names: one or two letters, abbreviating the type, same on every method, never `this`, `self` or `_` | keep | Go convention; Be Your Name allows a short name whose definition is in sight | [recv-name](#rule-recv-name) | For the protocols | guard candidate |
-| <a id="row-25"></a>25 | D:168-197 | Constants use MixedCaps; no `MAX_SIZE`, no `k` prefix | keep | Same rule as row 12, stated for constants | [name-mixedcaps](#rule-name-mixedcaps) | For the protocols | guard candidate |
+| <a id="row-20"></a>20 | D:92-94, D:125-130, D:887-899 | Imports are not renamed, except on a collision (rename the most local one); a local name follows package-name rules and is the same in every file | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-21"></a>21 | D:901-912 | Generated protobuf packages are renamed without underscores and with a `pb` suffix | keep | Where the project uses protobuf (bjornstack.md test-protobuf), its generated packages need a rename this rule fixes | [import-rename](#rule-import-rename) | For the protocols | guard candidate |
+| <a id="row-22"></a>22 | D:914-926 | An uninformative import name (`util`, `v1`) may be renamed, sparingly; prefer fixing the package's name | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-23"></a>23 | D:928-933 | An import that collides with a needed local variable is renamed with a `pkg` suffix (`urlpkg`) | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-24"></a>24 | D:148-160 | Receiver names: one or two letters, abbreviating the type, same on every method, never `this`, `self` or `_` | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-25"></a>25 | D:168-197 | Constants use MixedCaps; no `MAX_SIZE`, no `k` prefix | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-26"></a>26 | D:199-212 | Name constants for their role, not their value; a value with no role is not a constant | keep | Be Your Name for constants | [const-role](#rule-const-role) | For the protocols | judgment |
-| <a id="row-27"></a>27 | D:228-260 | Initialisms keep one case (`URL`, `ID`, `xmlAPI`, `gRPC`/`GRPC`) | keep | Go convention; exemptions kept | [name-initialisms](#rule-name-initialisms) | For the protocols | guard candidate |
-| <a id="row-28"></a>28 | D:276-278 | No `Get` prefix unless the concept is "get" (HTTP GET) | keep | Go convention | [name-getters](#rule-name-getters) | For the protocols | guard candidate |
+| <a id="row-27"></a>27 | D:228-260 | Initialisms keep one case (`URL`, `ID`, `xmlAPI`, `gRPC`/`GRPC`) | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-28"></a>28 | D:276-278 | No `Get` prefix unless the concept is "get" (HTTP GET) | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-29"></a>29 | D:280-283 | `Compute` or `Fetch` for a call that is expensive or remote | keep | Be Your Name: the name warns it may block or fail | [name-getters](#rule-name-getters) | For the protocols | judgment |
 | <a id="row-30"></a>30 | D:299-331 | Name length grows with scope and shrinks with use; the line counts are rough, not rules | keep | Be Your Name's short-name-in-sight case, spelled for Go | [name-var](#rule-name-var) | For the protocols | judgment |
 | <a id="row-31"></a>31 | D:333-336 | A local's name says what it holds here, not where it came from | keep | Be Your Name | [name-var](#rule-name-var) | For the protocols | judgment |
 | <a id="row-32"></a>32 | D:343-344 | Don't drop letters to save typing (`Sandbox`, not `Sbx`) | keep | Be Your Name | [name-var](#rule-name-var) | For the protocols | judgment |
-| <a id="row-33"></a>33 | D:345-351, D:419-447 | Leave type words out of names (`users`, not `userSlice`), unless two forms of a value are in scope (`limitRaw`, `limit`) | keep | Go convention; exception kept | [name-var](#rule-name-var) | For the protocols | judgment |
+| <a id="row-33"></a>33 | D:345-351, D:419-447 | Leave type words out of names (`users`, not `userSlice`), unless two forms of a value are in scope (`limitRaw`, `limit`) | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-34"></a>34 | D:362-379 | Single-letter names only where the word is obvious: receivers, `r`/`w`, `i`/`x`/`y`, short loops | keep | Be Your Name's short-name-in-sight case | [name-var](#rule-name-var) | For the protocols | judgment |
 | <a id="row-35"></a>35 | D:352-355, D:451-538 | Names leave out what the package, type, method or file already says (`(*Project).Name`, `sqldb.Connection`); judge at the call site | keep | Extends pkg-naming (exports vs package) to methods, types and locals | [name-context](#rule-name-context) | Pattern mappings | judgment |
-| <a id="row-36"></a>36 | D:402-415 | Exports don't repeat the package name; a package's only type gets constructor `New` (`widget.New`) | already ours | bjornstack.md row 4 (pkg-naming: exports extend the package name) | [pkg-naming](bjornstack.md#rule-pkg-naming) | Pattern mappings | guard candidate |
+| <a id="row-36"></a>36a | D:402-415 | Exports don't repeat the package name | already ours | bjornstack.md row 4 (pkg-naming: exports extend the package name) | [pkg-naming](bjornstack.md#rule-pkg-naming) | Pattern mappings | guard candidate |
+| <a id="row-36b"></a>36b | D:404-406 | A package's only type gets constructor `New` (`widget.New`) | drop | Standard Go convention, followed through go-conventions; not in pkg-naming, and go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-37"></a>37 | D:553-555 | Use doc preview during development and review | drop | A review habit, not a rule for code; no tool in our finish criteria | [dropped](#drop-37) | — | - |
 | <a id="row-38"></a>38 | D:557-559 | Godoc formatting: indent lists and code; otherwise no decoration | keep | Go-specific doc format | [doc-comments](#rule-doc-comments) | For the protocols | judgment |
-| <a id="row-39"></a>39 | D:566-599 | Wrap long comments, 80 or 100 columns as a guide, not a hard limit; consistent within a file | keep | Go convention | [comment-wrap](#rule-comment-wrap) | For the protocols | judgment |
-| <a id="row-40"></a>40 | D:616-633 | Every exported top-level name has a doc comment, full sentences starting with the name; so does unexported code with unobvious behavior | adapt | bjornstack.md builders-a gives builder methods no doc comments; that exception is added | [doc-comments](#rule-doc-comments) | For the protocols | guard candidate |
-| <a id="row-41"></a>41 | D:658-661 | A doc comment on unexported code also starts with its name | keep | Go convention | [doc-comments](#rule-doc-comments) | For the protocols | guard candidate |
-| <a id="row-42"></a>42 | D:669-680 | Comments that are sentences are capitalized and punctuated; fragments need not be | keep | Go convention | [comment-sentences](#rule-comment-sentences) | For the protocols | judgment |
+| <a id="row-39"></a>39 | D:566-599 | Wrap long comments, 80 or 100 columns as a guide, not a hard limit; consistent within a file | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-40"></a>40 | D:616-633 | Every exported top-level name has a doc comment, full sentences starting with the name; so does unexported code with unobvious behavior | adapt | bjornstack.md builders-a gives builder methods no doc comments; owner ruling 2026-11-16: an unexported name gets a comment only for what the code can't say (the why) | [doc-comments](#rule-doc-comments) | For the protocols | guard candidate |
+| <a id="row-41"></a>41 | D:658-661 | A doc comment on unexported code also starts with its name | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-42"></a>42 | D:669-680 | Comments that are sentences are capitalized and punctuated; fragments need not be | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-43"></a>43 | D:708-718 | Document intended use with a runnable example in a test file, or formatted example code in a comment | keep | `Example` functions in `foo_test` fit test-pkg | [doc-examples](#rule-doc-examples) | For the protocols | judgment |
-| <a id="row-44"></a>44 | D:726-776 | Name results only when it helps the caller: same-type results, an action the caller must take; not when repetitive or to avoid declaring a local | keep | Go convention | [named-results](#rule-named-results) | For the protocols | judgment |
-| <a id="row-45"></a>45 | D:778-785 | Naked returns only in small functions; a result changed in a deferred closure may always be named | keep | Go convention | [named-results](#rule-named-results) | For the protocols | judgment |
-| <a id="row-46"></a>46 | D:805-818 | One package comment per package, directly above the `package` clause | keep | Go convention | [pkg-comment](#rule-pkg-comment) | For the protocols | guard candidate |
+| <a id="row-44"></a>44 | D:726-776 | Name results only when it helps the caller: same-type results, an action the caller must take; not when repetitive or to avoid declaring a local | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-45"></a>45 | D:778-785 | Naked returns only in small functions; a result changed in a deferred closure may always be named | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-46"></a>46 | D:805-818 | One package comment per package, directly above the `package` clause | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-47"></a>47 | D:820-845 | A `main` package comment names the binary as the BUILD `go_binary` rule does | adapt | We don't build with Bazel; the comment names the command as it is invoked | [pkg-comment](#rule-pkg-comment) | For the protocols | judgment |
-| <a id="row-48"></a>48 | D:939-969 | Import groups in order: standard library, other, protobuf, side-effect imports | keep | Go convention | [import-groups](#rule-import-groups) | For the protocols | guard candidate |
+| <a id="row-48"></a>48 | D:939-969 | Import groups in order: standard library, other, protobuf, side-effect imports | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-49"></a>49 | D:977-1001 | Blank imports only in `main` or tests; exceptions: bypassing nogo, `embed` | adapt | We run no nogo checker, so that exception goes; the `embed` exception stays | [import-blank](#rule-import-blank) | For the protocols | guard candidate |
-| <a id="row-50"></a>50 | D:1011-1042 | No dot imports | keep | Go convention | [import-dot](#rule-import-dot) | For the protocols | guard candidate |
-| <a id="row-51"></a>51 | D:1054-1055 | `error` is the last result | keep | Go convention | [err-last](#rule-err-last) | For the protocols | guard candidate |
+| <a id="row-50"></a>50 | D:1011-1042 | No dot imports | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-51"></a>51 | D:1054-1055 | `error` is the last result | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-52"></a>52 | D:1063-1067 | With a non-nil error, other results are unspecified unless documented | keep | Go-specific trap | [err-results](#rule-err-results) | Go pitfalls | judgment |
 | <a id="row-53"></a>53 | D:1081-1090 | Exported functions return `error`, not a concrete error type: a nil pointer becomes a non-nil interface | keep | Go-specific trap; Failure Identity's identity types are still returned as `error` | [err-interface-return](#rule-err-interface-return) | Go pitfalls | guard candidate |
 | <a id="row-54"></a>54 | D:1092-1094 | A function taking a `context.Context` usually returns an `error` | keep | Lets the caller see a cancellation; "usually" kept | [ctx-returns-error](#rule-ctx-returns-error) | Pattern mappings | judgment |
-| <a id="row-55"></a>55 | D:1104-1119 | Error strings start lower-case (exceptions: exported names, proper nouns, acronyms) and end without punctuation | keep | Go convention; fits Failure Identity step 3's "adds what it was doing" chain | [err-strings](#rule-err-strings) | For the protocols | guard candidate |
-| <a id="row-56"></a>56 | D:1121-1134 | Full displayed messages (logs, test failures, UI) are usually capitalized | drop | Test messages follow bjornstack.md test-messages ("expected ..."); log messages are set by ctx-scope's logger, not by this guide | [dropped](#drop-56) | — | - |
+| <a id="row-55"></a>55 | D:1104-1119 | Error strings start lower-case (exceptions: exported names, proper nouns, acronyms) and end without punctuation | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-56"></a>56a | D:1121-1134 | Test failure messages are usually capitalized | drop | Assertion messages follow bjornstack.md test-messages, lower-case "expected ..." | [dropped](#drop-56) | — | - |
+| <a id="row-56b"></a>56b | D:1121-1134 | Log messages and messages shown to people (API responses, UI) are usually capitalized | open | Owner pick, still open for the owner's batch (bs-f3o.2 2026-11-16): ctx-scope says where the logger comes from, not how its messages read | - | — | - |
 | <a id="row-57"></a>57 | D:1142-1151 | Every error is handled, returned, or, exceptionally, ends the program | keep | Fail Early and Loud, spelled for Go | [err-handle](#rule-err-handle) | Pattern mappings | guard candidate |
-| <a id="row-58"></a>58 | D:1153-1163 | An error discarded with `_` carries a comment saying why that is safe | keep | Fail Early and Loud: a silent discard needs a stated reason | [err-handle](#rule-err-handle) | Pattern mappings | guard candidate |
-| <a id="row-59"></a>59 | D:1177-1231 | No in-band errors (-1, "", nil); return an extra `ok bool` or `error`, last | keep | Fail Early and Loud's "silent default substitution" | [err-in-band](#rule-err-in-band) | Pattern mappings | judgment |
-| <a id="row-60"></a>60 | D:1241-1267 | Handle errors first; no `else` after a block that ends in return, continue, panic or exit | keep | Go convention | [err-indent-flow](#rule-err-indent-flow) | For the protocols | guard candidate |
-| <a id="row-61"></a>61 | D:1269-1296 | A variable used past a few lines is declared before the `if`, not in its initializer | keep | Go convention | [err-indent-flow](#rule-err-indent-flow) | For the protocols | judgment |
-| <a id="row-62"></a>62 | D:1312-1317 | Build values with a composite literal rather than field by field, where possible | keep | Go convention | [lit-composite](#rule-lit-composite) | For the protocols | judgment |
-| <a id="row-63"></a>63 | D:1325-1350 | Struct literals of types from other packages name their fields | keep | Go convention | [lit-field-names](#rule-lit-field-names) | For the protocols | guard candidate |
-| <a id="row-64"></a>64 | D:1352-1374 | Field names optional for local types; use them when clearer, nearly always for many fields | keep | Go convention | [lit-field-names](#rule-lit-field-names) | For the protocols | judgment |
-| <a id="row-65"></a>65 | D:1380-1420 | A multi-line literal's closing brace sits at the opening brace's indentation | keep | Go convention gofmt doesn't enforce | [lit-braces](#rule-lit-braces) | For the protocols | guard candidate |
-| <a id="row-66"></a>66 | D:1426-1483 | Cuddle braces only when indentation matches and inner values are literals or proto builders | keep | Go convention | [lit-braces](#rule-lit-braces) | For the protocols | guard candidate |
-| <a id="row-67"></a>67 | D:1489-1532 | Leave repeated type names out of slice and map literals, except for an uncommon complex type far apart; `gofmt -s` removes them | keep | Go convention; exception kept | [lit-elide-types](#rule-lit-elide-types) | For the protocols | tool: gofmt -s (named by the source) |
-| <a id="row-68"></a>68 | D:1538-1583 | Zero-value fields may be left out of struct literals when no clarity is lost | adapt | Production code only; test tables follow bjornstack.md test-table (row 69) | [lit-zero-fields](#rule-lit-zero-fields) | For the protocols | judgment |
+| <a id="row-58"></a>58 | D:1153-1163 | An error is discarded with `_` only rarely, with a comment saying why that is safe | keep | Fail Early and Loud: a silent discard needs a stated reason | [err-handle](#rule-err-handle) | Pattern mappings | guard candidate |
+| <a id="row-59"></a>59 | D:1177-1231 | In general no in-band errors (-1, "", nil); return an extra `ok bool` or `error`, last; a documented in-band value, as in the `strings` package, is allowed | keep | Fail Early and Loud's "silent default substitution" | [err-in-band](#rule-err-in-band) | Pattern mappings | judgment |
+| <a id="row-60"></a>60 | D:1241-1267 | Handle errors first; no `else` after a block that ends in return, continue, panic or exit | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-61"></a>61 | D:1269-1296 | A variable used past a few lines is declared before the `if`, not in its initializer | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-62"></a>62 | D:1312-1317 | Build values with a composite literal rather than field by field, where possible | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-63"></a>63 | D:1325-1350 | Struct literals of types from other packages name their fields | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-64"></a>64 | D:1352-1374 | Field names optional for local types; use them when clearer, nearly always for many fields | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-65"></a>65 | D:1380-1420 | A multi-line literal's closing brace sits at the opening brace's indentation | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-66"></a>66 | D:1426-1483 | Cuddle braces only when indentation matches and inner values are literals or proto builders | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-67"></a>67 | D:1489-1532 | Leave repeated type names out of slice and map literals, except for an uncommon complex type far apart; `gofmt -s` removes them | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-68"></a>68 | D:1538-1583 | Zero-value fields may be left out of struct literals when no clarity is lost | adapt | Table-test cases follow bjornstack.md test-table (row 69): every case sets every field | [lit-zero-fields](#rule-lit-zero-fields) | For the protocols | judgment |
 | <a id="row-69"></a>69 | D:1585-1640 | Table-test cases leave out zero-valued fields unrelated to the case | drop | Contradicts bjornstack.md test-table ("Every case sets every field") and Parameterized Test Structure step 2 | [dropped](#drop-69) | — | - |
-| <a id="row-70"></a>70 | D:1666-1680 | Declare an empty local slice as `var s []T`, not `[]T{}` | keep | Go convention | [nil-slice](#rule-nil-slice) | For the protocols | guard candidate |
-| <a id="row-71"></a>71 | D:1682-1739 | No API makes callers tell nil from an empty slice; test emptiness with `len` | keep | Go-specific; Fail Early and Loud (a hidden path on nil) | [nil-slice](#rule-nil-slice) | For the protocols | judgment |
-| <a id="row-72"></a>72 | D:1749-1761 | Don't break a line so it aligns with an indented block; if unavoidable, leave a space | keep | Go convention | [fmt-line-length](#rule-fmt-line-length) | For the protocols | judgment |
-| <a id="row-73"></a>73 | D:1773-1789 | A function signature stays on one line | keep | Go convention | [fmt-line-length](#rule-fmt-line-length) | For the protocols | guard candidate |
-| <a id="row-74"></a>74 | D:1803-1817, D:1838-1857 | Don't split calls for length alone; break by meaning when the API can't change or the call is unusual | keep | Go convention; exception kept | [fmt-line-length](#rule-fmt-line-length) | For the protocols | judgment |
-| <a id="row-75"></a>75 | D:1819-1836 | No inline comments on call arguments; use an option struct or document the function | keep | Go convention | [fmt-arg-comments](#rule-fmt-arg-comments) | For the protocols | judgment |
-| <a id="row-76"></a>76 | D:1859-1880 | Don't break long string literals; arguments may follow the format string on new lines | keep | Go convention | [fmt-line-length](#rule-fmt-line-length) | For the protocols | judgment |
-| <a id="row-77"></a>77 | D:1886-1981 | `if` and `for` clauses stay on one line; extract boolean operands into locals | keep | Go convention | [fmt-line-length](#rule-fmt-line-length) | For the protocols | guard candidate |
-| <a id="row-78"></a>78 | D:1983-2033 | `switch` and `case` lines stay on one line; if too long, indent all cases and add a blank line | keep | Go convention; exception kept | [fmt-line-length](#rule-fmt-line-length) | For the protocols | judgment |
-| <a id="row-79"></a>79 | D:2035-2055 | Variable on the left when comparing to a constant; no Yoda conditions | keep | Go convention | [cond-no-yoda](#rule-cond-no-yoda) | For the protocols | guard candidate |
+| <a id="row-70"></a>70 | D:1666-1680 | Declare an empty local slice as `var s []T`, not `[]T{}` | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-71"></a>71 | D:1682-1739 | No API makes callers tell nil from an empty slice; test emptiness with `len` | keep | Go-specific; Fail Early and Loud (a hidden path on nil). `require.Equal` tells nil from empty, so a test pitfall goes with it | [nil-slice](#rule-nil-slice), [nil-slice-want](#rule-nil-slice-want) | For the protocols | judgment |
+| <a id="row-72"></a>72 | D:1749-1761 | Don't break a line so it aligns with an indented block; if unavoidable, leave a space | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-73"></a>73 | D:1773-1789 | A function signature stays on one line | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-74"></a>74 | D:1803-1817, D:1838-1857 | Don't split calls for length alone; break by meaning when the API can't change or the call is unusual | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-75"></a>75 | D:1819-1836 | No inline comments on call arguments; use an option struct or document the function | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-76"></a>76 | D:1859-1880 | Don't break long string literals; arguments may follow the format string on new lines | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-77"></a>77 | D:1886-1981 | `if` and `for` clauses stay on one line; extract boolean operands into locals | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-78"></a>78 | D:1983-2033 | `switch` and `case` lines stay on one line; if too long, indent all cases and add a blank line | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-79"></a>79 | D:2035-2055 | Variable on the left when comparing to a constant; no Yoda conditions | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-80"></a>80 | D:2063-2080 | Don't copy values whose methods are on the pointer type (`bytes.Buffer`, `sync.Mutex`) | keep | Go-specific trap | [copy-safety](#rule-copy-safety) | Go pitfalls | guard candidate |
 | <a id="row-81"></a>81 | D:2082-2119 | APIs over structs with uncopyable fields take and return pointers | keep | Go-specific trap | [copy-safety](#rule-copy-safety) | Go pitfalls | judgment |
 | <a id="row-82"></a>82 | D:2127-2128 | Don't panic for normal error handling | keep | Fail Early and Loud through returned errors | [err-no-panic](#rule-err-no-panic) | Pattern mappings | judgment |
-| <a id="row-83"></a>83 | D:2130-2141 | In `main` and init, end with `log.Exit` (no stack trace); "impossible" bugs may return an error or `log.Fatal` | adapt | `log.Exit`/`log.Fatal` are Google's glog; we say what they do with the standard library | [err-no-panic](#rule-err-no-panic) | Pattern mappings | judgment |
-| <a id="row-84"></a>84 | D:2150-2175, D:2210-2235 | `MustXYZ` names functions that stop the program; call them only at startup, never where an error can be handled | keep | Go convention | [must-funcs](#rule-must-funcs) | For the protocols | judgment |
+| <a id="row-83"></a>83 | D:2130-2141 | In `main` and init, end with `log.Exit` (no stack trace); "impossible" bugs may return an error or `log.Fatal` | adapt | `log.Exit`/`log.Fatal` are Google's glog; we say what they do with the standard library. A broken invariant that leaves state unrecoverable panics (coordinator call 2026-11-16, bs-f3o.2) | [err-no-panic](#rule-err-no-panic) | Pattern mappings | judgment |
+| <a id="row-84"></a>84 | D:2150-2175, D:2210-2235 | `MustXYZ` names functions that stop the program; call them only at startup, never where an error can be handled | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-85"></a>85 | D:2177-2221 | A test `mustXYZ` helper stops the test with `t.Fatal` and is marked a helper | adapt | It fails with `require` (test-require) and calls `t.Helper()` (test-helper) | [must-funcs](#rule-must-funcs) | For the protocols | judgment |
 | <a id="row-86"></a>86 | D:2243-2297 | Make each goroutine's exit evident; keep synchronization in the starting function or document when it exits | keep | Go-specific; no conflict | [go-lifetime](#rule-go-lifetime) | Pattern mappings | judgment |
 | <a id="row-87"></a>87 | D:2347-2349 | No interface until a real need; name it for behavior, not "service" or "repository" | adapt | A coordinator's direct collaborator is such a need: Unit Testing steps 3.2-3.3 receive it and replace it with a double | [iface-need](#rule-iface-need) | Pattern mappings | judgment |
-| <a id="row-88"></a>88 | D:2351-2354 | Don't wrap RPC clients in interfaces for testing; use real transports | drop | Unit Testing step 3.3 replaces every direct collaborator of a coordinator with a double; bjornstack.md coord-doubles spells it | [dropped](#drop-88) | — | - |
-| <a id="row-89"></a>89 | D:2356-2358 | No back doors or exported test doubles only for tests; test through the real API | already ours | bjornstack.md rows 14 and 16 (pkg-internal: "Never export it for the test") | [pkg-internal](bjornstack.md#rule-pkg-internal) | Pattern mappings | judgment |
+| <a id="row-88"></a>88 | D:2351-2354 | Don't wrap RPC clients in interfaces for testing; use real transports | drop | Unit Testing step 3.3 replaces every direct collaborator of a coordinator with a double; bjornstack.md coord-doubles spells it. Real transports still run at the black-box layer (bjornstack.md bb-http) | [dropped](#drop-88) | — | - |
+| <a id="row-89"></a>89a | D:2356-2358 | No back doors only for tests; test through the real API | already ours | bjornstack.md rows 14 and 16 (pkg-internal: "Never export it for the test") | [pkg-internal](bjornstack.md#rule-pkg-internal) | Pattern mappings | judgment |
+| <a id="row-89b"></a>89b | D:2356-2358 | Don't export test doubles solely for testing | drop | Contradicts Test Data Builders step 2, which moves a shared stateful double under the exported entry point `test/a` (row 90) | [dropped](#drop-89b) | — | - |
 | <a id="row-90"></a>90 | D:2360-2363 | When the real implementation is impractical, test doubles go in a dedicated package (e.g. `spannertest`) | adapt | Test Data Builders step 2: doubles stay in their test file; a stateful double moves under the builders' entry point once shared and once it passes the compliance suite | [double-package](#rule-double-package) | Pattern mappings | judgment |
 | <a id="row-91"></a>91 | D:2365-2368 | Keep interfaces small; document contract, edge cases and errors; unexported if only used inside the package | keep | Intentionally Public step 1; Failure Identity step 2 documents an identity with its operation | [iface-small](#rule-iface-small) | Pattern mappings | judgment |
 | <a id="row-92"></a>92 | D:2370-2373 | The consumer defines the interface with only the methods it uses; the producer exports one only when it is the product | keep | Test Data Builders step 2: each consumer depends only on the operations it calls | [iface-consumer](#rule-iface-consumer) | Pattern mappings | judgment |
-| <a id="row-93"></a>93 | D:2375-2383 | Accept interfaces, return concrete types; exceptions such as `error` and factory or strategy patterns | keep | Go convention; exceptions kept | [iface-return-concrete](#rule-iface-return-concrete) | Pattern mappings | judgment |
-| <a id="row-94"></a>94 | D:2399-2403 | Generics where they meet a requirement; beware premature use | keep | Least mechanism (row 4) | [generics](#rule-generics) | For the protocols | judgment |
-| <a id="row-95"></a>95 | D:2405-2406 | Exported generic APIs are documented, ideally with runnable examples | keep | Go convention | [generics](#rule-generics) | For the protocols | judgment |
-| <a id="row-96"></a>96 | D:2408-2413 | Only one type instantiated: no generics yet | keep | Same direction as Earned Abstraction: don't abstract before cases exist | [generics](#rule-generics) | For the protocols | judgment |
+| <a id="row-93"></a>93 | D:2375-2383 | Accept interfaces, return concrete types; exceptions such as `error` and factory or strategy patterns | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-94"></a>94 | D:2399-2403, D:2408-2409 | Generics where they meet a requirement; beware premature use; not just because the algorithm doesn't care about the type | keep | Least mechanism (row 4); generic code over several types is an abstraction under Earned Abstraction steps 1-3 | [generics](#rule-generics) | For the protocols | judgment |
+| <a id="row-95"></a>95 | D:2405-2406 | Exported generic APIs are documented, ideally with runnable examples | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-96"></a>96 | D:2408-2413 | Only one type instantiated: no generics yet | keep | Earned Abstraction steps 1-3: one type is one case, and with fewer than three cases the duplication stays | [generics](#rule-generics) | For the protocols | judgment |
 | <a id="row-97"></a>97 | D:2415-2420 | No generic DSLs or error-handling frameworks; be wary of assertion libraries | adapt | The assertion-library caution does not cover testify, the owner's choice (test-require) | [generics](#rule-generics) | For the protocols | judgment |
-| <a id="row-98"></a>98 | D:2422-2429 | Shared interface first; otherwise generics over `any` and type switches | keep | Go convention | [generics](#rule-generics) | For the protocols | judgment |
-| <a id="row-99"></a>99 | D:2448-2459 | No pointer arguments just to save bytes; large or growing structs and protobuf messages by pointer | keep | Go convention; exceptions kept | [pass-values](#rule-pass-values) | For the protocols | judgment |
-| <a id="row-100"></a>100 | D:2474-2590, D:2595-2601 | Receiver kind by correctness, then size; the case list; when in doubt, pointer; benchmark before claiming speed | keep | Go convention | [recv-type](#rule-recv-type) | For the protocols | judgment |
-| <a id="row-101"></a>101 | D:2592-2593 | A type's methods are all pointer or all value | keep | Go convention ("as a general guideline" kept) | [recv-type](#rule-recv-type) | For the protocols | guard candidate |
-| <a id="row-102"></a>102 | D:2613-2644 | No bare `break` at the end of a switch clause; comment an empty clause | keep | Go convention | [switch-break](#rule-switch-break) | For the protocols | guard candidate |
+| <a id="row-98"></a>98 | D:2422-2429 | Shared interface first; otherwise generics over `any` and type switches | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-99"></a>99 | D:2448-2459 | No pointer arguments just to save bytes; large or growing structs and protobuf messages by pointer | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-100"></a>100 | D:2474-2590, D:2595-2601 | Receiver kind by correctness, then size; the case list; when in doubt, pointer; benchmark before claiming speed | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-101"></a>101 | D:2592-2593 | A type's methods are all pointer or all value | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-102"></a>102 | D:2613-2644 | No bare `break` at the end of a switch clause; comment an empty clause | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-103"></a>103 | D:2646-2668 | `break` in a switch inside a loop exits only the switch; use a label | keep | Go-specific trap | [switch-break-loop](#rule-switch-break-loop) | Go pitfalls | judgment |
-| <a id="row-104"></a>104 | D:2676-2687 | Prefer synchronous functions; callers add concurrency | keep | Go convention; makes code testable without polling | [sync-funcs](#rule-sync-funcs) | Pattern mappings | judgment |
-| <a id="row-105"></a>105 | D:2700-2703 | Type definitions for new types; aliases only to aid migration | keep | Go convention | [type-alias](#rule-type-alias) | For the protocols | judgment |
-| <a id="row-106"></a>106 | D:2713-2734 | Quote strings in human output with `%q` | keep | Go convention | [fmt-q](#rule-fmt-q) | For the protocols | guard candidate |
-| <a id="row-107"></a>107 | D:2740-2743 | `any` in new code, not `interface{}` | keep | Go convention | [use-any](#rule-use-any) | For the protocols | guard candidate |
-| <a id="row-108"></a>108 | D:2755-2777 | Flag names in snake_case with a camelCase variable, using Google's internal flag package | drop | Tied to Google's internal flag package; nothing in our material picks a flag-name style | [dropped](#drop-108) | — | - |
-| <a id="row-109"></a>109 | D:2779-2787 | Flags only in `package main`; libraries are configured through Go APIs, rarely exported globals | adapt | Adds Unit Testing step 3.2: a coordinator that reads global state has a hidden collaborator | [flags-main](#rule-flags-main) | Pattern mappings | guard candidate |
-| <a id="row-110"></a>110 | D:2789-2790 | Global flag variables sit in their own `var` group after the imports | keep | Go convention | [flags-main](#rule-flags-main) | Pattern mappings | guard candidate |
+| <a id="row-104"></a>104 | D:2676-2687 | Prefer synchronous functions; callers add concurrency | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-105"></a>105 | D:2700-2703 | Type definitions for new types; aliases only to aid migration | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-106"></a>106 | D:2713-2734 | Quote strings in human output with `%q` | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-107"></a>107 | D:2740-2743 | `any` in new code, not `interface{}` | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-108"></a>108 | D:2755-2777 | Flag names in snake_case with a camelCase variable, using Google's internal flag package | drop | Google prefers snake_case flag names in Go binaries (D:2755-2760), separate from its internal flag package; flag-name style is an owner choice, still open for the owner's batch (bs-f3o.2 2026-11-16) | [dropped](#drop-108) | — | - |
+| <a id="row-109"></a>109 | D:2779-2787 | Flags only in `package main`; libraries are configured through Go APIs, rarely exported globals | adapt | Adds Unit Testing step 3.2: a coordinator that reads global state has a hidden collaborator. Differs: leaves out Google's "extremely rare" library-flag exception (D:2783-2786); keeping it is an owner pick, still open for the owner's batch | [flags-main](#rule-flags-main) | Pattern mappings | guard candidate |
+| <a id="row-110"></a>110 | D:2789-2790 | Global flag variables sit in their own `var` group after the imports | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-111"></a>111 | D:2810-2822 | Google's `log` (glog) package; `log.Info` over `log.Infof` without formatting | drop | We log through ctx (bjornstack.md ctx-scope: `logctx.From(ctx)`), not glog | [dropped](#drop-111) | — | - |
 | <a id="row-112"></a>112 | D:2851-2856 | `context.Context` is always the first parameter | already ours | bjornstack.md row 46 (ctx-per-call) | [ctx-per-call](bjornstack.md#rule-ctx-per-call) | Pattern mappings | guard candidate |
-| <a id="row-113"></a>113 | D:2858-2876 | Where ctx comes from without a caller: `r.Context()`, the stream, `t.Context()`, `context.Background()` in `main` or `init` | keep | Go convention | [ctx-sources](#rule-ctx-sources) | Pattern mappings | judgment |
-| <a id="row-114"></a>114 | D:2878-2896 | Code mid-chain takes its caller's ctx, unless it is the wrong one; only server frameworks create one; discuss other uses with the style list | adapt | No style mailing list here; such a use is raised in review | [ctx-sources](#rule-ctx-sources) | Pattern mappings | judgment |
-| <a id="row-115"></a>115 | D:2898-2904, D:3880-3883 | Test helper parameters: ctx first, then `t`, then the rest | keep | Go convention; consistent with ctx-per-call | [test-helper-params](#rule-test-helper-params) | Pattern mappings | guard candidate |
-| <a id="row-116"></a>116 | D:2907-2912 | No ctx field in a struct; pass it to each method; exception for a signature fixed by an outside interface | already ours | bjornstack.md row 46 (ctx-per-call: "never stored in a struct"); Google's outside-interface exception is not in ctx-per-call | [ctx-per-call](bjornstack.md#rule-ctx-per-call) | Pattern mappings | guard candidate |
-| <a id="row-117"></a>117 | D:2914-2918 | Tests use the innermost `t.Context()`, not `context.Background()`, and pass it to helpers and double setup | keep | Go convention | [ctx-test](#rule-ctx-test) | Pattern mappings | guard candidate |
+| <a id="row-113"></a>113 | D:2858-2876 | Where ctx comes from without a caller: `r.Context()`, the stream, `t.Context()`, `context.Background()` in `main` or `init` | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-114"></a>114 | D:2878-2896 | Code mid-chain takes its caller's ctx, unless it is the wrong one; only server frameworks create one; discuss other uses with the style list | adapt | No style mailing list here; such a use is raised in review. Google's "prefer context detachment" when a context exists (D:2884-2886) becomes `context.WithoutCancel` before `context.Background()` | [ctx-sources](#rule-ctx-sources) | Pattern mappings | judgment |
+| <a id="row-115"></a>115 | D:2898-2904, D:3880-3883 | Test helper parameters: ctx first, then `t`, then the rest | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16); it conflicted with bjornstack.md compliance-suite's `(t, ctx, factory)`, resolved by owner ruling 2026-11-16: the suite drops its ctx parameter and each scenario uses `t.Context()` | [dropped](#drop-conventions) | — | - |
+| <a id="row-116"></a>116 | D:2907-2912 | No ctx field in a struct; pass it to each method; exception for a signature fixed by an outside interface | adapt | bjornstack.md row 46 (ctx-per-call: "never stored in a struct"). Owner ruling 2026-11-16 narrows Google's outside-interface exception to a per-call adapter | [ctx-adapter](#rule-ctx-adapter) | Pattern mappings | judgment |
+| <a id="row-117"></a>117 | D:2914-2918 | Tests use the innermost `t.Context()`, not `context.Background()`, and pass it to helpers and double setup | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16); the compliance suite's outer ctx goes, by the same owner ruling as row 115 | [dropped](#drop-conventions) | — | - |
 | <a id="row-118"></a>118 | D:2920-2923 | `t.Context()` is cancelled before `t.Cleanup` runs; cleanup uses `context.Background()` or `context.WithoutCancel` | keep | Go-specific trap; meets bjornstack.md compliance-suite, whose factory cleans up with `t.Cleanup` | [ctx-cleanup](#rule-ctx-cleanup) | Go pitfalls | judgment |
-| <a id="row-119"></a>119 | D:2929-2932 | Background work that outlives the parent context uses an internal detachment package | drop | Google-internal package | [dropped](#drop-119) | — | - |
-| <a id="row-120"></a>120 | D:2949-2957 | No custom context types or other context interfaces in signatures, no exceptions | keep | Go convention | [ctx-no-custom](#rule-ctx-no-custom) | Pattern mappings | guard candidate |
-| <a id="row-121"></a>121 | D:2959-2962 | Application data goes in a parameter, the receiver, a global, or a ctx value if it belongs there | drop | bjornstack.md ctx-scope limits ctx values, and coord-globals and Unit Testing step 3.2 limit globals | [dropped](#drop-121) | — | - |
+| <a id="row-119"></a>119 | D:2929-2932 | Background work that outlives the parent context detaches from it | adapt | Google's internal package aside, the same section names `context.WithoutCancel` (D:2920-2923), which we have | [ctx-sources](#rule-ctx-sources) | Pattern mappings | judgment |
+| <a id="row-120"></a>120 | D:2949-2957 | No custom context types or other context interfaces in signatures, no exceptions | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
+| <a id="row-121"></a>121 | D:2959-2962 | Application data goes in a parameter, the receiver, a global, or a ctx value if it belongs there | drop | bjornstack.md ctx-scope limits ctx values, and coord-globals and Unit Testing step 3.2 limit globals; Google's list would admit globals ours rules out | [dropped](#drop-121) | — | - |
 | <a id="row-122"></a>122 | D:2970-2996 | Keys come from `crypto/rand`, never `math/rand` | keep | Go-specific security trap | [crypto-rand](#rule-crypto-rand) | Go pitfalls | guard candidate |
 | <a id="row-123"></a>123 | D:3022-3069, D:4002-4008 | No assertion libraries; package `testing` is the only test framework | drop | Contradicts the owner's choice of testify `require` (bjornstack.md test-require) | [dropped](#drop-123) | — | - |
 | <a id="row-124"></a>124 | D:3071-3087, D:3291-3307 | Compare with `cmp.Equal`/`cmp.Diff` and `fmt` | drop | bjornstack.md test-require and test-whole-value: `require.Equal`; `cmp.Diff` only for protobuf (test-protobuf) | [dropped](#drop-124) | — | - |
-| <a id="row-125"></a>125 | D:3089-3105 | Domain-specific comparison helpers return a value or error instead of taking `*testing.T` | drop | Contradicts Parameterized Test Structure step 3 and bjornstack.md test-table, whose assertion functions take `t` | [dropped](#drop-125) | — | - |
+| <a id="row-125"></a>125 | D:3089-3105 | Domain-specific comparison helpers return a value or error instead of taking `*testing.T` | drop | A value-returning helper needs no rule; for assertion helpers taking `t`, see row 163 | [dropped](#drop-125) | — | - |
 | <a id="row-126"></a>126 | D:3107-3108 | A non-trivial helper used by tests is tested directly | drop | Language-neutral; Unit Testing step 2 tests computation directly | [dropped](#drop-126) | — | - |
 | <a id="row-127"></a>127 | D:3128-3131 | Failure messages name the function: `YourFunc(%v) = %v, want %v` | drop | `require` prints expected and actual itself; messages follow bjornstack.md test-messages and the test name test-names | [dropped](#drop-127) | — | - |
-| <a id="row-128"></a>128 | D:3137-3141 | Failure messages include short inputs; otherwise name the case and print its description | adapt | Naming the case is bjornstack.md test-names; what remains is putting a short input the name doesn't show into the message | [test-input-in-message](#rule-test-input-in-message) | Pattern mappings | judgment |
+| <a id="row-128"></a>128 | D:3137-3141 | Failure messages include short inputs; otherwise name the case and print its description | drop | Parameterized Test Structure step 2 shows every case's input in the table and test-names locates the case; a per-assertion input adds boilerplate | [dropped](#drop-128) | — | - |
 | <a id="row-129"></a>129 | D:3147-3156 | Got before want; say "got" and "want" | drop | `require.Equal(t, want, got)` fixes the order and labels the sides itself (test-whole-value) | [dropped](#drop-129) | — | - |
 | <a id="row-130"></a>130 | D:3164-3171 | Compare whole structures, not field by field, unless irrelevant fields obscure the test | already ours | bjornstack.md rows 82 and 94 (test-whole-value); Google's irrelevant-fields exit is not in Whole-Object Assertion step 1 | [test-whole-value](bjornstack.md#rule-test-whole-value) | Pattern mappings | judgment |
-| <a id="row-131"></a>131 | D:3173-3178 | Approximate or uncomparable fields: tune `cmp` with `cmpopts` | drop | bjornstack.md test-protobuf gives `cmp` no other role; Whole-Object Assertion step 2 accounts for such fields | [dropped](#drop-131) | — | - |
+| <a id="row-131"></a>131 | D:3173-3178 | Approximate or uncomparable fields: tune `cmp` with `cmpopts` | drop | bjornstack.md test-protobuf gives `cmp` no other role; Whole-Object Assertion step 2 capture-and-verify covers approximate fields: check with `require.InDelta`/`InEpsilon`, substitute, then `require.Equal` | [dropped](#drop-131) | — | - |
 | <a id="row-132"></a>132 | D:3180-3200 | Multiple return values are compared one by one, not wrapped in a struct | already ours | bjornstack.md row 86 (test-table: `assertError` and `assertResult`, both called) | [test-table](bjornstack.md#rule-test-table) | Pattern mappings | guard candidate |
 | <a id="row-133"></a>133 | D:3210-3220 | Don't compare output whose bytes a package you don't own decides (`json.Marshal`); parse and compare the structure | keep | Go form of Whole-Object Assertion's misapplication "asserting on serialized representations" | [test-stable-output](#rule-test-stable-output) | Pattern mappings | judgment |
 | <a id="row-134"></a>134 | D:3228-3272 | Keep going: `t.Error` over `t.Fatal`; `t.Fatal` only when later checks would mislead | drop | Contradicts bjornstack.md test-require (`require` stops at the first failure; `assert` only for deliberately independent failures) | [dropped](#drop-134) | — | - |
@@ -177,7 +183,7 @@ Drop rows have "-".
 | <a id="row-140"></a>140 | D:3373-3376 | Tests with complex interactions say which call failed and any state needed | keep | Fits test-messages; nothing in bjornstack.md covers repeated calls | [test-failure-detail](#rule-test-failure-detail) | Pattern mappings | judgment |
 | <a id="row-141"></a>141 | D:3377-3379 | For a complex struct, describe only the important parts | drop | `require.Equal` prints the whole difference; Whole-Object Assertion compares everything | [dropped](#drop-141) | — | - |
 | <a id="row-142"></a>142 | D:3380-3384 | Setup failures need less detail: say which setup step failed | keep | Fits test-messages; a setup failure is not an assertion | [test-failure-detail](#rule-test-failure-detail) | Pattern mappings | judgment |
-| <a id="row-143"></a>143 | D:3386-3388 | Trigger the failure during development and read its message | drop | Language-neutral; Outside-In Development Loop step 1 already starts every test failing | [dropped](#drop-143) | — | - |
+| <a id="row-143"></a>143 | D:3386-3388 | Trigger the failure during development and read its message | drop | Language-neutral; Outside-In Development Loop step 4 already reads the changing failure message | [dropped](#drop-143) | — | - |
 | <a id="row-144"></a>144 | D:3390-3396 | Print strings with `%q`, small structs with `%+v`, large values as a diff | drop | `require` formats the values it prints; `%q` in messages we write is row 106 | [dropped](#drop-144) | — | - |
 | <a id="row-145"></a>145 | D:3402-3419 | Print a diff for large output; `cmp.Diff` preferred | drop | `require.Equal` prints a diff itself; `cmp.Diff` only for protobuf (test-protobuf) | [dropped](#drop-145) | — | - |
 | <a id="row-146"></a>146 | D:3421-3445 | Say the diff's direction, e.g. `(-want +got)`, and print a newline before it | adapt | Applies where we still call `cmp.Diff`: protobuf comparisons (test-protobuf) | [test-diff-key](#rule-test-diff-key) | Pattern mappings | guard candidate |
@@ -210,11 +216,12 @@ D is `go/decisions.md`. Strategy citations are at bjornstack
 
 ### Tooling
 
-<a id="rule-fmt-generated"></a>**fmt-generated.** Code a generator writes is formatted as `gofmt`
-would format it, for example by passing it through `go/format.Source`
-before writing.
-Source: G:400-401 "Formatting", `a9c5f82`, read 2026-11-16.
-↩ row [11](#row-11)
+<a id="rule-go-conventions"></a>**go-conventions.** Follow the standard Go conventions, as the
+Google Go style guide's decisions state them, except where go.md
+says otherwise. go.md records only what we add to them or change.
+Source: owner ruling 2026-11-16 (bs-f3o.2); conventions as in
+`go/decisions.md` at `a9c5f82`, read 2026-11-16.
+↩ the rows dropped under [Standard Go conventions](#drop-conventions)
 
 ### Pattern mappings
 
@@ -239,27 +246,32 @@ Source: D:1092-1094 "Returning errors", `a9c5f82`, read 2026-11-16.
 ↩ row [54](#row-54)
 
 <a id="rule-err-handle"></a>**err-handle.** Every returned error is handled, returned, or, in
-exceptional cases, ends the program. Discard one with `_` only when it
-cannot fail, with a comment saying why:
+exceptional cases, ends the program. Discard one with `_` rarely,
+with a comment saying why it is safe:
 `n, _ := b.Write(p) // never returns a non-nil error`.
 Source: D:1142-1163 "Handle errors", `a9c5f82`, read 2026-11-16.
 ↩ rows [57](#row-57), [58](#row-58)
 
-<a id="rule-err-in-band"></a>**err-in-band.** A function signals a missing or failed result with an
-extra, last result, `ok bool` when no explanation is needed or `error`
-otherwise, never with a value such as -1, "" or nil.
+<a id="rule-err-in-band"></a>**err-in-band.** In general, a function signals a missing or failed
+result with an extra, last result, `ok bool` when no explanation is
+needed or `error` otherwise, not with a value such as -1, "" or nil.
+A documented in-band value, as the `strings` package's `Index`
+returns -1, is allowed.
 Source: D:1177-1231 "In-band errors", `a9c5f82`, read 2026-11-16.
 ↩ row [59](#row-59)
 
 <a id="rule-err-no-panic"></a>**err-no-panic.** Normal errors are returned, never panicked. In
 `package main` and initialization code, an error that should end the
 program, such as invalid configuration, is printed and the program
-exits without a stack trace; deferred functions do not run on
-`os.Exit`. A bug that should be impossible may return an error or end
-the program.
-Source: D:2127-2141 "Don't panic", `a9c5f82`, read 2026-11-16.
+exits without a stack trace; deferred functions and `t.Cleanup` do
+not run on `os.Exit`. A bug that should be impossible may return an
+error; a broken invariant that leaves state unrecoverable panics
+with a message naming the invariant, and nothing recovers to carry
+on.
+Source: D:2127-2141 "Don't panic", `a9c5f82`, read 2026-11-16;
+coordinator call 2026-11-16 (bs-f3o.2).
 Differs: Google ends the program with its glog `log.Exit` and
-`log.Fatal`; we don't use glog.
+`log.Fatal`; we don't use glog, and `slog` has no Fatal.
 ↩ rows [82](#row-82), [83](#row-83)
 
 <a id="rule-go-lifetime"></a>**go-lifetime.** Every goroutine's end is evident. Keep the
@@ -274,7 +286,7 @@ Source: D:2243-2297 "Goroutine lifetimes", `a9c5f82`, read 2026-11-16.
 the behaviour it needs, not for a pattern such as "service" or
 "repository". A coordinator's direct collaborator is such a need: the
 coordinator receives it fully set up and its tests replace it with a
-double (Unit Testing steps 3.2-3.3, `testing__unit.md:27-52`), as an
+double (Unit Testing steps 3.2-3.3, `testing__unit.md:27-50`), as an
 interface or a function type (coord-doubles).
 Source: D:2347-2354 "Interfaces", `a9c5f82`, read 2026-11-16.
 Differs: Google says not to wrap RPC clients in interfaces "just for
@@ -287,7 +299,11 @@ it. A stateful double, one whose later results depend on earlier
 calls, moves under the builders' entry point `test/a` once a second
 test file in its interface's domain needs it, or a test outside that
 domain does, and only after it passes that interface's compliance
-suite (Test Data Builders step 2, `test-data-builders.md:21-41`).
+suite. Before writing a stateful double, look under the entry point,
+then search the test files for a double standing in for the same
+real implementation; one found in another test file moves now rather
+than being copied (Test Data Builders step 2,
+`test-data-builders.md:21-41`).
 Source: D:2360-2363 "Interfaces", `a9c5f82`, read 2026-11-16.
 Differs: Google puts doubles for an impractical real implementation in
 a dedicated package such as `spannertest`; Test Data Builders keeps
@@ -307,67 +323,44 @@ common protocol.
 Source: D:2370-2373 "Interfaces", `a9c5f82`, read 2026-11-16.
 ↩ row [92](#row-92)
 
-<a id="rule-iface-return-concrete"></a>**iface-return-concrete.** Functions accept interfaces and return
-concrete types, except where an interface is the point: `error`, and
-command, chaining, factory or strategy patterns.
-Source: D:2375-2383 "Interfaces", `a9c5f82`, read 2026-11-16.
-↩ row [93](#row-93)
-
-<a id="rule-sync-funcs"></a>**sync-funcs.** Prefer synchronous functions: they return their
-results and finish their callbacks and channel operations before
-returning. A caller that wants concurrency starts the goroutine.
-Source: D:2676-2687 "Synchronous functions", `a9c5f82`, read
-2026-11-16.
-↩ row [104](#row-104)
-
 <a id="rule-flags-main"></a>**flags-main.** Command-line flags are defined only in
 `package main`. Other packages take their configuration as function
 arguments or struct fields; importing a package never adds flags. An
 exported global variable is a rare last resort, and a coordinator
 never reads one: global state it reads is a hidden collaborator (Unit
-Testing step 3.2, `testing__unit.md:27-32`). Global flag variables sit
-in their own `var` group after the imports.
-Source: D:2779-2790 "Flags", `a9c5f82`, read 2026-11-16.
+Testing step 3.2, `testing__unit.md:27-32`).
+Source: D:2779-2787 "Flags", `a9c5f82`, read 2026-11-16.
 Differs: Google allows, in extremely rare cases, a library flag named
-for its package; we keep flags in `main`.
-↩ rows [109](#row-109), [110](#row-110)
+for its package; we keep flags in `main`. Whether to keep Google's
+exception is still open for the owner.
+↩ row [109](#row-109)
 
 <a id="rule-ctx-sources"></a>**ctx-sources.** Code takes ctx from its caller, unless the caller's
 is the wrong one. Where no caller hands one over: an HTTP handler uses
 `r.Context()`, a streaming RPC method the stream's `Context()`, a test
-`t.Context()` (ctx-test), and `main` or `init` `context.Background()`.
-Below an entry point, only a server framework that builds a context
-per request creates one; any other `context.Background()` there is
+`t.Context()`, and `main` or `init` `context.Background()`. Below an
+entry point, only a server framework that builds a context per
+request creates one. Where a context exists but its cancellation must
+not apply, such as background work that outlives its parent, derive
+one with `context.WithoutCancel(ctx)` before reaching for
+`context.Background()`; any other `context.Background()` there is
 raised in review.
-Source: D:2858-2896 "Contexts", `a9c5f82`, read 2026-11-16.
-Differs: Google sends other uses to its Go style mailing list.
-↩ rows [113](#row-113), [114](#row-114)
+Source: D:2878-2896, D:2920-2923, D:2929-2932 "Contexts", `a9c5f82`,
+read 2026-11-16.
+Differs: Google sends other uses to its Go style mailing list, and
+detaches background work with an internal package.
+↩ rows [114](#row-114), [119](#row-119)
 
-<a id="rule-test-helper-params"></a>**test-helper-params.** A test helper takes `ctx` first, then `t`,
-then the rest: `readTestFile(ctx, t, path)`.
-Source: D:2898-2904 "Contexts", D:3880-3883 "Test helpers",
-`a9c5f82`, read 2026-11-16.
-↩ row [115](#row-115)
-
-<a id="rule-ctx-test"></a>**ctx-test.** A test or subtest gets its ctx from the innermost
-`t.Context()`, not `context.Background()`, and passes it explicitly to
-helpers, double setup and anything else that needs one.
-Source: D:2914-2918 "Contexts", `a9c5f82`, read 2026-11-16.
-↩ row [117](#row-117)
-
-<a id="rule-ctx-no-custom"></a>**ctx-no-custom.** No custom context types, and no interface other
-than `context.Context` in a signature.
-Source: D:2949-2957 "Custom contexts", `a9c5f82`, read 2026-11-16.
-↩ row [120](#row-120)
-
-<a id="rule-test-input-in-message"></a>**test-input-in-message.** When a case's name does not show the input
-that matters and the input is short, the assertion message includes
-it.
-Source: D:3137-3141 "Identify the input", `a9c5f82`, read 2026-11-16.
-Differs: Google also asks for the function name and inputs in every
-message; `require` prints expected and actual, and the case name
-(test-names) states the situation.
-↩ row [128](#row-128)
+<a id="rule-ctx-adapter"></a>**ctx-adapter.** ctx is never a struct field (ctx-per-call), with one
+exception: a value built inside a call may hold that call's ctx, only
+to satisfy an interface whose signature can't take one, such as
+`io.Reader`. It never outlives the call and is never a long-lived
+collaborator.
+Source: D:2907-2912 "Contexts", `a9c5f82`, read 2026-11-16; owner
+ruling 2026-11-16 (bs-f3o.2).
+Differs: Google exempts any method whose signature must match an
+outside interface; we allow only the per-call adapter.
+↩ row [116](#row-116)
 
 <a id="rule-test-stable-output"></a>**test-stable-output.** Don't compare output whose exact bytes a
 package you don't own decides, such as `json.Marshal`'s: parse it and
@@ -414,6 +407,14 @@ type becomes a non-nil `error`. An identity type (Failure Identity
 step 2) is returned as `error` and matched with `errors.As`.
 Source: D:1081-1090 "Returning errors", `a9c5f82`, read 2026-11-16.
 ↩ row [53](#row-53)
+
+<a id="rule-nil-slice-want"></a>**nil-slice-want.** `require.Equal` tells a nil slice from an empty
+one, though no API distinguishes them (nil-slice). A test's want
+matches the nil-ness the code returns; a nil/empty mismatch is a bug
+in the test, not behaviour to pin.
+Source: D:1682-1739 "Nil slices", `a9c5f82`, read 2026-11-16;
+bjornstack.md test-require.
+↩ row [71](#row-71)
 
 <a id="rule-copy-safety"></a>**copy-safety.** Don't copy a value whose type has pointer-receiver
 methods, such as `bytes.Buffer` or a struct holding a `sync.Mutex`; a
@@ -475,70 +476,16 @@ Source: G:295-340 "Maintainability", `a9c5f82`, read 2026-11-16.
 ↩ row [8](#row-8)
 
 <a id="rule-name-predictable"></a>**name-predictable.** Parameters and receivers that stand for the same
-concept have the same name throughout a package.
+concept typically have the same name throughout a package.
 Source: G:346-351 "Maintainability", `a9c5f82`, read 2026-11-16.
 ↩ row [9](#row-9)
 
-<a id="rule-name-mixedcaps"></a>**name-mixedcaps.** Multi-word names use `MixedCaps` or `mixedCaps`,
-constants included: `MaxLength`, never `MAX_LENGTH`, `kMaxLength` or
-`max_length`. Local variables count as unexported. Generated protobuf
-code and code that mirrors the operating system's interface, as
-`syscall` does, are exempt.
-Source: G:408-426 "MixedCaps"; D:168-197 "Constant names"; `a9c5f82`,
-read 2026-11-16.
-↩ rows [12](#row-12), [25](#row-25)
-
-<a id="rule-fmt-line-length"></a>**fmt-line-length.** Go has no fixed line length. A long line is
-shortened by refactoring, such as extracting a local, not by
-splitting it; if it is as short as is practical, it stays long. Never
-split a line before an indentation change: function signatures and
-`if`, `for`, `switch` and `case` lines stay on one line. A call is
-split only to group its arguments by meaning, when the API cannot
-change or the call is unusual, never for length alone. Long string
-literals are never broken; arguments may follow the format string on
-later lines. Where a break that lines up with an indented block cannot
-be avoided, leave a space to separate them; an over-long `case` list
-puts every case on its own indented line, followed by a blank line.
-Source: G:432-442 "Line length"; D:1749-2033 "Indentation confusion",
-"Function formatting", "Conditionals and loops"; `a9c5f82`, read
-2026-11-16.
-↩ rows [13](#row-13), [72](#row-72), [73](#row-73), [74](#row-74), [76](#row-76), [77](#row-77), [78](#row-78)
-
-<a id="rule-name-underscores"></a>**name-underscores.** Go names contain no underscores, except:
-`Test`, `Benchmark` and `Example` function names in `_test.go` files;
-packages imported only by generated code; test packages named with a
-`_test` suffix (`linkedlist_test`, `linked_list_service_test`); and
-low-level code that interoperates with the operating system or cgo
-reusing its identifiers. File names may contain underscores.
-Source: D:58-73 "Underscores", D:92-110 "Package names", `a9c5f82`,
-read 2026-11-16.
-↩ row [16](#row-16)
-
-<a id="rule-import-rename"></a>**import-rename.** Imports keep their package name, except in these
-cases, taken in order:
-1. Two imports collide: rename the more local or project-specific
-   one.
-2. The package name has an underscore, as generated protobuf packages
-   do: rename it, with a `pb` suffix for protobuf
-   (`foosvcpb "path/to/foo_service_go_proto"`).
-3. The import collides with a local variable you need while the
-   package is in use: add a `pkg` suffix (`urlpkg`).
-4. The name is uninformative (`util`, `v1`) and the surrounding code
-   gives too little context: rename it, sparingly, and prefer giving
-   the package a better name.
-
-A local name follows the package-name rules (lower case, no
-underscores) and is the same in every file that imports the package.
-Source: D:92-94 "Package names", D:125-130, D:885-933 "Import
-renaming", `a9c5f82`, read 2026-11-16.
-↩ rows [20](#row-20), [21](#row-21), [22](#row-22), [23](#row-23)
-
-<a id="rule-recv-name"></a>**recv-name.** A receiver's name is one or two letters abbreviating
-its type, the same on every method of that type: `func (w
-*ReportWriter)`. Never `this`, `self` or `_`; omit the name when the
-method does not use it.
-Source: D:148-160 "Receiver names", `a9c5f82`, read 2026-11-16.
-↩ row [24](#row-24)
+<a id="rule-import-rename"></a>**import-rename.** Where the project uses protobuf
+(test-protobuf), a generated protobuf package, whose name has
+underscores, is imported under a name without them and with a `pb`
+suffix: `foosvcpb "path/to/foo_service_go_proto"`.
+Source: D:901-912 "Import renaming", `a9c5f82`, read 2026-11-16.
+↩ row [21](#row-21)
 
 <a id="rule-const-role"></a>**const-role.** Name a constant for what its value means
 (`MaxPacketSize`), not for the value (`Twelve`). A value with no
@@ -546,62 +493,35 @@ meaning beyond itself needs no constant.
 Source: D:199-212 "Constant names", `a9c5f82`, read 2026-11-16.
 ↩ row [26](#row-26)
 
-<a id="rule-name-initialisms"></a>**name-initialisms.** An initialism keeps one case: `URL` or `url`,
-`ID` or `id`, `DB` or `db`, never `Url` or `Id`. In a name with several
-initialisms each is consistent on its own (`XMLAPI`, `xmlAPI`). An
-initialism with a lower-case letter (`iOS`, `gRPC`, `DDoS`) is written
-as in prose, unless exporting changes its first letter; then the whole
-initialism takes one case (`IOS`, `GRPC`, `ddos`). Generated protobuf
-code and operating-system interfaces are exempt.
-Source: D:228-268 "Initialisms", `a9c5f82`, read 2026-11-16.
-↩ row [27](#row-27)
-
-<a id="rule-name-getters"></a>**name-getters.** No `Get` prefix, unless the concept itself is
-"get", as in HTTP GET: `Counts`, not `GetCounts`. A function that
-computes heavily or calls a remote service may be named `Compute…` or
-`Fetch…`, so the reader expects it to take time or fail.
-Source: D:276-291 "Getters", `a9c5f82`, read 2026-11-16.
-↩ rows [28](#row-28), [29](#row-29)
+<a id="rule-name-getters"></a>**name-getters.** A function that computes heavily or calls a remote
+service may be named `Compute…` or `Fetch…`, so the reader expects it
+to take time or fail.
+Source: D:280-283 "Getters", `a9c5f82`, read 2026-11-16.
+↩ row [29](#row-29)
 
 <a id="rule-name-var"></a>**name-var.** A variable's name grows with its scope and shrinks with
 how often it is used: as a rough guide, one or two operations over
 1-7 lines may use a letter or two, and a scope longer than a page
 needs words. Name what the value holds and how it is used here, not
 where it came from. Don't drop letters to save typing (`Sandbox`, not
-`Sbx`). Leave type words out (`users`, not `userSlice`; `userCount`,
-not `numUsers`) unless two forms of the value are in scope
-(`limitRaw` and `limit`). Single letters only where the full word is
-obvious: receivers, `r` for an `io.Reader` or `*http.Request`, `w` for
-an `io.Writer` or `http.ResponseWriter`, `i`, `x` and `y` for indices
+`Sbx`). Single letters only where the full word is obvious:
+receivers, `r` for an `io.Reader` or `*http.Request`, `w` for an
+`io.Writer` or `http.ResponseWriter`, `i`, `x` and `y` for indices
 and coordinates, and short loop variables such as `n` over `nodes`.
-Source: D:295-379 "Variable names", D:419-447 "Variable name vs.
-type", `a9c5f82`, read 2026-11-16.
-↩ rows [30](#row-30), [31](#row-31), [32](#row-32), [33](#row-33), [34](#row-34)
+Source: D:295-379 "Variable names", `a9c5f82`, read 2026-11-16.
+↩ rows [30](#row-30), [31](#row-31), [32](#row-32), [34](#row-34)
 
-<a id="rule-doc-comments"></a>**doc-comments.** Every exported top-level name has a doc comment, and
-so does an unexported type or function whose behaviour or meaning is
-not obvious. A doc comment is full sentences and begins with the name
-it documents, unexported names included; an article may come first.
-Godoc formatting: indent lists and code; no other decoration.
-Exception: builder methods in `test/a` have no doc comments
-(builders-a).
-Source: D:557-559 "Commentary", D:612-661 "Doc comments", `a9c5f82`,
-read 2026-11-16.
-Differs: Google has no exception for builder methods.
-↩ rows [38](#row-38), [40](#row-40), [41](#row-41)
-
-<a id="rule-comment-wrap"></a>**comment-wrap.** Wrap long comment lines so they read in tools that
-don't wrap, around 80 or 100 columns. It is not a hard limit: a long
-URL stays whole. Wrap consistently within a file.
-Source: D:566-608 "Comment line length", `a9c5f82`, read 2026-11-16.
-↩ row [39](#row-39)
-
-<a id="rule-comment-sentences"></a>**comment-sentences.** A comment written as a sentence is
-capitalized and punctuated; it may start with a lower-case identifier.
-Fragments, such as end-of-line comments on struct fields, need
-neither.
-Source: D:665-698 "Comment sentences", `a9c5f82`, read 2026-11-16.
-↩ row [42](#row-42)
+<a id="rule-doc-comments"></a>**doc-comments.** Every exported top-level name has a doc comment, in
+full sentences, beginning with the name it documents; an article may
+come first. An unexported name gets a comment only for what its code
+can't say, such as why it is done this way. Godoc formatting: indent
+lists and code; no other decoration. Exception: builder methods in
+`test/a` have no doc comments (builders-a).
+Source: D:557-559 "Commentary", D:612-633 "Doc comments", `a9c5f82`,
+read 2026-11-16; owner ruling 2026-11-16 (bs-f3o.2).
+Differs: Google also comments unexported code whose behaviour is not
+obvious, and has no exception for builder methods.
+↩ rows [38](#row-38), [40](#row-40)
 
 <a id="rule-doc-examples"></a>**doc-examples.** A package documents its intended use, where
 feasible with a runnable `Example` function in a `_test.go` file;
@@ -609,32 +529,13 @@ otherwise with example code in a comment, formatted like code.
 Source: D:704-718 "Examples", `a9c5f82`, read 2026-11-16.
 ↩ row [43](#row-43)
 
-<a id="rule-named-results"></a>**named-results.** Name results only when it helps the caller: several
-results of the same type, or a result the caller must act on
-(`cancel func()`). Don't name them when the name repeats the type, to
-avoid declaring a local, or to allow naked returns. Naked returns only
-in small functions. A result a deferred closure changes may always be
-named.
-Source: D:722-797 "Named result parameters", `a9c5f82`, read
-2026-11-16.
-↩ rows [44](#row-44), [45](#row-45)
-
-<a id="rule-pkg-comment"></a>**pkg-comment.** Each package has exactly one package comment,
-directly above the `package` clause with no blank line between; a
-long one may go in a `doc.go` holding only the comment and the clause.
-In `package main` the comment names the command as it is invoked:
-"The seed_generator command …", "Command seed_generator …", with the
-first word capitalized.
-Source: D:801-875 "Package comments", `a9c5f82`, read 2026-11-16.
+<a id="rule-pkg-comment"></a>**pkg-comment.** In `package main` the package comment names the
+command as it is invoked: "The seed_generator command …", "Command
+seed_generator …", with the first word capitalized.
+Source: D:820-845 "Package comments", `a9c5f82`, read 2026-11-16.
 Differs: Google takes the command's name from the Bazel `go_binary`
 rule; we use the binary's name.
-↩ rows [46](#row-46), [47](#row-47)
-
-<a id="rule-import-groups"></a>**import-groups.** Imports come in up to four groups, in this order,
-separated by blank lines: the standard library; other packages;
-protobuf packages; side-effect (`_`) imports.
-Source: D:937-969 "Import grouping", `a9c5f82`, read 2026-11-16.
-↩ row [48](#row-48)
+↩ row [47](#row-47)
 
 <a id="rule-import-blank"></a>**import-blank.** `import _` appears only in `package main` or in a
 test that needs it, except `_ "embed"` in a file that uses
@@ -645,149 +546,64 @@ Differs: Google also allows a blank import to bypass its nogo
 checker; we run none.
 ↩ row [49](#row-49)
 
-<a id="rule-import-dot"></a>**import-dot.** Never `import .`.
-Source: D:1007-1042 "Import dot", `a9c5f82`, read 2026-11-16.
-↩ row [50](#row-50)
-
-<a id="rule-err-last"></a>**err-last.** `error` is a function's last result.
-Source: D:1050-1055 "Returning errors", `a9c5f82`, read 2026-11-16.
-↩ row [51](#row-51)
-
-<a id="rule-err-strings"></a>**err-strings.** Error strings start lower-case, unless they begin
-with an exported name, a proper noun or an acronym, and end without
-punctuation, because they are read inside other messages.
-Source: D:1100-1119 "Error strings", `a9c5f82`, read 2026-11-16.
-↩ row [55](#row-55)
-
-<a id="rule-err-indent-flow"></a>**err-indent-flow.** Handle an error, or any condition that ends in
-`return`, `continue`, `panic` or an exit, first, and keep the normal
-path unindented: no `else` after such a block. A variable used for
-more than a few lines is declared before the `if`, not in its
-initializer.
-Source: D:1237-1296 "Indent error flow", `a9c5f82`, read 2026-11-16.
-↩ rows [60](#row-60), [61](#row-61)
-
-<a id="rule-lit-composite"></a>**lit-composite.** Build a value with a composite literal rather than
-field by field, where possible.
-Source: D:1310-1317 "Literal formatting", `a9c5f82`, read 2026-11-16.
-↩ row [62](#row-62)
-
-<a id="rule-lit-field-names"></a>**lit-field-names.** A struct literal of a type from another package
-names its fields. For a type from the same package names are
-optional; use them when it reads better, and almost always for a
-struct with many fields.
-Source: D:1323-1374 "Field names", `a9c5f82`, read 2026-11-16.
-↩ rows [63](#row-63), [64](#row-64)
-
-<a id="rule-lit-braces"></a>**lit-braces.** A multi-line literal's closing brace sits on its own
-line at the indentation of the line with the opening brace, and the
-last element ends with a comma. Braces are cuddled (`[]*T{{` …
-`}, {` … `}}`) only when the indentation still matches and the inner
-values are literals or proto builders.
-Source: D:1378-1483 "Matching braces", "Cuddled braces", `a9c5f82`,
-read 2026-11-16.
-↩ rows [65](#row-65), [66](#row-66)
-
-<a id="rule-lit-elide-types"></a>**lit-elide-types.** Leave repeated element types out of slice and
-map literals: `{A: 42}`, not `&Type{A: 42}`; `gofmt -s` removes them.
-Repeat them only for a complex type uncommon in the project whose
-lines are far apart.
-Source: D:1487-1532 "Repeated type names", `a9c5f82`, read 2026-11-16.
-↩ row [67](#row-67)
-
-<a id="rule-lit-zero-fields"></a>**lit-zero-fields.** In production code, a struct literal may leave
-out zero-value fields when no clarity is lost.
+<a id="rule-lit-zero-fields"></a>**lit-zero-fields.** A struct literal may leave out zero-value
+fields when no clarity is lost; table-test cases set every field
+(test-table).
 Source: D:1536-1583 "Zero-value fields", `a9c5f82`, read 2026-11-16.
 Differs: Google extends this to table-test cases; test-table requires
 every field in every case.
 ↩ row [68](#row-68)
 
-<a id="rule-nil-slice"></a>**nil-slice.** Declare an empty local slice as `var s []T`, not
-`s := []T{}`. No API makes its callers tell a nil slice from an empty
-one; test emptiness with `len(s) == 0`, not `s == nil`.
-Source: D:1642-1743 "Nil slices", `a9c5f82`, read 2026-11-16.
-↩ rows [70](#row-70), [71](#row-71)
+<a id="rule-nil-slice"></a>**nil-slice.** No API makes its callers tell a nil slice from an
+empty one; test emptiness with `len(s) == 0`, not `s == nil`. In
+tests, see nil-slice-want.
+Source: D:1682-1739 "Nil slices", `a9c5f82`, read 2026-11-16.
+↩ row [71](#row-71)
 
-<a id="rule-fmt-arg-comments"></a>**fmt-arg-comments.** No inline comments on call arguments
-(`42, // Port`); use an options struct or describe the parameter in
-the function's documentation.
-Source: D:1819-1836 "Function formatting", `a9c5f82`, read 2026-11-16.
-↩ row [75](#row-75)
-
-<a id="rule-cond-no-yoda"></a>**cond-no-yoda.** When comparing a variable with a constant, the
-variable goes on the left: `if result == "foo"`.
-Source: D:2035-2055 "Conditionals and loops", `a9c5f82`, read
-2026-11-16.
-↩ row [79](#row-79)
-
-<a id="rule-must-funcs"></a>**must-funcs.** A function that stops the program on failure is named
-`MustXYZ` or `mustXYZ` and is called only early at startup, typically
-to set a package-level value (`regexp.MustCompile`), never on user
-input or where the error could be handled, even after some
-refactoring. In tests, a `mustXYZ` helper may stop the current test:
-it calls `t.Helper()` and fails with `require.NoError`.
-Source: D:2146-2235 "Must functions", `a9c5f82`, read 2026-11-16.
+<a id="rule-must-funcs"></a>**must-funcs.** In tests, a `mustXYZ` helper may stop the current
+test: it calls `t.Helper()` and fails with `require.NoError`.
+Source: D:2177-2221 "Must functions", `a9c5f82`, read 2026-11-16.
 Differs: Google's test helpers call `t.Fatal`; we use `require`
 (test-require).
-↩ rows [84](#row-84), [85](#row-85)
+↩ row [85](#row-85)
 
-<a id="rule-generics"></a>**generics.** Use generics where they meet a real requirement, not by
-default (least-mechanism). When only one type is used, write the code
-for that type. When several types share a useful interface, use the
-interface; otherwise prefer generics to `any` and heavy type
-switching. Document an exported generic API, ideally with a runnable
-example. Don't use generics to build domain-specific languages or
-error-handling frameworks.
-Source: D:2397-2440 "Generics", `a9c5f82`, read 2026-11-16.
+<a id="rule-generics"></a>**generics.** Use generics where they meet a real requirement
+(least-mechanism), not just because an algorithm doesn't care about
+the type it works on. Generic code over several types is an
+abstraction: Earned Abstraction steps 1-3 decide whether it is
+earned, so with only one type, or fewer than three cases, write the
+code for the types at hand. Don't use generics to build
+domain-specific languages or error-handling frameworks.
+Source: D:2397-2420 "Generics", `a9c5f82`, read 2026-11-16;
+`earned-abstraction.md:4-41`.
 Differs: Google also warns against generic assertion libraries;
 testify is the owner's choice (test-require).
-↩ rows [94](#row-94), [95](#row-95), [96](#row-96), [97](#row-97), [98](#row-98)
-
-<a id="rule-pass-values"></a>**pass-values.** Don't pass a pointer only to save bytes: an argument
-read only as `*x`, such as a `*string` or `*io.Reader`, is passed by
-value. Large structs, structs that may grow, and protobuf messages go
-by pointer.
-Source: D:2444-2459 "Pass values", `a9c5f82`, read 2026-11-16.
-↩ row [99](#row-99)
-
-<a id="rule-recv-type"></a>**recv-type.** Choose the receiver kind for correctness first. Use a
-pointer when the method mutates the receiver, when the struct holds
-fields that must not be copied (copy-safety), when it holds pointers
-to things that may be mutated, when it is large, or when the method
-must see concurrent changes to it. Use a value for a slice the method
-does not reslice or reallocate, a map, function or channel, a
-built-in type that is not modified, a small immutable struct with no
-pointers, or when the method must not see concurrent changes. When in
-doubt, use a pointer. As a general guideline, all of a type's methods
-are pointer methods or all are value methods. A claim that one kind is
-faster needs a realistic benchmark.
-Source: D:2461-2605 "Receiver type", `a9c5f82`, read 2026-11-16.
-↩ rows [100](#row-100), [101](#row-101)
-
-<a id="rule-switch-break"></a>**switch-break.** No bare `break` at the end of a `switch` clause;
-a comment explains an empty clause.
-Source: D:2609-2644 "`switch` and `break`", `a9c5f82`, read
-2026-11-16.
-↩ row [102](#row-102)
-
-<a id="rule-type-alias"></a>**type-alias.** Define a new type with `type T1 T2`. Use an alias,
-`type T1 = T2`, only when needed, mainly to help move a package.
-Source: D:2694-2703 "Type aliases", `a9c5f82`, read 2026-11-16.
-↩ row [105](#row-105)
-
-<a id="rule-fmt-q"></a>**fmt-q.** Quote strings in output for humans with `%q`, not `"%s"` or
-`'%s'`, so an empty or odd value stands out.
-Source: D:2707-2734 "Use %q", `a9c5f82`, read 2026-11-16.
-↩ row [106](#row-106)
-
-<a id="rule-use-any"></a>**use-any.** New code writes `any`, not `interface{}`.
-Source: D:2736-2743 "Use any", `a9c5f82`, read 2026-11-16.
-↩ row [107](#row-107)
+↩ rows [94](#row-94), [96](#row-96), [97](#row-97)
 
 ## Dropped
 
 One section per drop row: what the source says, what it would have
-meant in practice, and why it was dropped.
+meant in practice, and why it was dropped. Rows dropped as standard Go
+conventions share one section.
+
+### <a id="drop-conventions"></a>Standard Go conventions
+
+<a id="rule-name-mixedcaps"></a><a id="rule-fmt-line-length"></a><a id="rule-name-underscores"></a><a id="rule-recv-name"></a><a id="rule-name-initialisms"></a><a id="rule-comment-wrap"></a><a id="rule-comment-sentences"></a><a id="rule-named-results"></a><a id="rule-import-groups"></a><a id="rule-import-dot"></a><a id="rule-err-last"></a><a id="rule-err-strings"></a><a id="rule-err-indent-flow"></a><a id="rule-lit-composite"></a><a id="rule-lit-field-names"></a><a id="rule-lit-braces"></a><a id="rule-lit-elide-types"></a><a id="rule-fmt-arg-comments"></a><a id="rule-cond-no-yoda"></a><a id="rule-iface-return-concrete"></a><a id="rule-pass-values"></a><a id="rule-recv-type"></a><a id="rule-switch-break"></a><a id="rule-sync-funcs"></a><a id="rule-type-alias"></a><a id="rule-fmt-q"></a><a id="rule-use-any"></a><a id="rule-test-helper-params"></a><a id="rule-ctx-test"></a><a id="rule-ctx-no-custom"></a>
+
+Source: the rows below, each an ordinary Go convention from G or D.
+
+In practice: go.md would restate the Go style guide rule by rule.
+
+Dropped because: Owner ruling 2026-11-16 (bs-f3o.2): go.md says once
+to follow the standard Go conventions ([go-conventions](#rule-go-conventions)) and carries
+only what we add, each with its reason. The anchors above keep links
+to the rules these rows once had. Rows 115 and 117 also conflicted
+with bjornstack.md compliance-suite's `(t, ctx, factory)` signature;
+the owner ruled that the suite drops its ctx parameter and each
+scenario uses `t.Context()`, so ctx-per-call and Google's ctx-test
+hold without exception.
+
+↩ rows [12](#row-12), [13](#row-13), [16](#row-16), [20](#row-20), [22](#row-22), [23](#row-23), [24](#row-24), [25](#row-25), [27](#row-27), [28](#row-28), [33](#row-33), [36b](#row-36b), [39](#row-39), [41](#row-41), [42](#row-42), [44](#row-44), [45](#row-45), [46](#row-46), [48](#row-48), [50](#row-50), [51](#row-51), [55](#row-55), [60](#row-60), [61](#row-61), [62](#row-62), [63](#row-63), [64](#row-64), [65](#row-65), [66](#row-66), [67](#row-67), [70](#row-70), [72](#row-72), [73](#row-73), [74](#row-74), [75](#row-75), [76](#row-76), [77](#row-77), [78](#row-78), [79](#row-79), [84](#row-84), [93](#row-93), [95](#row-95), [98](#row-98), [99](#row-99), [100](#row-100), [101](#row-101), [102](#row-102), [104](#row-104), [105](#row-105), [106](#row-106), [107](#row-107), [110](#row-110), [113](#row-113), [115](#row-115), [117](#row-117), [120](#row-120)
 
 ### <a id="drop-1"></a>Row 1: Principles in order, consistency last
 
@@ -805,7 +621,7 @@ Source: G:99-105: "It is often better for comments to explain why something is d
 
 In practice: The same convention bjornstack.md row 70 dropped.
 
-Dropped because: Language-neutral; bs-cbr's strategy owns where reasoning lives (bjornstack.md row 70).
+Dropped because: Language-neutral; Say It Once step 3 keeps implementation reasoning in the code (bjornstack.md row 70).
 
 ↩ row [2](#row-2)
 
@@ -859,13 +675,13 @@ Dropped because: A review habit, not a rule for code; nothing in tool-finish run
 
 ↩ row [37](#row-37)
 
-### <a id="drop-56"></a>Row 56: Capitalize displayed messages
+### <a id="drop-56"></a>Row 56a: Capitalize test failure messages
 
 Source: D:1121-1124: the full displayed message (logging, test failure, API response) "should typically be capitalized".
 
-In practice: `t.Errorf("Op(%q) failed ...")`, `log.Infof("Operation aborted: %v", err)`.
+In practice: `t.Errorf("Op(%q) failed ...")`.
 
-Dropped because: Assertion messages follow bjornstack.md test-messages ("expected the total to include tax"); log messages come from ctx-scope's logger, which this guide does not describe.
+Dropped because: Assertion messages follow bjornstack.md test-messages, which start lower-case ("expected the total to include tax"). The log and UI half of the same source lines is row 56b, still open for the owner.
 
 ↩ row [56](#row-56)
 
@@ -885,9 +701,19 @@ Source: D:2351-2354: "Do not wrap RPC clients in new manual interfaces just for 
 
 In practice: A coordinator calling an RPC client is tested against a real transport with a fake server, not a double.
 
-Dropped because: Unit Testing step 3.3 replaces every direct collaborator of a coordinator with a double; bjornstack.md coord-doubles spells it, and iface-need records the difference.
+Dropped because: Unit Testing step 3.3 replaces every direct collaborator of a coordinator with a double; bjornstack.md coord-doubles spells it, and iface-need records the difference. Real transports still run at the black-box layer (bjornstack.md bb-http).
 
 ↩ row [88](#row-88)
+
+### <a id="drop-89b"></a>Row 89b: Don't export test doubles only for tests
+
+Source: D:2356-2358: don't export test doubles solely for testing; the back-door half of the same lines is row 89a.
+
+In practice: Doubles stay unexported in the package's own tests.
+
+Dropped because: Test Data Builders step 2 (`test-data-builders.md:31-37`) moves a shared stateful double under the exported builders' entry point `test/a`, as double-package (row 90) states.
+
+↩ row [89b](#row-89b)
 
 ### <a id="drop-108"></a>Row 108: snake_case flag names
 
@@ -895,7 +721,7 @@ Source: D:2755-2761: Google's internal flag package; "the flag name should be in
 
 In practice: `flag.Duration("poll_interval", ...)`.
 
-Dropped because: It is tied to Google's internal flag package, and nothing in our material chooses a flag-name style.
+Dropped because: Nothing in our material chooses a flag-name style. Google states the snake_case preference for flag names in Go binaries (D:2755-2760), separately from its internal flag package, so the drop is not forced; whether to adopt it is an owner pick, still open for the owner's batch.
 
 ↩ row [108](#row-108)
 
@@ -909,23 +735,13 @@ Dropped because: We log through the logger in ctx (bjornstack.md ctx-scope, `log
 
 ↩ row [111](#row-111)
 
-### <a id="drop-119"></a>Row 119: Internal context detachment package
-
-Source: D:2929-2932: background operations that outlive the parent "can use an internal package for detachment".
-
-In practice: A Google-internal helper.
-
-Dropped because: Google-internal; not available to us.
-
-↩ row [119](#row-119)
-
 ### <a id="drop-121"></a>Row 121: Where application data goes
 
 Source: D:2959-2960: "put it in a parameter, in the receiver, in globals, or in a `Context` value if it truly belongs there".
 
 In practice: Globals as one accepted home for application data.
 
-Dropped because: bjornstack.md ctx-scope limits what ctx carries, and coord-globals with Unit Testing step 3.2 limits globals to metrics.
+Dropped because: bjornstack.md ctx-scope limits what ctx carries, and coord-globals with Unit Testing step 3.2 limits globals to metrics; Google's list would admit globals as a general home for data.
 
 ↩ row [121](#row-121)
 
@@ -955,7 +771,7 @@ Source: D:3089-3091: "prefer returning a value or an error that can be used in t
 
 In practice: Helpers like `postLength(p)` compared in the test body.
 
-Dropped because: Parameterized Test Structure step 3 and bjornstack.md test-table carry assertion functions that take `t` and assert.
+Dropped because: A helper that returns a value, such as `postLength`, is compared with `require.Equal` and needs no rule. Assertion helpers that take `t` are row 163.
 
 ↩ row [125](#row-125)
 
@@ -979,6 +795,16 @@ Dropped because: `require` prints expected and actual; the test and case names (
 
 ↩ row [127](#row-127)
 
+### <a id="drop-128"></a><a id="rule-test-input-in-message"></a>Row 128: Short inputs in failure messages
+
+Source: D:3137-3141: failure messages include short inputs; otherwise name the case and print its description.
+
+In practice: Every assertion message repeats the case's input.
+
+Dropped because: Parameterized Test Structure step 2 shows every case's input in the table, and test-names locates the failing case, so the input in each message is boilerplate.
+
+↩ row [128](#row-128)
+
 ### <a id="drop-129"></a>Row 129: Got before want
 
 Source: D:3147-3150: print the actual value before the expected one; use "got" and "want".
@@ -995,7 +821,7 @@ Source: D:3173-3178: tweak `cmp.Diff` or `cmp.Equal` with `cmpopts` options such
 
 In practice: `cmp` with options as the general escape for awkward fields.
 
-Dropped because: bjornstack.md test-protobuf gives `cmp` no role beyond protobuf; Whole-Object Assertion step 2 accounts for fields that can't be compared exactly (inject, capture and verify, or zero both sides).
+Dropped because: bjornstack.md test-protobuf gives `cmp` no role beyond protobuf. Whole-Object Assertion step 2 accounts for fields that can't be compared exactly (`whole-object-assertion.md:20-25`): for an approximate value, capture it from the result, check it with `require.InDelta` or `require.InEpsilon`, substitute it into the expected value, then compare with `require.Equal`.
 
 ↩ row [131](#row-131)
 
@@ -1045,7 +871,7 @@ Source: D:3386-3388: "Make your failure mode trigger during development. Review 
 
 In practice: See each test fail once and read its output.
 
-Dropped because: Language-neutral; Outside-In Development Loop step 1 already starts every test failing.
+Dropped because: Language-neutral; Outside-In Development Loop step 4 already has the developer read the failure message as it changes.
 
 ↩ row [143](#row-143)
 
@@ -1055,7 +881,7 @@ Source: D:3390-3396: `%q` for strings, `%+v` for small structs, a diff for large
 
 In practice: Formatting of hand-written failure output.
 
-Dropped because: `require` formats the values it prints; `%q` in a message we write is fmt-q (row 106).
+Dropped because: `require` formats the values it prints; `%q` in a message we write is a standard convention (row 106, go-conventions).
 
 ↩ row [144](#row-144)
 
