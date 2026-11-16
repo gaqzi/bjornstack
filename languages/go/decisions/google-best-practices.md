@@ -50,7 +50,7 @@ Drop rows have "—" and "-".
 | <a id="row-8"></a>8 | BP Naming conventions (:141-148) | No `Get` prefix | keep | Same | [name-shape](#rule-name-shape) | For the protocols | guard candidate |
 | <a id="row-9"></a>9 | BP Naming conventions (:150-156) | A function that does something has a verb-like name | keep | Same | [name-shape](#rule-name-shape) | For the protocols | judgment |
 | <a id="row-10"></a>10 | BP Naming conventions (:158-178) | Functions differing only by type end in the type's name; a clear primary version may omit it | keep | Same, exception included | [name-shape](#rule-name-shape) | For the protocols | judgment |
-| <a id="row-11"></a>11 | BP Creating test helper packages (:228-242) | A package of test helpers for `creditcard` is named `creditcardtest` | adapt | compliance-suite already uses such a package (`storagetest`); our own builders and stateful doubles live under `test/a` (Test Data Builders step 2), so the name is for helpers one package offers to other packages' tests | [test-helper-pkg](#rule-test-helper-pkg) | Pattern mappings | judgment |
+| <a id="row-11"></a>11 | BP Creating test helper packages (:228-242) | A package of test helpers for `creditcard` is named `creditcardtest` | adapt | compliance-suite already uses such a package (`storagetest`); everything this module's own tests share lives under `test/a` (Test Data Builders step 2), so the name is for the compliance suite and helpers published outside this module | [test-helper-pkg](#rule-test-helper-pkg) | Pattern mappings | judgment |
 | <a id="row-12"></a>12 | BP Simple case (:272-287) | Mark the helper package's Bazel `go_library` as `testonly` | drop | Bazel; we build with the go tool | [dropped](#drop-12) | — | - |
 | <a id="row-13"></a>13 | BP Simple case (:246-290) | One double for one type is named plainly (`Stub`), not `StubService` | adapt | Our doubles live in their test file, often as a function (Test Data Builders step 2; coord-doubles), so the names are unexported values, not types in a `footest` package | [double-names](#rule-double-names) | Pattern mappings | judgment |
 | <a id="row-14"></a>14 | BP Multiple test double behaviors (:298-319) | Several doubles of one type are named for the behaviour they simulate (`AlwaysDeclines`) | adapt | Same as row 13 | [double-names](#rule-double-names) | Pattern mappings | judgment |
@@ -68,25 +68,25 @@ Drop rows have "—" and "-".
 | <a id="row-26"></a>26 | BP Package size (:640-648) | No one-type-per-file rule; neither files of thousands of lines nor many tiny files | keep | Go convention | [file-size](#rule-file-size) | For the protocols | judgment |
 | <a id="row-27"></a>27 | BP Package size (:649-651) | Long package documentation may go in `doc.go` | drop | A permission, not required; nothing to enforce | [dropped](#drop-27) | — | - |
 | <a id="row-28"></a>28 | BP Package size (:653-656) | Bazel directory layout; one directory per package if you may open-source | drop | Bazel; with the go tool a directory is a package | [dropped](#drop-28) | — | - |
-| <a id="row-29"></a>29 | BP Protocol Buffer Messages and Stubs (:721-737) | Rename generated proto imports with a `pb` suffix, gRPC stubs with `grpc` | adapt | BP ties the suffix to Bazel rule names; we tie it to what the generated package holds | [proto-import-names](#rule-proto-import-names) | For the protocols | guard candidate |
+| <a id="row-29"></a>29 | BP Protocol Buffer Messages and Stubs (:721-737) | Rename generated proto imports with a `pb` suffix, gRPC stubs with `grpc` | adapt | BP ties the suffix to Bazel rule names; we tie it to what the generated package holds, and fall back on the proto package name, not the Bazel target name | [proto-import-names](#rule-proto-import-names) | For the protocols | guard candidate |
 | <a id="row-30"></a>30 | BP Protocol Buffer Messages and Stubs (:739-755) | Prefer descriptive whole words over `pb` or `xpb`; existing short names need not change | keep | Same rule | [proto-import-names](#rule-proto-import-names) | For the protocols | judgment |
 | <a id="row-31"></a>31 | BP Error handling (:777-788) | Handle errors deliberately; consider whether this frame is best placed to handle one | drop | Advice to use judgment; the checkable parts are rows 33-50, and Failure Identity step 3 says which unit handles a failure | [dropped](#drop-31) | — | - |
-| <a id="row-32"></a>32 | BP Error handling (:790-796) | Where related operations run as a group and only the first error matters, use `errgroup` | keep | Go library form; Failure Identity step 4 (the caller acts on the whole) | [err-group](#rule-err-group) | Tooling | judgment |
+| <a id="row-32"></a>32 | BP Error handling (:790-796) | Where related operations run as a group and only the first error matters, `errgroup` is a convenient way to run them | keep | Go library form; Failure Identity step 4 (the caller acts on the whole) | [err-group](#rule-err-group) | Tooling | judgment |
 | <a id="row-33"></a>33 | BP Error structure (:812-843) | Give an error structure when callers need to tell conditions apart; the simplest is a sentinel value | keep | Go spelling of Failure Identity steps 1-2 | [err-identity](#rule-err-identity) | Pattern mappings | judgment |
-| <a id="row-34"></a>34 | BP Error structure (:845-878) | Compare a sentinel with `==`, or with `errors.Is` when the function wraps | adapt | Above the edge every error is wrapped with `%w` (err-wrap-verb, bjornstack.md [row 48](bjornstack.md#row-48)), so `==` misses it: always `errors.Is` | [err-is-sentinel](#rule-err-is-sentinel) | Go pitfalls | guard candidate |
+| <a id="row-34"></a>34 | BP Error structure (:845-878) | Compare a sentinel with `==`, or with `errors.Is` when the function wraps | adapt | A callee may start wrapping at any time (err-wrap-where, bjornstack.md [row 121](bjornstack.md#row-121); `%w` per err-wrap-verb, [row 48](bjornstack.md#row-48)), and `==` then stops matching without any error: always `errors.Is` | [err-is-sentinel](#rule-err-is-sentinel) | Go pitfalls | guard candidate |
 | <a id="row-35"></a>35 | BP Error structure (:880-892) | Never tell errors apart by their string form | already ours | bjornstack.md [row 48](bjornstack.md#row-48) (err-wrap-verb: "never a match on the text") | [err-wrap-verb](bjornstack.md#rule-err-wrap-verb) | Go pitfalls | judgment |
 | <a id="row-36"></a>36 | BP Error structure (:894-897) | Values the caller needs go in struct fields (`os.PathError.Path`) | keep | Failure Identity step 2 | [err-identity](#rule-err-identity) | Pattern mappings | judgment |
 | <a id="row-37"></a>37 | BP Error structure (:899-904) | Package `status` is optional; if used, use canonical codes | keep | A handler choosing a status is Unit Testing step 3.4's user-facing coordinator | [err-grpc-status](#rule-err-grpc-status) | Pattern mappings | judgment |
 | <a id="row-38"></a>38 | BP Adding information to errors (:917-947) | Don't repeat what the underlying error already says | keep | Failure Identity step 5 (what failed and the values), without doubling them | [err-annotate](#rule-err-annotate) | Pattern mappings | judgment |
-| <a id="row-39"></a>39 | BP Adding information to errors (:949-957) | No annotation that only says it failed; return `err` instead | keep | Fits err-wrap-where (bjornstack.md [row 121](bjornstack.md#row-121)): a wrap adds where it came from | [err-annotate](#rule-err-annotate) | Pattern mappings | guard candidate |
+| <a id="row-39"></a>39 | BP Adding information to errors (:949-957) | No annotation that only says it failed; return `err` instead | adapt | err-wrap-where (bjornstack.md [row 121](bjornstack.md#row-121)) always wraps another unit's public function's error, so a wrap that only says it failed names the action instead of being left out | [err-annotate](#rule-err-annotate) | Pattern mappings | guard candidate |
 | <a id="row-40"></a>40 | BP Adding information to errors (:959-980) | Name the action that failed, without stop words ("failed to", "couldn't", "unable to") | keep | Failure Identity step 5 | [err-annotate](#rule-err-annotate) | Pattern mappings | guard candidate |
 | <a id="row-41"></a>41 | BP Adding information to errors (:982-1002) | When a function does several actions, say which one failed | keep | Failure Identity step 5 | [err-annotate](#rule-err-annotate) | Pattern mappings | judgment |
 | <a id="row-42"></a>42 | BP Adding information to errors (:1011-1019) | Use `%v` to add non-redundant context | drop | Owner ruled `%v` only at the edge, a single `%w` above it: bjornstack.md [row 48](bjornstack.md#row-48) (err-wrap-verb) | [dropped](#drop-42) | — | - |
 | <a id="row-43"></a>43 | BP Adding information to errors (:1021-1025) | Use `%v` when the error is for logging or display and no caller is meant to inspect it | drop | Same: err-wrap-verb chooses the verb by position, not by who inspects | [dropped](#drop-43) | — | - |
 | <a id="row-44"></a>44 | BP Adding information to errors (:1024-1025) | `errors.Unwrap` does not handle multi-errors | keep | Go-specific trap beside err-join-match | [err-unwrap-multi](#rule-err-unwrap-multi) | Go pitfalls | guard candidate |
-| <a id="row-45"></a>45 | BP Adding information to errors (:1027-1064) | At system boundaries (RPC, IPC, storage) create a fresh error with `%v`, translating into a canonical error space | already ours | bjornstack.md [row 48](bjornstack.md#row-48) (err-wrap-verb: `%v` at the edge); Failure Identity step 3 | [err-wrap-verb](bjornstack.md#rule-err-wrap-verb) | Go pitfalls | judgment |
+| <a id="row-45"></a>45 | BP Adding information to errors (:1027-1064) | At system boundaries (RPC, IPC, storage) create a fresh error with `%v`, translating into a canonical error space | already ours | Storage side: bjornstack.md [row 48](bjornstack.md#row-48) (err-wrap-verb: `%v` at the edge where an outside error comes in); RPC response side: err-grpc-status ([row 37](#row-37)), the handler translating for our clients (Failure Identity step 3) | [err-wrap-verb](bjornstack.md#rule-err-wrap-verb) | Go pitfalls | judgment |
 | <a id="row-46"></a>46 | BP Adding information to errors (:1073-1093) | Use `%w` to add context while keeping the cause inspectable | already ours | bjornstack.md [row 48](bjornstack.md#row-48) (err-wrap-verb: a single `%w` above the edge); where to wrap is [row 121](bjornstack.md#row-121) | [err-wrap-verb](bjornstack.md#rule-err-wrap-verb) | Go pitfalls | judgment |
-| <a id="row-47"></a>47 | BP Adding information to errors (:1095-1100) | Where the system meets an external one, translate rather than wrap with `%w` | already ours | bjornstack.md [row 48](bjornstack.md#row-48) (err-wrap-verb) | [err-wrap-verb](bjornstack.md#rule-err-wrap-verb) | Go pitfalls | judgment |
+| <a id="row-47"></a>47 | BP Adding information to errors (:1095-1100) | Where the system meets an external one, translate rather than wrap with `%w` | keep | BP means errors going out to our clients, not err-wrap-verb's errors coming in: the handler translates into canonical codes (Failure Identity step 3), as err-grpc-status ([row 37](#row-37)) says; not in bjornstack.md, so not "already ours" | [err-grpc-status](#rule-err-grpc-status) | Pattern mappings | judgment |
 | <a id="row-48"></a>48 | BP Adding information to errors (:1102-1106) | Use `%w` when the API documents and tests the underlying errors it exposes | drop | err-wrap-verb wraps with `%w` above the edge whether or not the cause is documented; documenting identities is err-doc | [dropped](#drop-48) | — | - |
 | <a id="row-49"></a>49 | BP Placement of %w in errors (:1117-1184) | Put `%w` at the end: `"...: %w"` | keep | Go-specific; the text then reads in chain order | [err-w-placement](#rule-err-w-placement) | For the protocols | guard candidate |
 | <a id="row-50"></a>50 | BP Sentinel error placement (:1188-1244) | Exception: a categorising sentinel goes first, `"%w: ..."` | keep | The exception to row 49, kept with it | [err-w-placement](#rule-err-w-placement) | For the protocols | judgment |
@@ -99,11 +99,11 @@ Drop rows have "—" and "-".
 | <a id="row-57"></a>57 | BP Custom verbosity levels (:1310-1332) | Don't call expensive functions for a log line whose level is off | adapt | glog's `if log.V(2)` becomes slog's level check | [log-lazy](#rule-log-lazy) | Go pitfalls | judgment |
 | <a id="row-58"></a>58 | BP Program initialization (:1340-1344) | Initialization errors go up to `main`, which exits with an actionable message, not a stack trace | adapt | glog's `log.Exit` and `log.Fatal` become plain Go | [main-exit](#rule-main-exit) | For the protocols | judgment |
 | <a id="row-59"></a>59 | BP Program checks and panics (:1350-1353) | Libraries return errors rather than abort, especially for transient ones | keep | Go convention | [panic-scope](#rule-panic-scope) | For the protocols | judgment |
-| <a id="row-60"></a>60 | BP Program checks and panics (:1355-1361) | An invariant whose failure leaves state unrecoverable ends the program with `log.Fatal`, not `panic` | adapt | `log.Fatal` is glog's; the rule (log and exit, don't let deferred code run on broken state) holds without it | [panic-scope](#rule-panic-scope) | For the protocols | judgment |
-| <a id="row-61"></a>61 | BP Program checks and panics (:1363-1369) | Don't recover panics to avoid crashes | keep | Go form of Fail Early and Loud | [panic-recover](#rule-panic-recover) | For the protocols | guard candidate |
-| <a id="row-62"></a>62 | BP Program checks and panics (:1371-1375) | `net/http` recovering handler panics is a mistake to avoid in your servers | keep | Same rule as row 61 | [panic-recover](#rule-panic-recover) | For the protocols | judgment |
+| <a id="row-60"></a>60 | BP Program checks and panics (:1355-1361) | An invariant whose failure leaves state unrecoverable ends the program with `log.Fatal`, not `panic` | adapt | Owner ruling (bs-f3o.2.4, 2026-11-16): panic with a message naming the invariant, and nothing recovers to carry on. BP's reason the standard library panics is that it lacks levelled logging (:1388-1391), our position without glog; slog has no Fatal, and `os.Exit` in a library skips `t.Cleanup` in tests | [panic-scope](#rule-panic-scope) | For the protocols | judgment |
+| <a id="row-61"></a>61 | BP Program checks and panics (:1363-1369) | Don't recover panics to avoid crashes | keep | Go form of Fail Early and Loud | [panic-no-recover](#rule-panic-no-recover) | For the protocols | guard candidate |
+| <a id="row-62"></a>62 | BP Program checks and panics (:1371-1375) | `net/http` recovering handler panics is a mistake to avoid in your servers | keep | Same rule as row 61 | [panic-no-recover](#rule-panic-no-recover) | For the protocols | judgment |
 | <a id="row-63"></a>63 | BP When to panic (:1384-1391) | Panic on API misuse, as the standard library does | keep | Go convention | [panic-scope](#rule-panic-scope) | For the protocols | judgment |
-| <a id="row-64"></a>64 | BP When to panic (:1396-1441) | A package may panic internally if a matching recover turns it into an error before it crosses the package boundary | keep | Go-specific pattern with its conditions | [panic-internal](#rule-panic-internal) | For the protocols | judgment |
+| <a id="row-64"></a>64 | BP When to panic (:1396-1441) | A package may panic internally if a matching recover turns it into an error before it crosses the package boundary | keep | Go-specific pattern with its conditions | [panic-recover](#rule-panic-recover) | For the protocols | judgment |
 | <a id="row-65"></a>65 | BP When to panic (:1443-1460) | `panic("unreachable")` after a call the compiler does not know never returns | keep | Go-specific | [panic-scope](#rule-panic-scope) | For the protocols | judgment |
 | <a id="row-66"></a>66 | BP When to panic (:1462) | Don't call `log` functions before flags are parsed | drop | glog-specific | [dropped](#drop-66) | — | - |
 | <a id="row-67"></a>67 | BP When to panic (:1463-1465) | A panic may replace fatal logging in `init` or a `Must` function | keep | Go convention | [panic-scope](#rule-panic-scope) | For the protocols | judgment |
@@ -111,7 +111,7 @@ Drop rows have "—" and "-".
 | <a id="row-69"></a>69 | BP Contexts (:1556-1579) | Cancellation interrupting the call and returning `ctx.Err()` is implied; don't restate it | adapt | Same as row 68 | [doc-ctx](#rule-doc-ctx) | Pattern mappings | judgment |
 | <a id="row-70"></a>70 | BP Contexts (:1581-1626) | Document ctx where behaviour differs: another error on cancellation, other interruption, expectations of lifetime, lineage or values | keep | Say It Once step 4.2: a rule callers follow goes in their documentation | [doc-ctx](#rule-doc-ctx) | Pattern mappings | judgment |
 | <a id="row-71"></a>71 | BP Contexts (:1628-1630) | Avoid APIs that make such demands of ctx | keep | Fits ctx-scope (bjornstack.md [row 47](bjornstack.md#row-47)) | [doc-ctx](#rule-doc-ctx) | Pattern mappings | judgment |
-| <a id="row-72"></a>72 | BP Concurrency (:1636-1659) | Read-only operations are assumed safe for concurrent use, mutating ones not; don't restate it | adapt | Same as row 68 | [doc-concurrency](#rule-doc-concurrency) | Pattern mappings | judgment |
+| <a id="row-72"></a>72 | BP Concurrency (:1636-1659) | Read-only operations are assumed safe for concurrent use, mutating ones not; don't restate it | adapt | Read-only operations need no remark; a type not safe for concurrent use says so once, on the type, with what breaks (Say It Once step 4.2's Good example), not per method | [doc-concurrency](#rule-doc-concurrency) | Pattern mappings | judgment |
 | <a id="row-73"></a>73 | BP Concurrency (:1661-1719) | Document concurrency when read-only versus mutating is unclear, when the API synchronizes, or when an interface's implementations must be safe | keep | Say It Once step 4.2 | [doc-concurrency](#rule-doc-concurrency) | Pattern mappings | judgment |
 | <a id="row-74"></a>74 | BP Cleanup (:1725-1759) | Document cleanup the caller owes, and how where unclear | keep | Say It Once step 4.2 | [doc-cleanup](#rule-doc-cleanup) | Pattern mappings | judgment |
 | <a id="row-75"></a>75 | BP Errors (:1771-1785) | Document the significant sentinels and error types a function returns | keep | Failure Identity step 2: document the identity with the operation | [err-doc](#rule-err-doc) | Pattern mappings | judgment |
@@ -120,15 +120,15 @@ Drop rows have "—" and "-".
 | <a id="row-78"></a>78 | BP Errors (:1816-1835) | Error conventions shared by most of a package go in the package documentation | keep | Failure Identity step 2, said once | [err-doc](#rule-err-doc) | Pattern mappings | judgment |
 | <a id="row-79"></a>79 | BP Preview (:1846-1850) | Preview rendered documentation with pkgsite before and during review | drop | A manual review step with a running server; no outcome an agent can check | [dropped](#drop-79) | — | - |
 | <a id="row-80"></a>80 | BP Godoc formatting (:1860-1868) | A blank line separates paragraphs | keep | Go doc-comment syntax | [doc-format](#rule-doc-format) | For the protocols | guard candidate |
-| <a id="row-81"></a>81 | BP Godoc formatting (:1870-1888, :1904-1905) | Show usage as a runnable example in a test file rather than code in a comment | keep | Same | [doc-format](#rule-doc-format) | For the protocols | judgment |
+| <a id="row-81"></a>81 | BP Godoc formatting (:1870-1888, :1904-1905) | A runnable example in a test file is often more appropriate than code in a comment | keep | Same | [doc-format](#rule-doc-format) | For the protocols | judgment |
 | <a id="row-82"></a>82 | BP Godoc formatting (:1890-1918) | Two extra spaces of indent render verbatim, also for lists and tables | keep | Same | [doc-format](#rule-doc-format) | For the protocols | judgment |
 | <a id="row-83"></a>83 | BP Godoc formatting (:1920-1932) | A single capitalised line without punctuation, followed by a paragraph, is a heading | keep | Same | [doc-format](#rule-doc-format) | For the protocols | judgment |
-| <a id="row-84"></a>84 | BP Signal boosting (:1942-1972) | Mark a line that looks common but isn't, such as `err == nil`, with a comment | keep | Say It Once step 3.2: say why a line is written the non-obvious way | [doc-signal-boost](#rule-doc-signal-boost) | Pattern mappings | guard candidate |
+| <a id="row-84"></a>84 | BP Signal boosting (:1942-1972) | Mark a line that looks common but isn't, such as `err == nil`, with a comment | adapt | BP's `// if NO error` restates the code (Say It Once step 3.1 and its outcome "No comment repeats the implementation"); what survives is step 3.2: say why the unusual branch is taken | [doc-signal-boost](#rule-doc-signal-boost) | Pattern mappings | judgment |
 | <a id="row-85"></a>85 | BP Initialization (:1982-1995) | `:=` over `var` for a non-zero initial value | keep | Go convention | [var-decl](#rule-var-decl) | For the protocols | guard candidate |
 | <a id="row-86"></a>86 | BP Declaring variables with zero values (:2015-2027) | `var x T` for an empty value ready to use, not a literal of zeros | keep | Same | [var-decl](#rule-var-decl) | For the protocols | guard candidate |
 | <a id="row-87"></a>87 | BP Declaring variables with zero values (:2029-2047) | Zero value for an unmarshal target; `new(T)` or `&T{}` when a pointer is needed | keep | Same | [var-decl](#rule-var-decl) | For the protocols | judgment |
 | <a id="row-88"></a>88 | BP Declaring variables with zero values (:2049-2066) | A field that must not be copied stays a value; the struct goes by pointer with pointer receivers | keep | Go-specific | [var-pointer](#rule-var-pointer) | For the protocols | guard candidate |
-| <a id="row-89"></a>89 | BP Declaring variables with zero values (:2068-2099) | Declare as a pointer a composite that is returned or always addressed; protobuf messages are pointers | keep | Same | [var-pointer](#rule-var-pointer) | For the protocols | guard candidate |
+| <a id="row-89"></a>89 | BP Declaring variables with zero values (:2068-2099) | Declare as a pointer a composite that is returned as a pointer or always addressed; protobuf messages are pointers | keep | Same; a function that returns a value, such as builders-a's `Build()` (bjornstack.md [row 29](bjornstack.md#row-29)), is not covered | [var-pointer](#rule-var-pointer) | For the protocols | guard candidate |
 | <a id="row-90"></a>90 | BP Declaring variables with zero values (:2103-2104) | A map must be initialized before writing; reading a nil map is fine | keep | Go-specific trap | [map-nil-write](#rule-map-nil-write) | Go pitfalls | judgment |
 | <a id="row-91"></a>91 | BP Composite literals (:2126-2130) | A composite literal when the initial members are known, not for an empty value | keep | Go convention | [var-decl](#rule-var-decl) | For the protocols | judgment |
 | <a id="row-92"></a>92 | BP Composite literals (:2132-2143) | `new(T)` and `&T{}` are both fine for a pointer to a zero value | keep | Same | [var-decl](#rule-var-decl) | For the protocols | judgment |
@@ -138,11 +138,11 @@ Drop rows have "—" and "-".
 | <a id="row-96"></a>96 | BP Option structure (:2261-2274, :2333-2337) | Collect arguments in an option struct, preferred when all callers set some, many set many, or functions share the options | adapt | Unit Testing's misapplication "a wrapper made for one call" rules out a struct that only carries one function's arguments | [func-options](#rule-func-options) | Pattern mappings | judgment |
 | <a id="row-97"></a>97 | BP Option structure (:2263-2264) | Export the option struct only if an exported function uses it | keep | Intentionally Public step 2 | [func-options](#rule-func-options) | Pattern mappings | guard candidate |
 | <a id="row-98"></a>98 | BP Option structure (:2331) | Contexts are never in option structs | already ours | bjornstack.md [row 46](bjornstack.md#row-46) (ctx-per-call: never stored in a struct) | [ctx-per-call](bjornstack.md#rule-ctx-per-call) | Pattern mappings | guard candidate |
-| <a id="row-99"></a>99 | BP Variadic options (:2343-2365, :2461-2470) | Variadic options cost much code; use them when most callers pass none, options are many or take arguments, can fail, or others define their own | keep | Go-specific pattern with its own conditions | [func-options](#rule-func-options) | Pattern mappings | judgment |
+| <a id="row-99"></a>99 | BP Variadic options (:2343-2365, :2461-2470) | Variadic options cost much code; use them when several of these hold: most callers pass none, options are many or take arguments, can fail, or others define their own | keep | Go-specific pattern with its own conditions | [func-options](#rule-func-options) | Pattern mappings | judgment |
 | <a id="row-100"></a>100 | BP Variadic options (:2472-2482) | An option takes its value as a parameter (`FailFast(bool)`), not by presence | keep | Same | [func-options](#rule-func-options) | Pattern mappings | judgment |
 | <a id="row-101"></a>101 | BP Variadic options (:2484-2485) | Options apply in order; the last one wins | keep | Same | [func-options](#rule-func-options) | Pattern mappings | judgment |
 | <a id="row-102"></a>102 | BP Variadic options (:2487-2490) | The option functions' parameter type is unexported by default | keep | Intentionally Public step 1 | [func-options](#rule-func-options) | Pattern mappings | judgment |
-| <a id="row-103"></a>103 | BP Complex command-line interfaces (:2507-2523) | Use `subcommands` unless you need features only `cobra` has | keep | Library choice; no other source decides it | [cli-subcommands](#rule-cli-subcommands) | Tooling | judgment |
+| <a id="row-103"></a>103 | BP Complex command-line interfaces (:2507-2523) | With no other preference, use `subcommands` (simplest); `cobra` where its features are needed | keep | Library choice; no other source decides it | [cli-subcommands](#rule-cli-subcommands) | Tooling | judgment |
 | <a id="row-104"></a>104 | BP Complex command-line interfaces (:2525-2528) | A cobra command takes `cmd.Context()`, not `context.Background()` | keep | Go-specific trap | [cobra-context](#rule-cobra-context) | Go pitfalls | guard candidate |
 | <a id="row-105"></a>105 | BP Complex command-line interfaces (:2530-2536) | Subcommands need no package each; the CLI is one more client of the library | keep | Domain-First Packaging decides boundaries here as anywhere | [cli-layout](#rule-cli-layout) | Pattern mappings | judgment |
 | <a id="row-106"></a>106 | BP Leave testing to the Test function (:2554-2566) | Assertion helpers are not idiomatic | drop | Owner chose testify `require` (bjornstack.md [row 39](bjornstack.md#row-39)) and an assertion function per case (bjornstack.md [row 64](bjornstack.md#row-64)) | [dropped](#drop-106) | — | - |
@@ -164,11 +164,11 @@ Drop rows have "—" and "-".
 | <a id="row-122"></a>122 | BP Error handling in test helpers (:2948-2952) | Register cleanup with `t.Cleanup` | keep | Same rule; compliance-suite relies on it | [test-setup-helper](#rule-test-setup-helper) | Pattern mappings | judgment |
 | <a id="row-123"></a>123 | BP Error handling in test helpers (:2954-3022) | `t.Helper` reports the failure at the caller's line | already ours | bjornstack.md [row 91](bjornstack.md#row-91) (test-helper) | [test-helper](bjornstack.md#rule-test-helper) | Pattern mappings | guard candidate |
 | <a id="row-124"></a>124 | BP Error handling in test helpers (:3027-3029) | A helper that cannot fail the test takes no `t` | keep | Same as test-helper's scope; builders-a's `Build()` already takes none | [test-setup-helper](#rule-test-setup-helper) | Pattern mappings | guard candidate |
-| <a id="row-125"></a>125 | BP Don't call t.Fatal from separate goroutines (:3037-3088) | `t.Fatal` and `t.FailNow` only from the test's goroutine | adapt | `require.*` fails through `t.FailNow`, so it falls under the same rule | [test-fatal-goroutine](#rule-test-fatal-goroutine) | Go pitfalls | guard candidate |
+| <a id="row-125"></a>125 | BP Don't call t.Fatal from separate goroutines (:3037-3088) | `t.Fatal` and `t.FailNow` only from the test's goroutine | adapt | `require.*` fails through `t.FailNow`, so it falls under the same rule; the goroutine sends its result to the test's goroutine, which asserts with `require`, so test-require needs no `assert` exception | [test-fatal-goroutine](#rule-test-fatal-goroutine) | Go pitfalls | guard candidate |
 | <a id="row-126"></a>126 | BP Use field names in struct literals (:3096-3127) | Name the fields of table-case literals, and leave out zero-valued ones | adapt | Parameterized Test Structure step 2 and test-table (bjornstack.md [row 65](bjornstack.md#row-65)): every case sets every field | [test-case-fields](#rule-test-case-fields) | Pattern mappings | guard candidate |
 | <a id="row-127"></a>127 | BP Keep setup code scoped to specific tests (:3133-3221) | Each test calls the setup it needs; no `init` or package-level setup | keep | Fits Isolated Test Execution step 2 (per-test factories) | [test-setup-scope](#rule-test-setup-scope) | Pattern mappings | guard candidate |
-| <a id="row-128"></a>128 | BP When to use a custom TestMain entrypoint (:3227-3241) | A custom `TestMain` only when every test needs setup with teardown; not the first choice | keep | Shared infrastructure is allowed by Isolated Test Execution when data is scoped per test | [test-setup-scope](#rule-test-setup-scope) | Pattern mappings | judgment |
-| <a id="row-129"></a>129 | BP When to use a custom TestMain entrypoint (:3288-3293) | Each test resets the global state it modified, such as an external database | drop | Isolated Test Execution step 4: no clearing between tests; data scoping makes resetting unnecessary | [dropped](#drop-129) | — | - |
+| <a id="row-128"></a>128 | BP When to use a custom TestMain entrypoint (:3227-3241) | A custom `TestMain` only when every test needs setup with teardown; not the first choice | keep | Isolated Test Execution step 2 bans suite-level setup that produces shared mutable state, so `TestMain` may start shared infrastructure only; each test still creates its own scoped data (steps 1-2) | [test-setup-scope](#rule-test-setup-scope) | Pattern mappings | judgment |
+| <a id="row-129"></a>129 | BP When to use a custom TestMain entrypoint (:3288-3293) | Each test resets the global state it modified, such as an external database | adapt | On shared infrastructure, Isolated Test Execution steps 1 and 4 scope the data instead of resetting it; BP's "global state" also covers in-process globals (package variables, environment), which cannot be scoped, so a test restores them | [test-global-state](#rule-test-global-state) | Pattern mappings | judgment |
 | <a id="row-130"></a>130 | BP Amortizing common test setup (:3299-3353) | `sync.Once` for setup that is expensive, used by some tests only, and needs no teardown | keep | Read-only shared data is allowed by Isolated Test Execution step 2 | [test-setup-scope](#rule-test-setup-scope) | Pattern mappings | judgment |
 | <a id="row-131"></a>131 | BP Amortizing common test setup (:3355-3360) | `sync.Once` does not suit setup that takes a ctx | keep | Same rule | [test-setup-scope](#rule-test-setup-scope) | Pattern mappings | judgment |
 | <a id="row-132"></a>132 | BP Prefer "+" for simple cases (:3379-3388) | `+` for a few strings | keep | Go convention | [string-build](#rule-string-build) | For the protocols | judgment |
@@ -181,12 +181,12 @@ Drop rows have "—" and "-".
 | <a id="row-139"></a>139 | BP Global state (:3519-3521) | Pass dependencies as parameters to constructors, functions, methods or fields | already ours | bjornstack.md [row 69](bjornstack.md#row-69) (coord-inject) | [coord-inject](bjornstack.md#rule-coord-inject) | Pattern mappings | judgment |
 | <a id="row-140"></a>140 | BP Major forms of package state APIs (:3652-3717) | Global state's forms: top-level variables, a global service locator, callback registries, singleton clients; legacy use is no precedent | keep | Lists what Unit Testing step 3.2 calls reading global state | [global-state](#rule-global-state) | Pattern mappings | guard candidate |
 | <a id="row-141"></a>141 | BP Litmus tests (:3721-3733) | When global state is unsafe | keep | Same rule | [global-state](#rule-global-state) | Pattern mappings | judgment |
-| <a id="row-142"></a>142 | BP Litmus tests (:3735-3776) | When global state is safe: logically constant, stateless to observers, not reaching outside the process, no expectation of predictability | keep | The rule's exceptions, kept with it | [global-state](#rule-global-state) | Pattern mappings | judgment |
+| <a id="row-142"></a>142 | BP Litmus tests (:3735-3776) | Global state is safe only when none of the unsafe conditions holds and it is logically constant, stateless to observers, not reaching outside the process, or not expected to be predictable | keep | The rule's exceptions, kept with it | [global-state](#rule-global-state) | Pattern mappings | judgment |
 | <a id="row-143"></a>143 | BP Providing a default instance (:3782-3829) | A package-level convenience API only with isolated instances, as a thin proxy, used by binaries only, documented and resettable | keep | Go-specific pattern with its conditions | [global-default](#rule-global-default) | Pattern mappings | judgment |
 | <a id="row-144"></a>144 | BP Avoid unnecessary interfaces (:3849-3852) | Don't declare an interface because something is a "service"; start from the concrete implementation | adapt | A coordinator declares each collaborator's interface for its doubles (Unit Testing steps 3.2-3.3), before the implementation exists | [iface-need](#rule-iface-need) | Pattern mappings | judgment |
-| <a id="row-145"></a>145 | BP Avoid unnecessary interfaces (:3854-3857) | Reuse existing interfaces such as generated RPC clients; don't wrap them for testing | adapt | A wrapper is still right where Domain-First Packaging step 6 and Failure Identity step 3 translate outside types and failures, never as a test seam | [iface-need](#rule-iface-need) | Pattern mappings | judgment |
+| <a id="row-145"></a>145 | BP Avoid unnecessary interfaces (:3854-3857) | Reuse existing interfaces such as generated RPC clients; don't wrap them for testing | adapt | The edge unit uses the generated client directly and is tested over a real transport (test-real-transport); code above it depends on our own interface in domain types (Domain-First Packaging step 6, Failure Identity step 3), which its coordinator tests double. No interface over the generated client only to test the edge unit. Same id and reading as google-guide-decisions.md iface-need | [iface-need](#rule-iface-need) | Pattern mappings | judgment |
 | <a id="row-146"></a>146 | BP Avoid unnecessary interfaces (:3859-3870) | Don't export a test double beside the real implementation; export an interface for substitution only with a material need | keep | Public API Surface Testing's misapplication "exporting internals solely for tests" | [iface-test-doubles](#rule-iface-test-doubles) | Pattern mappings | judgment |
-| <a id="row-147"></a>147 | BP Avoid unnecessary interfaces (:3872-3875) | Where the real implementation is impractical, put doubles in a dedicated package (`spannertest`) | adapt | Test Data Builders step 2: doubles stay in the test file; a stateful one moves under `test/a` | [iface-test-doubles](#rule-iface-test-doubles) | Pattern mappings | judgment |
+| <a id="row-147"></a>147 | BP Avoid unnecessary interfaces (:3872-3875) | Where the real implementation is impractical, put doubles in a dedicated package (`spannertest`) | adapt | Test Data Builders step 2: doubles stay in the test file; a stateful one moves under `test/a` once a second test file in its domain, or a test outside the domain, needs it | [iface-test-doubles](#rule-iface-test-doubles) | Pattern mappings | judgment |
 | <a id="row-148"></a>148 | BP Avoid unnecessary interfaces (:3879-3883) | An interface for two or more concrete types handled by the same logic | keep | Go convention | [iface-need](#rule-iface-need) | Pattern mappings | judgment |
 | <a id="row-149"></a>149 | BP Avoid unnecessary interfaces (:3885-3891) | An interface to break an import cycle, often a sign of badly split packages | keep | Domain-First Packaging step 5 (a shared interface between siblings) | [iface-need](#rule-iface-need) | Pattern mappings | judgment |
 | <a id="row-150"></a>150 | BP Avoid unnecessary interfaces (:3893-3895) | An interface for the one or two methods a function needs of a large type | keep | Go convention | [iface-need](#rule-iface-need) | Pattern mappings | judgment |
@@ -196,7 +196,7 @@ Drop rows have "—" and "-".
 | <a id="row-154"></a>154 | BP Designing effective interfaces (:3950-3952) | Keep interfaces small | keep | Go convention | [iface-design](#rule-iface-design) | Pattern mappings | judgment |
 | <a id="row-155"></a>155 | BP Designing effective interfaces (:3954-3969) | Document interfaces in proportion to their load, unexported ones included | keep | Same | [iface-design](#rule-iface-design) | Pattern mappings | judgment |
 | <a id="row-156"></a>156 | BP Designing effective interfaces (:3971-3974) | Accept interfaces, return concrete types | keep | Same | [iface-design](#rule-iface-design) | Pattern mappings | judgment |
-| <a id="row-157"></a>157 | BP Designing effective interfaces (:3979-4037) | Return an interface to hide exported methods that would break the type's integrity, but not by rote | adapt | Intentionally Public step 4 first asks whether the method should be exported at all | [iface-design](#rule-iface-design) | Pattern mappings | judgment |
+| <a id="row-157"></a>157 | BP Designing effective interfaces (:3979-4037) | Return an interface to hide exported methods that would break the type's integrity, but not by rote | adapt | Intentionally Public step 3 first asks whether the method should be exported at all; step 4 reshapes the boundary or moves it into an internal package | [iface-design](#rule-iface-design) | Pattern mappings | judgment |
 | <a id="row-158"></a>158 | BP Designing effective interfaces (:4039-4079) | Return an interface when the function picks one of several types at run time; guidelines, not rules | keep | Exception to row 156 | [iface-design](#rule-iface-design) | Pattern mappings | judgment |
 | <a id="row-159"></a>159 | BP Designing effective interfaces (:4081-4157) | Return an interface when a concrete type would create an import cycle; prefer consolidating packages | keep | Exception to row 156; Domain-First Packaging's over-packaging misapplication | [iface-design](#rule-iface-design) | Pattern mappings | judgment |
 
@@ -230,27 +230,28 @@ bjornstack `67b1213`.
 ### Tooling
 
 <a id="rule-err-group"></a>**err-group.** When related operations run as a group and only the
-first failure matters, run them with `golang.org/x/sync/errgroup` and
-return its error. This is not for checking input, where every
+first failure matters, `golang.org/x/sync/errgroup` may run them and
+return that error. This is not for checking input, where every
 violation is reported (scrub-validate).
 Source: BP "Error handling" (:790-796), `a9c5f82b1981`, read
 2026-11-16.
 ↩ row [32](#row-32)
 
-<a id="rule-cli-subcommands"></a>**cli-subcommands.** A command-line tool with subcommands uses
-`github.com/google/subcommands`, unless it needs a feature only
-`github.com/spf13/cobra` has.
+<a id="rule-cli-subcommands"></a>**cli-subcommands.** With no other preference, a command-line tool
+with subcommands uses `github.com/google/subcommands`, the simplest;
+`github.com/spf13/cobra` where its features are needed.
 Source: BP "Complex command-line interfaces" (:2507-2523),
 `a9c5f82b1981`, read 2026-11-16.
 ↩ row [103](#row-103)
 
 ### Pattern mappings
 
-<a id="rule-test-helper-pkg"></a>**test-helper-pkg.** A package that offers helpers for package `foo`
-to tests in other packages is named `footest`, as the compliance
-suite's package is (compliance-suite). Builders and stateful doubles
-for our own tests still live in `test/a` (builders-a; Test Data
-Builders step 2).
+<a id="rule-test-helper-pkg"></a>**test-helper-pkg.** Package `footest` holds `foo`'s compliance suite
+(compliance-suite) and any helpers for `foo` published for tests
+outside this module. Everything this module's own tests share,
+builders and doubles alike, lives under `test/a` (builders-a), and a
+double moves there on Test Data Builders step 2's trigger: a second
+test file in its domain, or a test outside that domain, needs it.
 Source: BP "Creating test helper packages" (:228-242),
 `a9c5f82b1981`, read 2026-11-16.
 Differs: BP puts a package's test doubles in `footest`; Test Data
@@ -297,22 +298,26 @@ for an identity.
 
 <a id="rule-err-grpc-status"></a>**err-grpc-status.** A handler that answers with a gRPC status uses
 the canonical codes of `google.golang.org/grpc/codes`. Package
-`status` is one way to carry them, not a requirement.
-Source: BP "Error structure" (:899-904), `a9c5f82b1981`, read
-2026-11-16.
-↩ row [37](#row-37)
+`status` is one way to carry them, not a requirement. The handler
+translates our failures into those codes for the client rather than
+wrapping them with `%w` (Failure Identity step 3).
+Source: BP "Error structure" (:899-904) and "Adding information to
+errors" (:1095-1100), `a9c5f82b1981`, read 2026-11-16.
+↩ rows [37](#row-37), [47](#row-47)
 
 <a id="rule-err-annotate"></a>**err-annotate.** Where an error is wrapped (err-wrap-where), the
 wrap names the action that failed and the values the underlying error
 does not already carry: `load launch code settings: %w`, since
 `os.Open`'s error already names the file. It uses no stop words such
 as "failed to", "couldn't" or "unable to". A wrap that only says
-something failed adds nothing: return the error as it is. When a
+something failed adds nothing: name the action instead. When a
 function does several things, each wrap says which one failed (Failure
 Identity step 5).
 Source: BP "Adding information to errors" (:917-1002), `a9c5f82b1981`,
 read 2026-11-16.
 Differs: BP's examples wrap with `%v`; the verb follows err-wrap-verb.
+BP returns the error unannotated where the wrap would add nothing;
+err-wrap-where always wraps another unit's public function's error.
 ↩ rows [38](#row-38), [39](#row-39), [40](#row-40), [41](#row-41)
 
 <a id="rule-err-doc"></a>**err-doc.** Document with each operation the error identities a
@@ -347,13 +352,15 @@ Source: BP "Contexts" (:1556-1630), `a9c5f82b1981`, read 2026-11-16.
 ↩ rows [69](#row-69), [70](#row-70), [71](#row-71)
 
 <a id="rule-doc-concurrency"></a>**doc-concurrency.** Read-only operations are assumed safe for
-concurrent use and mutating ones are not; don't restate either.
-Document concurrency where an operation that looks read-only mutates,
-such as a lookup that reorders an LRU cache; where the API
-synchronizes for the caller, on the type when that covers the whole
-type; and where implementations of an interface the API consumes must
-be safe for concurrent use. Existing caller documentation follows
-doc-params.
+concurrent use and need no remark. A type that is not safe for
+concurrent use says so once, on the type, with what breaks: "takes no
+locks; two callers at once corrupt the text" (Say It Once step 4.2),
+not on each method. Document concurrency also where an operation that
+looks read-only mutates, such as a lookup that reorders an LRU cache;
+where the API synchronizes for the caller, on the type when that
+covers the whole type; and where implementations of an interface the
+API consumes must be safe for concurrent use. Existing caller
+documentation follows doc-params.
 Source: BP "Concurrency" (:1636-1719), `a9c5f82b1981`, read
 2026-11-16.
 ↩ rows [72](#row-72), [73](#row-73)
@@ -365,10 +372,12 @@ Source: BP "Cleanup" (:1725-1759), `a9c5f82b1981`, read 2026-11-16.
 ↩ row [74](#row-74)
 
 <a id="rule-doc-signal-boost"></a>**doc-signal-boost.** When a line looks like a common one but isn't,
-such as `if err == nil`, mark the difference with a short comment:
-`// if NO error`.
+such as `if err == nil`, comment why the unusual branch is taken (Say
+It Once step 3.2), not what the line does.
 Source: BP "Signal boosting" (:1942-1972), `a9c5f82b1981`, read
 2026-11-16.
+Differs: BP's comment, `// if NO error`, restates the code; Say It
+Once step 3.1 leaves that out.
 ↩ row [84](#row-84)
 
 <a id="rule-func-args"></a>**func-args.** When a signature grows long, look first for a domain
@@ -387,9 +396,9 @@ share the options, or when it names a concept of the domain. A struct
 that only carries one function's arguments is the one-call wrapper
 Unit Testing names as a misapplication (`testing__unit.md`, "A wrapper
 made for one call"). ctx never goes in it (ctx-per-call).
-Variadic options cost much code: use them when most callers pass no
-options, the options are many or take arguments, an option can fail,
-or other packages may define their own. An option takes its value as
+Variadic options cost much code: use them when several of these
+hold: most callers pass no options, the options are many or take
+arguments, an option can fail, or other packages may define their own. An option takes its value as
 a parameter, `FailFast(enable bool)`, not `EnableFailFast()`. Options
 apply in order, the last winning when one is given twice. The type the
 option functions change is unexported unless other packages are meant
@@ -441,16 +450,30 @@ Test Structure step 2 sets every field in every case.
 
 <a id="rule-test-setup-scope"></a>**test-setup-scope.** A test calls the setup it needs, so
 `go test -run X` pays only for X; test files have no `init` and no
-package-level setup. A custom `TestMain` is for setup that every test
-in the package needs and that needs teardown, typically an expensive
-shared resource, and only once a setup helper or `sync.Once` will not
-do. `sync.Once` may share setup that is expensive, used by only some
+package-level setup outside `TestMain`. A custom `TestMain`
+is for setup that every test in the package needs and that needs
+teardown, and only once a setup helper or `sync.Once` will not do. It
+may start shared infrastructure only, such as a database server; each
+test still creates its own scoped data (Isolated Test Execution steps
+1-2). `sync.Once` may share setup that is expensive, used by only some
 tests, needs no teardown, and that tests only read (Isolated Test
 Execution step 2). It does not suit setup that takes a ctx: a second
 caller waits for the first without honouring its own cancellation.
 Source: BP "Keep setup code scoped to specific tests" (:3133-3360),
 `a9c5f82b1981`, read 2026-11-16.
 ↩ rows [127](#row-127), [128](#row-128), [130](#row-130), [131](#row-131)
+
+<a id="rule-test-global-state"></a>**test-global-state.** A test does not reset data it wrote to shared
+infrastructure such as a database: it scopes that data under its own
+identity instead (Isolated Test Execution steps 1 and 4). A test that
+changes in-process global state, such as a package variable or an
+environment variable, restores it with `t.Cleanup` or `t.Setenv` and
+does not call `t.Parallel`.
+Source: BP "When to use a custom TestMain entrypoint" (:3291-3293),
+`a9c5f82b1981`, read 2026-11-16.
+Differs: BP has each test reset what it changed in an external
+database; Isolated Test Execution step 4 does not clear between tests.
+↩ row [129](#row-129)
 
 <a id="rule-global-state"></a>**global-state.** A package that keeps state lets its clients
 create instances and pass them on. It does not make clients rely on
@@ -461,11 +484,11 @@ registry of callbacks, and a singleton client for a backend; standard
 library and legacy APIs that use them are no precedent. It is unsafe
 when otherwise independent code or tests interact through it, when
 users would swap it for a test double, or when it imposes an order,
-such as calls only during `init`. It is safe when it is logically
-constant, when the package's observable behaviour is stateless (a
-private cache), when it does not reach outside the process (sidecars,
-shared files), or when nobody expects predictable behaviour
-(`math/rand`). Metrics may be package-level globals (coord-globals).
+such as calls only during `init`. It is safe only when none of those
+holds and one of these does: it is logically constant; the package's
+observable behaviour is stateless (a private cache); it does not reach
+outside the process (sidecars, shared files); or nobody expects
+predictable behaviour (`math/rand`). Metrics may be package-level globals (coord-globals).
 Source: BP "Global state", "Major forms of package state APIs",
 "Litmus tests" (:3474-3776), `a9c5f82b1981`, read 2026-11-16.
 Differs: BP makes no exception for metrics; the owner allowed them as
@@ -490,15 +513,19 @@ coordinator receives a collaborator its tests replace with a double
 (coord-doubles); a function needs one or two methods of a large type;
 or two packages would otherwise import each other, which more often
 means they are split wrongly (pkg-size; Domain-First Packaging step
-5). Where an interface already exists, such as a generated RPC client,
-use it instead of wrapping it. A wrapper is right only where Domain-
-First Packaging step 6 and Failure Identity step 3 translate outside
-types and failures into our own, never as a test seam.
+5). A generated RPC client is used directly by the edge unit that
+calls the service, which is tested over a real transport
+(test-real-transport); no interface goes over the client only to test
+that unit. Code above the edge unit depends on our own interface in
+domain types (Domain-First Packaging step 6, Failure Identity step 3),
+which its coordinator tests replace with a double.
 Source: BP "Avoid unnecessary interfaces" (:3846-3895),
 `a9c5f82b1981`, read 2026-11-16.
 Differs: BP starts from the concrete implementation; outside-in, a
 coordinator's test declares the collaborator's interface before any
 implementation exists.
+Same id as google-guide-decisions.md iface-need, which states the
+coordinator case; bs-f3o.2.9 merges the two.
 ↩ rows [144](#row-144), [145](#row-145), [148](#row-148), [149](#row-149), [150](#row-150)
 
 <a id="rule-iface-owner"></a>**iface-owner.** An interface belongs to the package that uses it and
@@ -526,21 +553,22 @@ and for errors (err-nil-interface). Don't force an interface where one
 concrete type handles the variation, as `database/sql`'s `DB` does.
 Before returning an interface to hide a method that would break the
 type's integrity, ask whether that method should be exported at all
-(Intentionally Public step 4).
+(Intentionally Public steps 3-4).
 Source: BP "Designing effective interfaces" (:3948-4157),
 `a9c5f82b1981`, read 2026-11-16.
 Differs: BP exports the dangerous method (`Refill`) and hides it
-behind a returned interface; Intentionally Public step 4 first
-reshapes the boundary or moves the method into an internal package.
+behind a returned interface; Intentionally Public steps 3-4 first
+reshape the boundary or moves the method into an internal package.
 ↩ rows [154](#row-154), [155](#row-155), [156](#row-156), [157](#row-157), [158](#row-158), [159](#row-159)
 
 <a id="rule-iface-test-doubles"></a>**iface-test-doubles.** A package does not export a test double
 beside its real implementation, nor an interface whose only purpose is
 substitution in tests, unless there is a material need for it. Our own
 tests keep their doubles in the test file and move a stateful one
-under `test/a` once it passes the compliance suite (Test Data Builders
-step 2). A package that offers doubles to other teams' tests is
-`footest` (test-helper-pkg).
+under `test/a` once a second test file in its domain, or a test
+outside that domain, needs it, and only after it passes the compliance
+suite (Test Data Builders step 2). `footest` holds only the compliance
+suite and helpers published outside this module (test-helper-pkg).
 Source: BP "Avoid unnecessary interfaces" (:3859-3875),
 `a9c5f82b1981`, read 2026-11-16.
 Differs: BP puts doubles for an impractical real implementation in a
@@ -561,8 +589,9 @@ Source: BP "Shadowing" (:458-546), `a9c5f82b1981`, read 2026-11-16.
 ↩ rows [17](#row-17), [18](#row-18), [19](#row-19)
 
 <a id="rule-err-is-sentinel"></a>**err-is-sentinel.** Check for a sentinel with `errors.Is(err,
-ErrX)`, never `err == ErrX`: above the edge every error is wrapped
-with `%w` (err-wrap-verb), and `==` misses a wrapped sentinel.
+ErrX)`, never `err == ErrX`: a callee may start wrapping at any time
+(err-wrap-where, with `%w` per err-wrap-verb), and `==` then stops
+matching without any error.
 Source: BP "Error structure" (:845-878), `a9c5f82b1981`, read
 2026-11-16.
 Differs: BP allows `==` where the function returns sentinels
@@ -607,7 +636,8 @@ Source: BP "Complex command-line interfaces" (:2525-2528),
 
 <a id="rule-test-fatal-goroutine"></a>**test-fatal-goroutine.** `t.Fatal`, `t.FailNow` and `require.*`,
 which fails through `t.FailNow`, must not run in a goroutine the test
-started. There, report with `t.Error` or `assert.*` and return.
+started. That goroutine sends its result on a channel, and the test's
+own goroutine receives it and asserts with `require` (test-require).
 `t.Parallel` does not change this; a setup helper calls them from the
 test's own goroutine.
 Source: BP "Don't call t.Fatal from separate goroutines" (:3037-3088),
@@ -659,7 +689,7 @@ Source: BP "Package size" (:640-648), `a9c5f82b1981`, read 2026-11-16.
 word for the package plus `pb`, and a gRPC stub import to that word
 plus `grpc`: `foopb`, `foogrpc`. Prefer whole, descriptive words over
 short names like `pb` or `xpb`; when unsure, use the proto package name
-up to `_go` plus `pb`. Existing short names need not change.
+plus `pb`. Existing short names need not change.
 Source: BP "Protocol Buffer Messages and Stubs" (:719-755),
 `a9c5f82b1981`, read 2026-11-16.
 Differs: BP ties the suffixes to the Bazel rules `go_proto_library`
@@ -697,29 +727,33 @@ Differs: BP uses glog's `log.Exit` and warns off `log.Fatal`.
 ↩ row [58](#row-58)
 
 <a id="rule-panic-scope"></a>**panic-scope.** Return errors: a library does not end the program,
-least of all for a transient failure. End it only when an invariant
-check finds the program's state unrecoverable, and then log and exit
-rather than panic, since a panic runs deferred functions that can
-deadlock or corrupt state further. A panic is right for API misuse
-that tests and review should catch, as the standard library does; in
-`init` or a `Must` function that has to stop the program; and as
+least of all for a transient failure. When an invariant check finds
+the program's state unrecoverable, panic with a message naming the
+invariant that broke; nothing recovers that panic to carry on
+(panic-no-recover). A panic is also right for API misuse that tests
+and review should catch, as the standard library does; in `init` or a
+`Must` function that has to stop the program; and as
 `panic("unreachable")` after a call the compiler does not know never
-returns.
+returns. Don't log and call `os.Exit` from a library instead: slog
+has no Fatal, and `os.Exit` skips `t.Cleanup` in tests.
 Source: BP "Program checks and panics" and "When to panic"
-(:1348-1465), `a9c5f82b1981`, read 2026-11-16.
-Differs: BP ends the program with glog's `log.Fatal`.
+(:1348-1465), `a9c5f82b1981`, read 2026-11-16; owner ruling on
+bs-f3o.2.4, 2026-11-16.
+Differs: BP ends the program on a broken invariant with glog's
+`log.Fatal`, so deferred code does not run; without glog we are where
+BP says the standard library is (:1388-1391), and panic.
 ↩ rows [59](#row-59), [60](#row-60), [63](#row-63), [65](#row-65), [67](#row-67)
 
-<a id="rule-panic-recover"></a>**panic-recover.** Don't recover panics to avoid a crash: the further
-from the panic, the less is known about the program's state. Let it
-crash and surface it through monitoring. `net/http` recovering handler
-panics is a historical mistake, not a model for a server's own code.
-panic-internal is the one exception.
+<a id="rule-panic-no-recover"></a>**panic-no-recover.** Don't recover panics to avoid a crash: the
+further from the panic, the less is known about the program's state.
+Let it crash and surface it through monitoring. `net/http` recovering
+handler panics is a historical mistake, not a model for a server's own
+code. panic-recover is the one exception.
 Source: BP "Program checks and panics" (:1363-1375), `a9c5f82b1981`,
 read 2026-11-16.
 ↩ rows [61](#row-61), [62](#row-62)
 
-<a id="rule-panic-internal"></a>**panic-internal.** Deeply nested code inside one package, such as a
+<a id="rule-panic-recover"></a>**panic-recover.** Deeply nested code inside one package, such as a
 parser, may panic with its own error type and recover in a deferred
 function at the exported entry point, turning the panic into a
 returned error. The panic never crosses the package boundary; the
@@ -727,14 +761,16 @@ recover re-panics anything that is not its own type; and code in such
 sections releases its resources (close, free, unlock) itself.
 Source: BP "When to panic" (:1396-1441), `a9c5f82b1981`, read
 2026-11-16.
+Same rule as go-team-docs.md panic-recover (Effective Go "Recover");
+this one adds the re-panic and resource conditions.
 ↩ row [64](#row-64)
 
 <a id="rule-doc-format"></a>**doc-format.** In a doc comment, a blank comment line separates
 paragraphs; lines indented two extra spaces render verbatim, which
 also suits lists and tables; and a single capitalised line with no
 punctuation but parentheses and commas, followed by a paragraph,
-renders as a heading. Show usage as a runnable `Example` function in a
-test file rather than as code in a comment.
+renders as a heading. Prefer showing usage as a runnable `Example`
+function in a test file over code in a comment.
 Source: BP "Godoc formatting" (:1856-1936) and "Conventions"
 (:1487-1490), `a9c5f82b1981`, read 2026-11-16.
 ↩ rows [80](#row-80), [81](#row-81), [82](#row-82), [83](#row-83)
@@ -753,7 +789,8 @@ Source: BP "Initialization", "Declaring variables with zero values",
 as `sync.Mutex`, holds that field as a value; the struct is then
 passed by pointer and its methods take pointer receivers. A local
 composite may be a value, but declare it as a pointer from the start
-when it is returned or every use takes its address. Declare protobuf
+when the function returns a pointer to it, or every use takes its
+address. Declare protobuf
 messages as pointers: only `*pb.T` satisfies `proto.Message`.
 Source: BP "Declaring variables with zero values" (:2049-2099),
 `a9c5f82b1981`, read 2026-11-16.
@@ -978,31 +1015,19 @@ Dropped because: test-require (bjornstack.md row 39): `require` stops at the fir
 
 ↩ row [117](#row-117)
 
-### <a id="drop-129"></a>Row 129: Reset modified global state
-
-Source: BP "When to use a custom TestMain entrypoint" (:3291-3293): "At the very least, ensure that individual test cases reset any global state they have modified if they have done so (for instance, if the tests are working with an external database)."
-
-In practice: Each test deletes or restores what it wrote to a shared database after it runs.
-
-Dropped because: Isolated Test Execution step 4: no clearing between individual tests or after a run; each test scopes its data under its own identity, so nothing needs resetting, and post-run data helps debugging.
-
-↩ row [129](#row-129)
-
 ## Open for owner
 
 Rows whose decision rests on reading a strategy or an owner ruling
 against this source, where another reading is possible:
 
-1. **Option structs (row 96).** Unit Testing's "wrapper made for one
-   call" is read as covering BP's single-function option struct
-   (`ReplicationOptions`). BP's examples are library configuration;
-   the strategy's examples are domain functions.
-2. **Ending the program on a broken invariant (row 60).** BP prefers
-   glog's `log.Fatal` over `panic`; panic-scope keeps "log and exit,
-   not panic" without glog. Go's common practice is to panic.
-3. **Wrapping generated RPC clients (row 145).** BP says not to wrap
-   them; iface-need still wraps where Domain-First Packaging step 6
-   and Failure Identity step 3 translate types and failures.
-4. **Documentation that restates the obvious (rows 68, 69, 72).** BP's
+1. **Option structs and variadic options (row 96).** Unit Testing's
+   "wrapper made for one call" is read as covering BP's
+   single-function option struct (`ReplicationOptions`), yet
+   func-options allows variadic options for one function, which carry
+   the same one-call arguments. Suggested: one test for both forms,
+   used only when the options are shared across functions or name a
+   domain concept. Alternative: allow both for optional settings with
+   working defaults. Still open on bs-f3o.2.
+2. **Documentation that restates the obvious (rows 68, 69).** BP's
    bad examples read as text to delete; Say It Once step 1 leaves a
    public name's caller documentation alone.
