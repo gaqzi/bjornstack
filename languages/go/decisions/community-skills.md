@@ -19,7 +19,7 @@ Read 2026-11-16. Strategy text was judged at bjornstack commit
 | PL | `skills/golang-project-layout/` | same repository and commit |
 | SI | `skills/golang-structs-interfaces/` | same repository and commit |
 | SF | `skills/golang-safety/` | same repository and commit |
-| CU | `skills/go-testing`, `go-error-handling`, `go-context`, `go-interfaces` (SKILL.md only) | https://github.com/cxuu/golang-skills commit `91f0c2eef559a3168f9d3c38f5f99936d472b508`, read 2026-11-16 |
+| CU | `skills/go-testing`, `go-error-handling`, `go-context`, `go-interfaces`, `go-defensive` (SKILL.md only) | https://github.com/cxuu/golang-skills commit `91f0c2eef559a3168f9d3c38f5f99936d472b508`, read 2026-11-16 |
 | ES | `skills/(testing)/go-test-quality`, `(code-quality)/go-error-handling`, `(code-quality)/go-context` (SKILL.md only, the sections cited) | https://github.com/eduardo-sl/go-agent-skills commit `e25b517bbd0c11db35f75a83a14f18848c1abdb0`, read 2026-11-16 |
 
 Coverage:
@@ -29,8 +29,9 @@ Coverage:
   rows 142-143 name, not line by line.
 - Spot-checked: cxuu and eduardo-sl, only the skills covering the
   same topics, and only to find rules that add to or contradict a
-  samber row. cxuu `go-defensive` was read only by its headings and
-  gave no row. Nothing else in either repository was read.
+  samber row. cxuu `go-defensive` gives rows 254-259 and bears on
+  rows 81-82 and 188-189. Nothing else in either repository was
+  read.
 
 Evals: the bead puts the evals in scope without saying what they
 contribute. Each eval is a prompt, a trap and assertions. An
@@ -57,19 +58,19 @@ row. Drop rows have "-".
 | <a id="row-1"></a>1 | T `SKILL.md:26-37` | Modes (write, review, audit, debug), thinking mode, sub-agent fan-out for audits | drop | Instructions for running an agent, not Go rules | [dropped](#drop-1) | — | - |
 | <a id="row-2"></a>2 | T `SKILL.md:34`, `:41-43` | Scaffold table tests with `gotests` | drop | A generator, not a rule; the table's shape is test-table | [dropped](#drop-2) | — | - |
 | <a id="row-3"></a>3 | T `SKILL.md:51`, `:103`; eval 3.3 | Every table case has a `name` passed to `t.Run` | already ours | bjornstack.md row 89 (test-names), with row 83 (test-table) | [test-names](bjornstack.md#rule-test-names) | Pattern mappings | guard candidate |
-| <a id="row-4"></a>4 | T `SKILL.md:52`, `:360-384`; eval 2 | Integration tests behind `//go:build integration`; `testing.Short()` is no substitute | adapt | Tag the tests that need real infrastructure, and make the finish run pass the tag so they are not skipped; see Open for owner 1 | [test-integration-tag](#rule-test-integration-tag) | Tooling | guard candidate |
-| <a id="row-5"></a>5 | T `references/coverage.md:44` | Tagged integration tests are invisible to coverage unless the tag is passed | adapt | Same rule as row 4: every run that should include them passes the tag | [test-integration-tag](#rule-test-integration-tag) | Tooling | guard candidate |
+| <a id="row-4"></a>4 | T `SKILL.md:52`, `:360-384`; eval 2 | Integration tests behind `//go:build integration`; `testing.Short()` is no substitute | drop | tool-bb-infra starts the infrastructure inside the tests, so a tag buys nothing and hides black-box tests from `go test ./...` and gopls | [dropped](#drop-4) | — | - |
+| <a id="row-5"></a>5 | T `references/coverage.md:44` | Tagged integration tests are invisible to coverage unless the tag is passed | drop | Same as row 4 | [dropped](#drop-4) | — | - |
 | <a id="row-6"></a>6 | T `SKILL.md:53`; eval 14.3, 14.5 | Tests do not depend on execution order | drop | Isolated Test Execution's outcomes say it for every language | [dropped](#drop-6) | — | - |
-| <a id="row-7"></a>7 | T `SKILL.md:54`, `:302-326`; eval 3.1-3.2 | Independent tests and subtests call `t.Parallel()` | keep | Go's mechanism for Isolated Test Execution step 4; no strategy limits it | [test-parallel](#rule-test-parallel) | Pattern mappings | tool: paralleltest (named by T `SKILL.md:396`) |
+| <a id="row-7"></a>7 | T `SKILL.md:54`, `:302-326`; eval 3.1-3.2 | Independent tests and subtests call `t.Parallel()` | adapt | Go's mechanism for Isolated Test Execution step 4; only process-wide state keeps a test serial, and a test that would collide gets its data scoped (bb-parallel) | [test-parallel](#rule-test-parallel) | Pattern mappings | tool: paralleltest (named by T `SKILL.md:396`) |
 | <a id="row-8"></a>8 | T `SKILL.md:55`; evals 6, 7 | Assert observable behaviour through the public API; `package foo_test` | already ours | bjornstack.md row 63 (test-pkg) | [test-pkg](bjornstack.md#rule-test-pkg) | Pattern mappings | guard candidate |
 | <a id="row-9"></a>9 | T `SKILL.md:56`, `:181-213`; eval 1 | Packages with goroutines check for leaks with goleak in `TestMain` | keep | Mechanical, Go-specific; `-race` does not find a goroutine that never exits | [test-goleak](#rule-test-goleak) | Tooling | guard candidate |
 | <a id="row-10"></a>10 | T `SKILL.md:57` | Use testify as helpers, not a replacement for `testing` | drop | testify's API already forces `*testing.T`; test-require settles the assertion choice | [dropped](#drop-10) | — | - |
 | <a id="row-11"></a>11 | T `SKILL.md:58`, `:388-392`; eval 5 | Mock interfaces, not concrete types; define the interface where it is consumed | keep | Go spelling of Unit Testing step 3.3 and Test Data Builders step 2 | [iface-consumer](#rule-iface-consumer) | Pattern mappings | judgment |
 | <a id="row-12"></a>12 | T `SKILL.md:59`, `:175` | Unit tests under 1 ms, isolated, deterministic | drop | No strategy sets a time budget; isolation and determinism are Unit Testing's and Isolated Test Execution's | [dropped](#drop-12) | — | - |
 | <a id="row-13"></a>13 | T `SKILL.md:60`, `:419`; eval 14.2 | Run tests with the race detector in CI | keep | Mechanical, Go-specific | [tool-race](#rule-tool-race) | Tooling | tool: `go test -race` (named by T `SKILL.md:60`, `:419`) |
-| <a id="row-14"></a>14 | T `SKILL.md:61`, `:348-352`; `references/examples.md:3`; eval 8 | Example functions as executable documentation | keep | Go's form of documentation that `go test` checks | [test-examples](#rule-test-examples) | Pattern mappings | judgment |
+| <a id="row-14"></a>14 | T `SKILL.md:61`, `:348-352`; `references/examples.md:3`; eval 8 | Example functions as executable documentation | adapt | Go's form of documentation that `go test` checks; limited to packages other modules import, since an `internal/` package has no outside reader | [test-examples](#rule-test-examples) | Pattern mappings | judgment |
 | <a id="row-15"></a>15 | T `references/examples.md:21-30` | An example's suffix after the second underscore starts lower-case | keep | Otherwise godoc detaches the example from its symbol | [test-examples](#rule-test-examples) | Pattern mappings | guard candidate |
-| <a id="row-16"></a>16 | T `references/examples.md:34-36`; eval 8.3 | Examples carry `// Output:`; one without it is compiled, not run | keep | Same rule | [test-examples](#rule-test-examples) | Pattern mappings | guard candidate |
+| <a id="row-16"></a>16 | T `references/examples.md:34-36`; eval 8.3 | Examples carry `// Output:`; one without it is compiled, not run; none for live dependencies | keep | Same rule; the source allows no output where the example needs a live dependency (T `references/examples.md:36`) | [test-examples](#rule-test-examples) | Pattern mappings | guard candidate |
 | <a id="row-17"></a>17 | T `references/examples.md:35` | `// Unordered output:` for map iteration and concurrent producers | keep | Same rule | [test-examples](#rule-test-examples) | Pattern mappings | judgment |
 | <a id="row-18"></a>18 | T `references/examples.md:40` | Examples live in `package foo_test` | already ours | bjornstack.md row 63 (test-pkg): no test file declares `package foo` | [test-pkg](bjornstack.md#rule-test-pkg) | Pattern mappings | guard candidate |
 | <a id="row-19"></a>19 | T `SKILL.md:62`, `:77-87` | Test file named after the source file; a split file's name still derives from it | adapt | Keep for package tests; black-box tests are one file per feature (bb-package) | [test-file-name](#rule-test-file-name) | Pattern mappings | guard candidate |
@@ -83,25 +84,25 @@ row. Drop rows have "-".
 | <a id="row-27"></a>27 | T `SKILL.md:267-269`; `references/helpers.md:3-41` | Timeout helper whose goroutine panics with the caller's location | drop | A panic in a goroutine ends the whole test binary; row 249's context timeout fails only the hung test | [dropped](#drop-27) | — | - |
 | <a id="row-28"></a>28 | T `SKILL.md:273`; `references/benchmarks.md:5-28` | One sub-benchmark (`b.Run`) per variant | keep | Each variant gets its own name for `benchstat` | [bench-shape](#rule-bench-shape) | Pattern mappings | judgment |
 | <a id="row-29"></a>29 | T `references/benchmarks.md:30-46`; eval 13.2 | Vary input size through sub-benchmarks | keep | Same rule | [bench-shape](#rule-bench-shape) | Pattern mappings | judgment |
-| <a id="row-30"></a>30 | T `SKILL.md:273`; `references/benchmarks.md:48-50`; eval 13.3 | `for b.Loop()` on Go 1.24+, not a `b.N` loop | keep | Go pitfall: `b.N` loops can report impossible results | [bench-loop](#rule-bench-loop) | Go pitfalls | guard candidate |
-| <a id="row-31"></a>31 | T eval 13.1 | Benchmarks call `b.ReportAllocs()` | keep | Eval-only rule; allocations are half of what a benchmark reports | [bench-shape](#rule-bench-shape) | Pattern mappings | judgment |
+| <a id="row-30"></a>30 | T `SKILL.md:273`; `references/benchmarks.md:48-50`; eval 13.3 | `for b.Loop()` on Go 1.24+, not a `b.N` loop; legacy `b.N` only for Go <1.24 or existing code kept on purpose | keep | Go pitfall: `b.N` loops can report impossible results; the source's exit matches the owner's migration ruling | [bench-loop](#rule-bench-loop) | Go pitfalls | guard candidate |
+| <a id="row-31"></a>31 | T eval 13.1, `references/benchmarks.md:37`; ES `go-test-quality/SKILL.md:193` | Benchmarks report allocations (`b.ReportAllocs()`) | keep | Allocations are half of what a benchmark reports; `-benchmem` does the same from the command line | [bench-shape](#rule-bench-shape) | Pattern mappings | judgment |
 | <a id="row-32"></a>32 | T eval 13.5-13.6 | Keep the result alive with a sink; setup outside the timed loop or `b.ResetTimer` | drop | `b.Loop` does both (T `references/benchmarks.md:50`) | [dropped](#drop-32) | — | - |
 | <a id="row-33"></a>33 | T `SKILL.md:279-296` | Go 1.26: files a test keeps go in `t.ArtifactDir()` | keep | Mechanical, Go-specific | [test-artifacts](#rule-test-artifacts) | Tooling | judgment |
 | <a id="row-34"></a>34 | T `SKILL.md:298-300` | Go 1.27: a `stdversion` failure means bump the `go` directive or stop using the API, never silence it | adapt | Kept conditional until bs-f3o.2.7 checks the Go 1.27 release notes, as bjornstack.md row 60a | [tool-stdversion](#rule-tool-stdversion) | Tooling | tool: `stdversion` vet check (named by T `SKILL.md:300`) |
 | <a id="row-35"></a>35 | T `SKILL.md:328-346`; eval 9; ES `go-test-quality/SKILL.md:138` | Fuzz functions that take untrusted input, seeded with `f.Add`, asserting properties | keep | Finds inputs no table case thought of | [test-fuzz](#rule-test-fuzz) | Pattern mappings | judgment |
-| <a id="row-36"></a>36 | T `SKILL.md:354-358`; `references/coverage.md:3`, `:46` | Coverage is a gap finder, not a target | drop | Language-neutral advice | [dropped](#drop-36) | — | - |
-| <a id="row-37"></a>37 | T `references/coverage.md:43` | Coverage is per package unless `-coverpkg` is passed | keep | Go pitfall; black-box and `foo_test` tests report nothing for the package without it | [tool-coverage](#rule-tool-coverage) | Tooling | guard candidate |
-| <a id="row-38"></a>38 | T `references/coverage.md:35-39` | `-covermode=atomic` with `-race` or `t.Parallel()` | keep | Mechanical, Go-specific | [tool-coverage](#rule-tool-coverage) | Tooling | guard candidate |
+| <a id="row-36"></a>36 | T `SKILL.md:354-358`; `references/coverage.md:3`, `:46` | Coverage is a gap finder, not a target | drop | Language-neutral advice; its home is bs-1ep | [dropped](#drop-36) | — | - |
+| <a id="row-37"></a>37 | T `references/coverage.md:43` | Coverage is per package unless `-coverpkg` is passed | keep | Go pitfall; tests in another package, black-box tests included, report nothing for the package without it | [tool-coverage](#rule-tool-coverage) | Tooling | guard candidate |
+| <a id="row-38"></a>38 | T `references/coverage.md:35-39` | `-covermode=atomic` with `-race` or `t.Parallel()` | adapt | `-race` already makes `atomic` the default; only a parallel run without `-race` needs the flag | [tool-coverage](#rule-tool-coverage) | Tooling | guard candidate |
 | <a id="row-39"></a>39 | T `references/coverage.md:45` | Exclude generated code before setting a coverage threshold | drop | No coverage threshold exists in the stack | [dropped](#drop-39) | — | - |
 | <a id="row-40"></a>40 | T `references/integration-testing.md:11-41` | docker-compose fixture for the service's own infrastructure | already ours | bjornstack.md row 7 (tool-bb-infra) | [tool-bb-infra](bjornstack.md#rule-tool-bb-infra) | Tooling | judgment |
 | <a id="row-41"></a>41 | T `references/integration-testing.md:97-126`, `:159-161`; eval 12.1-12.2, 12.4, 12.6 | testify suite: `SetupSuite` starts infrastructure, `TearDownSuite` stops it | adapt | Starting shared infrastructure once is fine; Isolated Test Execution step 2 forbids suite setup that creates state tests change | [bb-infra-lifecycle](#rule-bb-infra-lifecycle) | Pattern mappings | judgment |
 | <a id="row-42"></a>42 | T `references/integration-testing.md:64-78`, `:128-139`; eval 12.3 | Truncate and reseed shared data before each test | drop | Isolated Test Execution steps 2 and 4: per-test factories, no clearing between tests | [dropped](#drop-42) | — | - |
 | <a id="row-43"></a>43 | T `references/integration-testing.md:164-195` | Embedded SQL fixtures loaded by an exported `SetupDB` in the production package | drop | Shared seed data (row 42) and a test-only export (Public API Surface Testing misapplication) | [dropped](#drop-43) | — | - |
 | <a id="row-44"></a>44 | T `references/mocking.md:10-73` | testify/mock doubles verified with `AssertExpectations` | keep | Same rule as row 54 | [mock-expectations](#rule-mock-expectations) | Pattern mappings | guard candidate |
-| <a id="row-45"></a>45 | T `references/mocking.md:75-141` | Organize mocks alongside the code they mock | drop | Test Data Builders step 2 says where a double lives, for every language | [dropped](#drop-45) | — | - |
+| <a id="row-45"></a>45 | T `references/mocking.md:75-141` | Organize mocks alongside the code they mock | already ours | bjornstack.md row 110 (coord-doubles): a double stays in the consumer's test file (Test Data Builders step 2), as T's own example does (`references/mocking.md:94-96`) | [coord-doubles](bjornstack.md#rule-coord-doubles) | Pattern mappings | judgment |
 | <a id="row-46"></a>46 | T `references/mocking.md:143-177` | Package-level fixture variables; `NewUser` with `uuid.New()` and `time.Now()` | drop | Contradicts builders-a, builders-ids, clock-inject and Isolated Test Execution steps 2-3 | [dropped](#drop-46) | — | - |
 | <a id="row-47"></a>47 | T `references/mocking.md:179-213`; eval 4.1-4.3 | Time-dependent code takes a clock; tests use a fake one (clockwork) | already ours | bjornstack.md row 74 (clock-inject); it names no clock library | [clock-inject](bjornstack.md#rule-clock-inject) | Pattern mappings | guard candidate |
-| <a id="row-48"></a>48 | T eval 4.4 | No real `time.Sleep` in test code | keep | Eval-only rule; ES row 238 says the same | [test-no-sleep](#rule-test-no-sleep) | Pattern mappings | guard candidate |
+| <a id="row-48"></a>48 | T eval 4.4; `references/mocking.md:181`; `SKILL.md:219-223` | No real `time.Sleep` in test code | keep | Mechanical; ES row 238 says the same | [test-no-sleep](#rule-test-no-sleep) | Pattern mappings | guard candidate |
 | <a id="row-49"></a>49 | T `SKILL.md:394-396` | Enforce test practices with `thelper`, `paralleltest`, `testifylint` | keep | Mechanical, Go-specific | [tool-lint](#rule-tool-lint) | Tooling | tool: golangci-lint linters (named by T `SKILL.md:396`) |
 | <a id="row-50"></a>50 | TF `SKILL.md:44-49`, `:68`, `:190`; eval 1.1-1.4 | `require` for preconditions, `assert` for verifications | drop | Contradicts test-require (bjornstack.md row 39), the owner's choice | [dropped](#drop-50) | — | - |
 | <a id="row-51"></a>51 | TF `SKILL.md:51-66`; eval 2 | `assert.New(t)` / `require.New(t)`, named `is` and `must` | drop | test-whole-value uses the package functions, `require.Equal(t, ...)`; one form for all tests | [dropped](#drop-51) | — | - |
@@ -109,23 +110,23 @@ row. Drop rows have "-".
 | <a id="row-53"></a>53 | TF `SKILL.md:119-131`; eval 10 | `EventuallyWithT` with `*assert.CollectT` when the awaited outcome needs several checks | keep | Extends test-eventually (bjornstack.md row 85) without changing where it applies | [test-eventually-witht](#rule-test-eventually-witht) | Pattern mappings | guard candidate |
 | <a id="row-54"></a>54 | TF `SKILL.md:135`, `:187`; `references/mock.md:3`; eval 4.3, 5.5, 6.4 | Always verify a testify mock with `AssertExpectations(t)` | keep | `.Test(t)` (coord-doubles) catches unexpected calls, not missing ones | [mock-expectations](#rule-mock-expectations) | Pattern mappings | guard candidate |
 | <a id="row-55"></a>55 | TF eval 4.4 | `.Once()` or `.Times(n)` to pin how often a call happens | keep | Eval-only rule; an unpinned count lets a duplicate call pass | [mock-calls](#rule-mock-calls) | Pattern mappings | judgment |
-| <a id="row-56"></a>56 | TF `SKILL.md:137`; `references/mock.md:46-50`; eval 4.5, 5.4 | `mock.Anything` for a context argument | keep | A test has no reason to compare contexts | [mock-ctx-anything](#rule-mock-ctx-anything) | Pattern mappings | guard candidate |
+| <a id="row-56"></a>56 | TF eval 4.5 | `mock.Anything` for a context argument | adapt | Only eval 4.5 names ctx, and only as an example of an argument that needs no specific matching | [mock-ctx-anything](#rule-mock-ctx-anything) | Pattern mappings | judgment |
 | <a id="row-57"></a>57 | TF `SKILL.md:137`; `references/mock.md:55-58`; eval 5.1-5.3 | `mock.MatchedBy` checking a few fields because a timestamp varies | adapt | Whole-Object Assertion steps 1-2: inject the source and match the whole value; a predicate only for step 2's fallbacks | [mock-match-whole](#rule-mock-match-whole) | Pattern mappings | judgment |
 | <a id="row-58"></a>58 | TF `references/mock.md:76-82`; eval 6 | Chain `.Once()` expectations to return different results per call | keep | How a retry unit's test sets up a failure then a success | [mock-calls](#rule-mock-calls) | Pattern mappings | judgment |
-| <a id="row-59"></a>59 | TF `SKILL.md:141-162`; eval 7.1-7.2, 7.5 | Suites group tests with shared setup; `SetupTest` per test, `SetupSuite` once | adapt | Fresh state per test in `SetupTest` is a per-test factory; `SetupSuite` may only start infrastructure (Isolated Test Execution step 2) | [test-suite](#rule-test-suite) | Pattern mappings | judgment |
-| <a id="row-60"></a>60 | TF `SKILL.md:177-181`, `:191`; eval 7.3-7.4 | A suite needs its `suite.Run` launcher, or none of its tests run | keep | Go pitfall: silent | [test-suite](#rule-test-suite) | Pattern mappings | guard candidate |
+| <a id="row-59"></a>59 | TF `SKILL.md:141-162`; eval 7.1-7.2, 7.5 | Suites group tests with shared setup; `SetupTest` per test, `SetupSuite` once | adapt | Suites only as the infrastructure lifecycle of a black-box package (row 41): suite methods keep state on `s`, so they cannot safely call `t.Parallel()`; unit tests stay plain table tests | [test-suite](#rule-test-suite) | Pattern mappings | judgment |
+| <a id="row-60"></a>60 | TF `SKILL.md:177-181`, `:191`; eval 7.3 | A suite needs its `suite.Run` launcher, or none of its tests run | keep | Go pitfall: silent | [test-suite](#rule-test-suite) | Pattern mappings | guard candidate |
 | <a id="row-61"></a>61 | TF `SKILL.md:183`; eval 8 | Suite methods such as `s.Equal` behave like `assert`; use `s.Require()` | adapt | Under test-require every suite assertion goes through `s.Require()` | [test-suite](#rule-test-suite) | Pattern mappings | guard candidate |
-| <a id="row-62"></a>62 | TF `SKILL.md:188`; eval 3.1-3.3 | `Equal(ErrNotFound, err)` fails on a wrapped error; use `ErrorIs` | keep | Go pitfall; fits Failure Identity step 6 | [test-error-is](#rule-test-error-is) | Go pitfalls | guard candidate |
+| <a id="row-62"></a>62 | TF `SKILL.md:188`; eval 3.1-3.2 | `Equal(ErrNotFound, err)` fails on a wrapped error; use `ErrorIs` | keep | Go pitfall; fits Failure Identity step 6 | [test-error-is](#rule-test-error-is) | Go pitfalls | guard candidate |
 | <a id="row-63"></a>63 | TF `SKILL.md:192`; eval 9 | `Equal(ptr1, ptr2)` compares addresses; dereference or use `EqualExportedValues` | drop | False: `require.Equal` is `reflect.DeepEqual` (bs-f3o.2 comment 2026-11-03 09:09), which compares what the pointers point to | [dropped](#drop-63) | — | - |
 | <a id="row-64"></a>64 | TF `SKILL.md:194-196`; eval 11 | Run testifylint | keep | Same rule as row 49 | [tool-lint](#rule-tool-lint) | Tooling | tool: testifylint (named by TF `SKILL.md:196`) |
 | <a id="row-65"></a>65 | EH `SKILL.md:22-30`, `:64-72` | Coding, review and audit modes; five audit sub-agents | drop | Instructions for running an agent | [dropped](#drop-1) | — | - |
-| <a id="row-66"></a>66 | EH `SKILL.md:40`; `references/error-creation.md:25-40` | Check every returned error; never discard with `_` | adapt | Add CU's exit (row 226): a discard with a comment saying why it cannot fail | [err-check](#rule-err-check) | Go pitfalls | tool: errcheck (named by SF `SKILL.md:246`) |
+| <a id="row-66"></a>66 | EH `SKILL.md:40`; `references/error-creation.md:25-40` | Check every returned error; never discard with `_` | adapt | Add CU's exit (row 226): a deliberate discard with a comment saying why; "cannot fail" is only CU's example (`go-error-handling/SKILL.md:86`) | [err-check](#rule-err-check) | Go pitfalls | tool: errcheck (named by SF `SKILL.md:246`) |
 | <a id="row-67"></a>67 | EH `references/error-creation.md:25` | A function that can fail returns `error` as its last result | keep | Go convention callers and linters rely on | [err-results](#rule-err-results) | Pattern mappings | guard candidate |
 | <a id="row-68"></a>68 | EH `references/error-creation.md:31-39` | Check the error before using the other results | keep | Same rule | [err-results](#rule-err-results) | Pattern mappings | judgment |
-| <a id="row-69"></a>69 | EH `SKILL.md:41`; `references/error-wrapping.md:15-28`; eval 5.1, 5.5, 9.2 | Wrap every error with context, at each layer | already ours | bjornstack.md row 121 (err-wrap-where), which narrows it by owner ruling: a private helper's error returns unwrapped | [err-wrap-where](bjornstack.md#rule-err-wrap-where) | Go pitfalls | judgment |
+| <a id="row-69"></a>69 | EH `SKILL.md:41`; `references/error-wrapping.md:15-28`; eval 5.1, 5.5, 9.2 | Wrap every error with context, at each layer | drop | Contradicts err-wrap-where (bjornstack.md row 121): a private helper's error returns unwrapped | [dropped](#drop-245) | — | - |
 | <a id="row-70"></a>70 | EH `SKILL.md:42`; `references/error-creation.md:42-54`; eval 4.2-4.3 | Error strings lower-case, no trailing punctuation | adapt | Add CU's exception (row 224): exported names, proper nouns, acronyms | [err-string](#rule-err-string) | Pattern mappings | guard candidate |
-| <a id="row-71"></a>71 | EH `references/error-creation.md:44-60` | Don't repeat context wrapping will add: no `UserService:` prefix, no "failed to" | keep | Keeps the wrapped chain readable (Failure Identity step 5) | [err-string](#rule-err-string) | Pattern mappings | judgment |
-| <a id="row-72"></a>72 | EH `SKILL.md:43`; `references/error-wrapping.md:30-48` | `%w` inside the module, `%v` at the public API boundary | drop | Contradicts err-wrap-verb (bjornstack.md row 48): `%v` goes at the edge where an outside error enters (Failure Identity step 3), `%w` above it | [dropped](#drop-72) | — | - |
+| <a id="row-71"></a>71 | EH `references/error-creation.md:44-60` | Don't repeat context wrapping will add: no `UserService:` prefix | adapt | Keeps the wrapped chain readable (Failure Identity step 5); says what this unit was doing, as err-wrap-where asks. "No 'failed to'" sits only in a bad example (EH `references/error-creation.md:48-49`) and is not taken | [err-string](#rule-err-string) | Pattern mappings | judgment |
+| <a id="row-72"></a>72 | EH `SKILL.md:43`; `references/error-wrapping.md:30-48` | `%w` inside the module, `%v` at the public API boundary | drop | Only EH's public-API example (`references/error-wrapping.md:36-46`) diverges: err-wrap-verb (bjornstack.md row 48) puts `%v` at the edge where an outside error enters (Failure Identity step 3); EH's "%v at system boundaries" agrees with it (row 73) | [dropped](#drop-72) | — | - |
 | <a id="row-73"></a>73 | EH eval 12 | A gateway inspects backend errors with `errors.As`, translates them to its own sentinels with `%v` | already ours | bjornstack.md row 48 (err-wrap-verb): the gateway is the edge | [err-wrap-verb](bjornstack.md#rule-err-wrap-verb) | Go pitfalls | judgment |
 | <a id="row-74"></a>74 | EH `SKILL.md:44`; `references/error-wrapping.md:50-80`; eval 4.4-4.5, 9.3 | `errors.Is` for sentinels, `errors.As` for types; never `==` or a bare type assertion | keep | Go pitfall: both miss a wrapped error | [err-inspect](#rule-err-inspect) | Go pitfalls | guard candidate |
 | <a id="row-75"></a>75 | EH `SKILL.md:44`; `references/error-wrapping.md:76-80` | Go 1.26: prefer `errors.AsType[T](err)` | keep | Same check, typed | [err-inspect](#rule-err-inspect) | Go pitfalls | guard candidate |
@@ -134,43 +135,43 @@ row. Drop rows have "-".
 | <a id="row-78"></a>78 | EH `references/error-wrapping.md:103-115`; eval 8.2, 8.4 | Close every resource even when one fails; each error names its resource | keep | Eval 8 adds the rule the `closeAll` example implies | [err-close-all](#rule-err-close-all) | Pattern mappings | judgment |
 | <a id="row-79"></a>79 | EH `SKILL.md:46`; `references/error-handling.md:12-48`; evals 7, 10.1, 11.5 | Log an error or return it, never both | keep | Each failure appears once in the logs | [err-handle-once](#rule-err-handle-once) | Pattern mappings | judgment |
 | <a id="row-80"></a>80 | EH `SKILL.md:47`; `references/error-creation.md:62-69`, `:85-92`, `:117-138`; eval 4.1, 9.4 | Sentinel when the caller matches, custom type when it reads data, `fmt.Errorf` otherwise | adapt | Go spelling of Failure Identity steps 1-2; FI's test is whether a caller handles the failure differently, not whether it is "expected" | [err-identity-form](#rule-err-identity-form) | Pattern mappings | judgment |
-| <a id="row-81"></a>81 | EH `SKILL.md:48`; `references/error-handling.md:50-74` | Never panic for expected failures; panic only for programmer errors | keep | Go form of Fail Early and Loud: an expected failure is a returned error | [err-panic](#rule-err-panic) | Pattern mappings | judgment |
-| <a id="row-82"></a>82 | EH `references/error-handling.md:76-97` | Recover in a deferred function at goroutine boundaries | keep | One panic does not stop the process | [err-recover](#rule-err-recover) | Pattern mappings | judgment |
+| <a id="row-81"></a>81 | EH `SKILL.md:48`; `references/error-handling.md:50-74` | Never panic for expected failures; panic only for programmer errors | adapt | Go form of Fail Early and Loud: an expected failure is a returned error. "MustX only while initialising" is an example label (EH `references/error-handling.md:57`), so the limit is programmer errors | [err-panic](#rule-err-panic) | Pattern mappings | judgment |
+| <a id="row-82"></a>82 | EH `references/error-handling.md:76-97` | Recover in a deferred function at goroutine boundaries | adapt | Fail Early and Loud: recovering to carry on keeps a broken invariant running; net/http already recovers panics in handlers | [err-recover](#rule-err-recover) | Pattern mappings | judgment |
 | <a id="row-83"></a>83 | EH `SKILL.md:49`; eval 1.1, 7.3, 10.3 | Log with `slog`, not `fmt.Println` or `log.Printf` | keep | Structured logging; the logger comes from ctx (ctx-scope) | [log-slog](#rule-log-slog) | Tooling | guard candidate |
 | <a id="row-84"></a>84 | EH `SKILL.md:50`; `references/error-handling.md:99-134`; `references/error-creation.md:73-81`, `:109-113`; evals 1.3, 2.2, 3.2, 5.3, 11.2 | `samber/oops` for stack traces and structured attributes | drop | The author's own library; Failure Identity step 2 puts values in our own error types | [dropped](#drop-84) | — | - |
 | <a id="row-85"></a>85 | EH `SKILL.md:51` | Log HTTP requests with middleware: method, path, status, duration | keep | Go spelling of Don't Fly Blind for a server | [log-requests](#rule-log-requests) | Pattern mappings | judgment |
 | <a id="row-86"></a>86 | EH `SKILL.md:52` | Use log levels to indicate severity | drop | Names no levels and no mapping, so it decides nothing | [dropped](#drop-86) | — | - |
 | <a id="row-87"></a>87 | EH `SKILL.md:53` | Never expose technical errors to users; translate, log details separately | drop | Unit Testing step 3.4 says it for every language | [dropped](#drop-87) | — | - |
-| <a id="row-88"></a>88 | EH `SKILL.md:54`; `references/error-creation.md:94-115`; eval 7.4-7.5, 10.4 | Stable log messages; IDs, paths and counts as structured attributes | adapt | Applies to log messages only; error messages still name their values (Failure Identity step 5) | [log-static-msg](#rule-log-static-msg) | Pattern mappings | guard candidate |
-| <a id="row-89"></a>89 | EH evals 1.2, 2.1, 3.1, 5.2, 9.1, 11.1 | Error strings stay static: no IDs or row numbers in them | drop | Contradicts Failure Identity step 5 and the skill's own text (`error-creation.md:115`) | [dropped](#drop-89) | — | - |
+| <a id="row-88"></a>88 | EH `SKILL.md:54`; `references/error-creation.md:94-115`; eval 2.1, 7.4-7.5, 10.4 | Stable log messages; IDs, paths and counts as structured attributes | adapt | Applies to log messages only; error messages still name their values (Failure Identity step 5) | [log-static-msg](#rule-log-static-msg) | Pattern mappings | guard candidate |
+| <a id="row-89"></a>89 | EH evals 1.2, 3.1, 5.2, 9.1, 11.1 | Error strings stay static: no IDs or row numbers in them | drop | The evals remove the text's exit ("sometimes", "may"); Failure Identity step 5 asks the message to name the values | [dropped](#drop-89) | — | - |
 | <a id="row-90"></a>90 | EH `references/error-creation.md:140-157` | A custom type that wraps an error implements `Unwrap()` | adapt | Above the edge only; at the edge it leaks the outside identity (err-unwrap, Failure Identity step 3) | [err-unwrap-where](#rule-err-unwrap-where) | Go pitfalls | judgment |
-| <a id="row-91"></a>91 | EH evals 2.5, 3.3, 6.3-6.4 | Validate every field, with cross-field rules, before rejecting | already ours | bjornstack.md row 17 (scrub-validate), with row 18 | [scrub-validate](bjornstack.md#rule-scrub-validate) | Pattern mappings | judgment |
+| <a id="row-91"></a>91 | EH evals 2.5, 3.3, 6.3-6.4 | Validate every field, with cross-field rules, before rejecting | adapt | Differs: the source validates every field; scrub-validate (bjornstack.md row 17) checks acted-on fields only, and Scrub on Entry lists validating everything as a misapplication | [scrub-validate](bjornstack.md#rule-scrub-validate) | Pattern mappings | judgment |
 | <a id="row-92"></a>92 | CX `SKILL.md:30`, `:51-65`; eval 1.2-1.3, 6.2, 6.5 | Propagate the same ctx through the whole call chain | already ours | bjornstack.md row 46 (ctx-per-call) | [ctx-per-call](bjornstack.md#rule-ctx-per-call) | Pattern mappings | guard candidate |
 | <a id="row-93"></a>93 | CX `SKILL.md:31`; eval 4.5, 7.4 | ctx is the first parameter, named `ctx` | already ours | bjornstack.md row 46 (ctx-per-call) | [ctx-per-call](bjornstack.md#rule-ctx-per-call) | Pattern mappings | guard candidate |
 | <a id="row-94"></a>94 | CX `SKILL.md:32`; eval 4 | Never store ctx in a struct | already ours | bjornstack.md row 46 (ctx-per-call) | [ctx-per-call](bjornstack.md#rule-ctx-per-call) | Pattern mappings | guard candidate |
 | <a id="row-95"></a>95 | CX `SKILL.md:33`; eval 7.5 | Pass `context.TODO()`, never a nil ctx | keep | Go pitfall: nil panics far from the caller | [ctx-no-nil](#rule-ctx-no-nil) | Go pitfalls | guard candidate |
 | <a id="row-96"></a>96 | CX `SKILL.md:34`; `references/cancellation.md:43-60`; eval 2.2-2.3, 6.4 | Call `cancel()` on every path, unless ownership is handed on; `defer cancel()` for scoped work | keep | Go pitfall: leaks the child and its timer | [ctx-cancel](#rule-ctx-cancel) | Go pitfalls | guard candidate |
-| <a id="row-97"></a>97 | CX `SKILL.md:35`, `:41-49`; eval 7.2 | `context.Background()` only at entry points: main, init, tests | adapt | Tests take `t.Context()` instead (ES, row 240) | [ctx-root](#rule-ctx-root) | Pattern mappings | guard candidate |
+| <a id="row-97"></a>97 | CX `SKILL.md:35`, `:41-49`; eval 7.2 | `context.Background()` only at entry points: main, init, tests | adapt | Tests take `t.Context()` instead (ES, row 240); `TestMain` has no `t` and starts infrastructure (bb-infra-lifecycle); cleanup outlives `t.Context()` | [ctx-root](#rule-ctx-root) | Pattern mappings | guard candidate |
 | <a id="row-98"></a>98 | CX `SKILL.md:47`; `references/http-services.md:9-29`; eval 1.1 | A handler uses `r.Context()`, never a new `Background()` | keep | Same rule | [ctx-root](#rule-ctx-root) | Pattern mappings | guard candidate |
 | <a id="row-99"></a>99 | CX `SKILL.md:36`; eval 7.1, 7.3 | `context.TODO()` as the placeholder while no ctx exists yet | adapt | Add ES's limit (row 253): replaced before the change ships | [ctx-todo](#rule-ctx-todo) | Pattern mappings | guard candidate |
 | <a id="row-100"></a>100 | CX `SKILL.md:37`; `references/values-tracing.md:7-31`; eval 3.1-3.2 | ctx value keys are unexported types | keep | Go pitfall: string keys collide across packages | [ctx-keys](#rule-ctx-keys) | Pattern mappings | guard candidate |
-| <a id="row-101"></a>101 | CX `references/values-tracing.md:18-26`; eval 3.3-3.5 | Typed setter and getter per value; the getter reports a missing value | keep | Matches ctx-scope's `logctx.From(ctx)` | [ctx-keys](#rule-ctx-keys) | Pattern mappings | judgment |
-| <a id="row-102"></a>102 | CX `SKILL.md:38`; `references/values-tracing.md:3-5`, `:33-41`; eval 9.1, 9.3, 9.5 | Only request-scoped metadata in ctx values; never parameters, connections or flags | already ours | bjornstack.md row 47 (ctx-scope) | [ctx-scope](bjornstack.md#rule-ctx-scope) | Pattern mappings | judgment |
-| <a id="row-103"></a>103 | CX `references/values-tracing.md:38`; eval 9.4 | The authenticated user or tenant travels in ctx values | drop | ctx-scope (bjornstack.md row 47) limits ctx to cancellation and program-wide per-goroutine settings; the user a request acts for is input (Unit Testing step 3.2); see Open for owner 2 | [dropped](#drop-103) | — | - |
+| <a id="row-101"></a>101 | CX `references/values-tracing.md:18-26`; eval 3.3-3.5 | Typed setter and getter per value; the getter reports a missing value | adapt | Except the logger: `logctx.From` reports nothing and returns a discarding logger (ctx-scope) | [ctx-keys](#rule-ctx-keys) | Pattern mappings | judgment |
+| <a id="row-102"></a>102 | CX `SKILL.md:38`; `references/values-tracing.md:3-5`, `:33-41`; eval 9.1, 9.3, 9.5 | Only request-scoped metadata in ctx values; never parameters, connections or flags | adapt | Differs: the source's "request-scoped data" is wider; ctx-scope (bjornstack.md row 47) narrows it to cancellation and program-wide per-goroutine settings (see row 103) | [ctx-scope](bjornstack.md#rule-ctx-scope) | Pattern mappings | judgment |
+| <a id="row-103"></a>103 | CX `references/values-tracing.md:38`; eval 9.4; CU `go-context/SKILL.md:83` | The authenticated user or tenant travels in ctx values | drop | ctx-scope (bjornstack.md row 47) limits ctx to cancellation and program-wide per-goroutine settings; the user a request acts for is input (Unit Testing step 3.2); still open for the owner (Open for owner 1) | [dropped](#drop-103) | — | - |
 | <a id="row-104"></a>104 | CX `references/values-tracing.md:42`; eval 9.2 | Logger in ctx only when enriched with request fields; eval 9.2: never in ctx | drop | Contradicts ctx-scope (bjornstack.md row 47): the logger lives in ctx only | [dropped](#drop-104) | — | - |
 | <a id="row-105"></a>105 | CX `SKILL.md:39`; `references/cancellation.md:163-186`; eval 5 | `context.WithoutCancel` for work that outlives the request | adapt | Add ES's rule (row 252): detached work gets its own timeout | [ctx-detach](#rule-ctx-detach) | Pattern mappings | judgment |
 | <a id="row-106"></a>106 | CX `references/cancellation.md:106-128` | Select on `ctx.Done()` alongside other work | keep | Go mechanism for honouring cancellation | [ctx-listen](#rule-ctx-listen) | Pattern mappings | judgment |
 | <a id="row-107"></a>107 | CX `references/cancellation.md:130-144` | CPU-bound loops check `ctx.Err()` periodically | keep | Same rule | [ctx-listen](#rule-ctx-listen) | Pattern mappings | judgment |
 | <a id="row-108"></a>108 | CX `references/cancellation.md:146-161`; eval 10 | `context.AfterFunc` for cleanup on cancellation; keep its `stop` | keep | Cleanup without blocking the main flow | [ctx-afterfunc](#rule-ctx-afterfunc) | Pattern mappings | judgment |
-| <a id="row-109"></a>109 | CX `references/http-services.md:17-24`; eval 1.5 | After a failure, a handler whose `ctx.Err()` is set writes no response | keep | The client is gone | [ctx-client-gone](#rule-ctx-client-gone) | Pattern mappings | judgment |
+| <a id="row-109"></a>109 | CX `references/http-services.md:17-24`; eval 1.5 | After a failure, a handler whose `ctx.Err()` is set writes no response | adapt | Rests on a code comment that assumes any ctx error means the client left; when the handler's own timeout fired, the client is still waiting | [ctx-client-gone](#rule-ctx-client-gone) | Pattern mappings | judgment |
 | <a id="row-110"></a>110 | CX `references/http-services.md:31-61` | Middleware attaches request values with `r.WithContext` before handlers run | keep | Where row 101's setter is called | [ctx-keys](#rule-ctx-keys) | Pattern mappings | judgment |
 | <a id="row-111"></a>111 | CX `references/http-services.md:63-77`; `references/values-tracing.md:44-78` | Copy the trace ID from ctx into outgoing request headers | keep | Keeps one trace across services | [ctx-trace-out](#rule-ctx-trace-out) | Pattern mappings | judgment |
 | <a id="row-112"></a>112 | CX `references/http-services.md:80-113`; evals 1.4, 8 | Context-aware calls: `NewRequestWithContext`, `QueryContext`, `ExecContext`, `BeginTx` | keep | Go pitfall: the plain variants ignore cancellation | [ctx-aware-calls](#rule-ctx-aware-calls) | Go pitfalls | guard candidate |
-| <a id="row-113"></a>113 | CX eval 2.1, 2.5 | Each retry attempt derives its own timeout from the caller's ctx | keep | Eval-only rule | [ctx-retry-timeout](#rule-ctx-retry-timeout) | Pattern mappings | judgment |
+| <a id="row-113"></a>113 | CX eval 2.1, 2.5 | Each retry attempt derives its own timeout from the caller's ctx | adapt | A per-attempt timeout is a design choice from one eval; kept only where an attempt can hang | [ctx-retry-timeout](#rule-ctx-retry-timeout) | Pattern mappings | judgment |
 | <a id="row-114"></a>114 | CX `SKILL.md:82-84` | `govet` and `staticcheck` catch context pitfalls | keep | Same rule as row 49 | [tool-lint](#rule-tool-lint) | Tooling | tool: govet, staticcheck (named by CX `SKILL.md:84`) |
 | <a id="row-115"></a>115 | PL `SKILL.md:22`, `:26-34`; eval 1.1-1.4 | Ask the developer for the architecture, then the DI approach, one question at a time | drop | Agent process; Domain-First Packaging and coord-inject already decide both | [dropped](#drop-115) | — | - |
 | <a id="row-116"></a>116 | PL `SKILL.md:28`; eval 1.5 | Don't over-structure small projects | drop | Domain-First Packaging's SKIP WHEN and over-packaging misapplication say it for every language | [dropped](#drop-116) | — | - |
-| <a id="row-117"></a>117 | PL `SKILL.md:36-38`; eval 7.1, 7.5 | 12-factor: config through environment variables | drop | Language-neutral deployment rule; see Open for owner 3 | [dropped](#drop-117) | — | - |
+| <a id="row-117"></a>117 | PL `SKILL.md:36-38`; eval 7.1, 7.5 | 12-factor: config through environment variables | drop | Language-neutral deployment rule; its home is bs-1ep | [dropped](#drop-117) | — | - |
 | <a id="row-118"></a>118 | PL `SKILL.md:38`; eval 7.2 | 12-factor: logs to stdout | drop | Same | [dropped](#drop-117) | — | - |
 | <a id="row-119"></a>119 | PL `SKILL.md:38` | 12-factor: stateless processes | drop | Same | [dropped](#drop-117) | — | - |
 | <a id="row-120"></a>120 | PL `SKILL.md:38` | 12-factor: graceful shutdown | drop | Same | [dropped](#drop-117) | — | - |
@@ -182,34 +183,34 @@ row. Drop rows have "-".
 | <a id="row-126"></a>126 | PL `SKILL.md:80`; `references/directory-layouts.md:98-137`; eval 11 | Every `main` package in `cmd/<name>/`, one directory per binary | keep | Mechanical, Go-specific layout | [layout-cmd](#rule-layout-cmd) | Pattern mappings | guard candidate |
 | <a id="row-127"></a>127 | PL `SKILL.md:80`; `references/directory-layouts.md:100`; eval 2 | `main` only parses flags, wires dependencies and calls `Run()`; no business logic in `cmd/` | keep | main is where coord-inject's collaborators are built | [layout-cmd](#rule-layout-cmd) | Pattern mappings | judgment |
 | <a id="row-128"></a>128 | PL `SKILL.md:80`, `:114`; eval 5.2, 5.5 | An application's packages live under `internal/` | keep | Go's mechanism for Intentionally Public step 1 at the module level | [layout-internal](#rule-layout-internal) | Pattern mappings | judgment |
-| <a id="row-129"></a>129 | PL `SKILL.md:80`, `:115`; eval 5.1, 5.4 | `pkg/` only for code useful to other modules | keep | Intentionally Public step 2 | [layout-internal](#rule-layout-internal) | Pattern mappings | judgment |
+| <a id="row-129"></a>129 | PL `SKILL.md:80`, `:115`; eval 5.1, 5.4 | `pkg/` only for code useful to other modules | adapt | Intentionally Public step 2 asks for a concrete, current need, which "useful to other modules" does not | [layout-internal](#rule-layout-internal) | Pattern mappings | judgment |
 | <a id="row-130"></a>130 | PL `references/directory-layouts.md:72-96`; eval 8 | A library: public packages at the root, private code in `internal/`, no `cmd/` | keep | Go-specific layout | [layout-library](#rule-layout-library) | Pattern mappings | judgment |
 | <a id="row-131"></a>131 | PL `references/directory-layouts.md:15-51` | Universal layout with `internal/{app,config,handler,model,service}` | drop | Technical-role packages: Domain-First Packaging step 1 and proto-packages | [dropped](#drop-131) | — | - |
 | <a id="row-132"></a>132 | PL `references/directory-layouts.md:143-150`; eval 3.1 | No `src/` directory | keep | Mechanical, Go-specific | [layout-cmd](#rule-layout-cmd) | Pattern mappings | guard candidate |
-| <a id="row-133"></a>133 | PL `references/directory-layouts.md:146`; eval 3.6 | No `main.go` at the module root | keep | Same rule as row 126 | [layout-cmd](#rule-layout-cmd) | Pattern mappings | guard candidate |
+| <a id="row-133"></a>133 | PL `references/directory-layouts.md:146`; eval 3.6 | No `main.go` at the module root | keep | Same rule as row 126; still open for the owner (Open for owner 2) | [layout-cmd](#rule-layout-cmd) | Pattern mappings | guard candidate |
 | <a id="row-134"></a>134 | PL `references/directory-layouts.md:147-149`; eval 3.2-3.5 | No `utils/`, `helpers/`, `common/` packages | already ours | bjornstack.md row 3 (proto-packages) | [proto-packages](bjornstack.md#rule-proto-packages) | For the protocols | guard candidate |
 | <a id="row-135"></a>135 | PL `references/directory-layouts.md:152-163` | The fix: `internal/util/` "specific utility names" | drop | Still a technical-role name (proto-packages) | [dropped](#drop-135) | — | - |
-| <a id="row-136"></a>136 | PL `SKILL.md:47`, `:98-100`; `references/workspaces.md:12-25`; eval 6 | `go.work` only for several modules that import each other | keep | Go-specific | [layout-workspace](#rule-layout-workspace) | Tooling | judgment |
+| <a id="row-136"></a>136 | PL `SKILL.md:47`, `:98-100`; `references/workspaces.md:12-25`; eval 6 | `go.work` for developing several modules together: a monorepo, modules that import each other, local cross-module testing | keep | Go-specific; the uses the source lists | [layout-workspace](#rule-layout-workspace) | Tooling | judgment |
 | <a id="row-137"></a>137 | PL `SKILL.md:56`; eval 4.2 | Module path matches the repository URL | keep | Mechanical, Go-specific | [mod-path](#rule-mod-path) | Tooling | guard candidate |
 | <a id="row-138"></a>138 | PL `SKILL.md:57`; eval 4.3 | Module path lower-case only | keep | Same | [mod-path](#rule-mod-path) | Tooling | guard candidate |
 | <a id="row-139"></a>139 | PL `SKILL.md:58`; eval 4.4 | Hyphens between words in the module path | keep | Same | [mod-path](#rule-mod-path) | Tooling | guard candidate |
 | <a id="row-140"></a>140 | PL `SKILL.md:59`; eval 4.5 | The module name says what it is for | keep | Same | [mod-path](#rule-mod-path) | Tooling | judgment |
-| <a id="row-141"></a>141 | PL `SKILL.md:74-76` | Package names lower-case, singular, matching the directory | adapt | pkg-naming (bjornstack.md row 1) holds lower-case nouns; add singular and matching the directory | [pkg-dir](#rule-pkg-dir) | Pattern mappings | guard candidate |
+| <a id="row-141"></a>141 | PL `SKILL.md:74-76` | Package names lower-case, singular, matching the directory | adapt | pkg-naming (bjornstack.md row 1) holds lower-case nouns; add matching the directory. "Singular" is contradicted by the standard library (`strings`, `bytes`, `errors`) | [pkg-dir](#rule-pkg-dir) | Pattern mappings | guard candidate |
 | <a id="row-142"></a>142 | PL `SKILL.md:88`; `assets/Makefile` | A Makefile at the root | drop | Build automation is the project's choice; nothing about Go code | [dropped](#drop-142) | — | - |
 | <a id="row-143"></a>143 | PL `SKILL.md:89`, `:118`; `assets/.gitignore` | A `.gitignore` with `/vendor/` and binaries | drop | Same | [dropped](#drop-142) | — | - |
 | <a id="row-144"></a>144 | PL `SKILL.md:90` | A `.golangci.yml` at the root | keep | Where tool-lint's linters are configured | [tool-lint](#rule-tool-lint) | Tooling | tool: golangci-lint (named by PL `SKILL.md:90`) |
-| <a id="row-145"></a>145 | PL `SKILL.md:75`; `references/config.md:1-49` | Config struct with `mapstructure` tags loaded by Viper in `cmd/` | drop | A library choice no rule needs | [dropped](#drop-145) | — | - |
-| <a id="row-146"></a>146 | PL `SKILL.md:96`; `references/testing-layout.md:26-47`; eval 9.1-9.3 | Tests sit beside the code they test; no central `tests/` directory | already ours | bjornstack.md row 63 (test-pkg): `package foo_test` exists only in the package's own directory | [test-pkg](bjornstack.md#rule-test-pkg) | Pattern mappings | guard candidate |
+| <a id="row-145"></a>145 | PL `SKILL.md:92`; `references/config.md:1-49` | Config struct with `mapstructure` tags loaded by Viper in `cmd/` | drop | A library choice no rule needs | [dropped](#drop-145) | — | - |
+| <a id="row-146"></a>146 | PL `SKILL.md:96`; `references/testing-layout.md:26-47`; eval 9.1-9.3 | Tests sit beside the code they test; no central `tests/` directory | already ours | bjornstack.md row 63 (test-pkg) for package tests; black-box tests are the exception, in their own package (bb-package) | [test-pkg](bjornstack.md#rule-test-pkg) | Pattern mappings | guard candidate |
 | <a id="row-147"></a>147 | PL `references/testing-layout.md:49-53`, `:55-88`; eval 9.5 | Unit tests in the same package; `_test` package for behavioural tests | drop | Contradicts test-pkg (bjornstack.md row 63) | [dropped](#drop-147) | — | - |
-| <a id="row-148"></a>148 | PL `references/testing-layout.md:15-24`, `:90-131`, `:219-226` | `_bench_test.go` and `{package}_example_test.go` files, in the code's own package | drop | Contradicts test-file-name (row 19) and test-pkg | [dropped](#drop-148) | — | - |
+| <a id="row-148"></a>148 | PL `references/testing-layout.md:15-24`, `:90-131`, `:219-226` | `_bench_test.go` and `{package}_example_test.go` files, in the code's own package | drop | Contradicts test-pkg: the files sit in the code's own package; test-file-name allows a split by concern | [dropped](#drop-148) | — | - |
 | <a id="row-149"></a>149 | PL `references/testing-layout.md:141-159`, `:227` | Shared test helpers in `test/testutils/` or `internal/testutil/` | drop | Contradicts builders-a, Test Data Builders step 2 and proto-packages | [dropped](#drop-149) | — | - |
 | <a id="row-150"></a>150 | PL `SKILL.md:96`; `references/testing-layout.md:165-176`; eval 9.4 | Package-specific fixture files in `testdata/` | keep | Go tool convention | [test-testdata](#rule-test-testdata) | Pattern mappings | judgment |
-| <a id="row-151"></a>151 | PL `references/testing-layout.md:178-188`, `:205` | Fixture files shared across packages in `test/fixtures/` | keep | Read-only shared files are allowed (Isolated Test Execution step 2) | [test-testdata](#rule-test-testdata) | Pattern mappings | judgment |
+| <a id="row-151"></a>151 | PL `references/testing-layout.md:178-188`, `:205` | Fixture files shared across packages in `test/fixtures/` | drop | Isolated Test Execution step 2 ("factories, not fixtures") and builders-a: data several packages share is built per test | [dropped](#drop-151) | — | - |
 | <a id="row-152"></a>152 | PL `references/testing-layout.md:203`, `:206` | No `.go` files in `testdata/`: the go tool ignores them | keep | Go pitfall | [test-testdata](#rule-test-testdata) | Pattern mappings | guard candidate |
 | <a id="row-153"></a>153 | PL `SKILL.md:111` | Run `go version` to detect the current Go version | drop | Agent setup step | [dropped](#drop-153) | — | - |
 | <a id="row-154"></a>154 | PL `SKILL.md:117` | `gofmt -s -w .` | already ours | bjornstack.md row 78 (tool-finish); ours checks `gofmt -l .` without `-s` | [tool-finish](bjornstack.md#rule-tool-finish) | Tooling | tool: gofmt, go vet, go test (named by the P0 brief) |
 | <a id="row-155"></a>155 | PL `SKILL.md:119`, `:129` | Write the always-load directive for `golang-how-to` into CLAUDE.md | drop | Installs a skill; owner ruled install none (bjornstack.md row 56) | [dropped](#drop-155) | — | - |
-| <a id="row-156"></a>156 | SI `SKILL.md:28-52`, `:289` | Interfaces of one to three methods; compose larger ones | keep | Each consumer depends only on what it calls (Test Data Builders step 2) | [iface-small](#rule-iface-small) | Pattern mappings | judgment |
+| <a id="row-156"></a>156 | SI `SKILL.md:28-52`, `:289` | Interfaces of one to three methods; compose larger ones | adapt | The source says "SHOULD have 1-3 methods" and names 5+ as the mistake (SI `SKILL.md:34`, `:289`); the number is a prompt to look for a split, not a cap, as Unit Testing 3.1 treats counts | [iface-small](#rule-iface-small) | Pattern mappings | judgment |
 | <a id="row-157"></a>157 | SI `SKILL.md:64-81`, `:290`; eval 1 | Interfaces defined where consumed | keep | Same rule as row 11 | [iface-consumer](#rule-iface-consumer) | Pattern mappings | judgment |
 | <a id="row-158"></a>158 | SI `SKILL.md:83-93`, `:291`; eval 2 | Accept interfaces, return concrete types | keep | Go convention; callers keep the whole type | [iface-return-concrete](#rule-iface-return-concrete) | Pattern mappings | judgment |
 | <a id="row-159"></a>159 | SI `SKILL.md:95-110`, `:298`; eval 3 | No premature interfaces; extract one when a second consumer, implementation or test double needs it | adapt | Keep its test-double exit: a coordinator's collaborators are replaced by doubles (Unit Testing step 3.3), so they are interfaces from the start | [iface-when](#rule-iface-when) | Pattern mappings | judgment |
@@ -226,40 +227,40 @@ row. Drop rows have "-".
 | <a id="row-170"></a>170 | SI `SKILL.md:181-221`, `:293`; eval 5 | Embed only to promote the whole API; a named field otherwise | adapt | Add CU's warning (row 233): embedding in an exported struct puts the inner method set in the public API | [embed-when](#rule-embed-when) | Pattern mappings | judgment |
 | <a id="row-171"></a>171 | SI `SKILL.md:223-237` | Accept dependencies as interfaces in constructors | already ours | bjornstack.md row 69 (coord-inject) | [coord-inject](bjornstack.md#rule-coord-inject) | Pattern mappings | judgment |
 | <a id="row-172"></a>172 | SI `SKILL.md:243-254`, `:294`; `references/struct-fields.md:3-17` | Every exported field of a serialized struct has a tag | keep | Go pitfall: renaming a field silently changes the wire format | [tags](#rule-tags) | Pattern mappings | guard candidate |
-| <a id="row-173"></a>173 | SI `references/struct-fields.md:34` | Unexported fields are never serialized; a tag on one does nothing | keep | Go pitfall | [tags](#rule-tags) | Pattern mappings | guard candidate |
+| <a id="row-173"></a>173 | SI `references/struct-fields.md:34` | Unexported fields are not serialized; a tag on one does nothing | keep | Go pitfall; an embedded unexported struct (not a pointer) is the exception, since `encoding/json` promotes its exported fields | [tags](#rule-tags) | Pattern mappings | guard candidate |
 | <a id="row-174"></a>174 | SI `references/struct-fields.md:35` | `omitempty` drops zero values; use a pointer, `mo.Option` or `omitzero` when zero and absent differ | adapt | Drop `mo.Option`, a library no rule needs | [tags](#rule-tags) | Pattern mappings | judgment |
 | <a id="row-175"></a>175 | SI `references/struct-fields.md:36-38` | `go vet` structtag in CI | already ours | bjornstack.md row 78 (tool-finish) runs `go vet ./...` | [tool-finish](bjornstack.md#rule-tool-finish) | Tooling | tool: gofmt, go vet, go test (named by the P0 brief) |
-| <a id="row-176"></a>176 | SI `references/struct-fields.md:38` | A marshal-unmarshal round trip catches field-name drift | drop | A round trip passes after a rename, because both directions use the new name | [dropped](#drop-176) | — | - |
+| <a id="row-176"></a>176 | SI `references/struct-fields.md:38` | A marshal-unmarshal round trip catches field-name drift | drop | A round trip passes after a rename, the case the source names; tags covers renames | [dropped](#drop-176) | — | - |
 | <a id="row-177"></a>177 | SI `SKILL.md:256-266` | Pointer receiver when the method modifies, holds a mutex or is large; value for small immutable types | keep | Go-specific | [receivers](#rule-receivers) | Pattern mappings | judgment |
 | <a id="row-178"></a>178 | SI `SKILL.md:267`, `:295`; eval 11; CU `go-interfaces/SKILL.md:133-137` | All methods of a type use the same receiver kind | keep | Same rule | [receivers](#rule-receivers) | Pattern mappings | guard candidate |
-| <a id="row-179"></a>179 | SI `SKILL.md:269-275`; `references/struct-fields.md:40-71`; eval 9 | `noCopy` sentinel for structs that must not be copied; pass by pointer | keep | Go-specific | [nocopy](#rule-nocopy) | Go pitfalls | tool: `go vet` copylocks (named by SI `SKILL.md:273`) |
+| <a id="row-179"></a>179 | SI `SKILL.md:269-275`; `references/struct-fields.md:40-71`; eval 9 | `noCopy` sentinel for structs that must not be copied; pass by pointer | adapt | Go-specific; only for a struct holding no lock, since copylocks already reports a struct with a `sync.Mutex` | [nocopy](#rule-nocopy) | Go pitfalls | tool: `go vet` copylocks (named by SI `SKILL.md:273`) |
 | <a id="row-180"></a>180 | SF `SKILL.md:30` | Generics over `any` when the type set is known | keep | Same rule as row 161 | [generics-over-any](#rule-generics-over-any) | Pattern mappings | judgment |
 | <a id="row-181"></a>181 | SF `SKILL.md:31`, `:263`; eval 7 | Comma-ok type assertions | keep | Same rule as row 164 | [type-assert-ok](#rule-type-assert-ok) | Go pitfalls | tool: forcetypeassert (named by SF `SKILL.md:246`) |
 | <a id="row-182"></a>182 | SF `SKILL.md:31`, `:248-256` | Go 1.25: `reflect.TypeAssert[T](v)` over `v.Interface().(T)` | keep | Mechanical | [type-assert-ok](#rule-type-assert-ok) | Go pitfalls | guard candidate |
 | <a id="row-183"></a>183 | SF `SKILL.md:32`, `:44-67`, `:264`; `references/nil-safety.md:98-121`; evals 1, 13, 25 | A typed nil pointer in an interface is not nil; return untyped `nil` | keep | Go pitfall | [typed-nil](#rule-typed-nil) | Go pitfalls | judgment |
 | <a id="row-184"></a>184 | SF `SKILL.md:33`, `:69-91`, `:265`; evals 9, 28 | Writing to a nil map panics; initialise before use | keep | Go pitfall | [nil-collections](#rule-nil-collections) | Go pitfalls | judgment |
-| <a id="row-185"></a>185 | SF `SKILL.md:69-75`, `:273` | A nil channel blocks forever; initialise before use | keep | Go pitfall | [nil-collections](#rule-nil-collections) | Go pitfalls | judgment |
+| <a id="row-185"></a>185 | SF `SKILL.md:69-75`, `:273` | A nil channel blocks forever; initialise before use | keep | Go pitfall, except where a nil channel deliberately disables a `select` case | [nil-collections](#rule-nil-collections) | Go pitfalls | judgment |
 | <a id="row-186"></a>186 | SF `SKILL.md:34`, `:95-107`, `:266`; `references/slice-map-safety.md:67-89`; evals 2, 24 | `append` may share the backing array; full slice expression or `slices.Clone` first | keep | Go pitfall | [append-alias](#rule-append-alias) | Go pitfalls | judgment |
 | <a id="row-187"></a>187 | SF `SKILL.md:109-111` | Maps are never accessed concurrently without synchronisation | keep | Go pitfall | [map-concurrent](#rule-map-concurrent) | Go pitfalls | judgment |
-| <a id="row-188"></a>188 | SF `SKILL.md:35`, `:188-208`, `:271`; evals 3, 11, 15, 34 | Return copies of internal slices and maps; collection fields unexported | keep | Matches compliance-suite's returned-copy check | [copy-out](#rule-copy-out) | Pattern mappings | judgment |
-| <a id="row-189"></a>189 | SF eval 26 | A constructor copies a caller's slice it keeps | keep | Eval-only rule, the ingress side of row 188 | [copy-out](#rule-copy-out) | Pattern mappings | judgment |
-| <a id="row-190"></a>190 | SF `references/slice-map-safety.md:116-131` | `slices.Clone` and `maps.Clone` for defensive copies | keep | Same rule | [copy-out](#rule-copy-out) | Pattern mappings | guard candidate |
+| <a id="row-188"></a>188 | SF `SKILL.md:35`, `:188-208`, `:271`; evals 3, 11, 15, 34 | Return copies of internal slices and maps; collection fields unexported | keep | Matches compliance-suite's returned-copy check; the source's "SHOULD" kept as a documented exit | [copy-out](#rule-copy-out) | Pattern mappings | judgment |
+| <a id="row-189"></a>189 | SF eval 26 | A constructor copies a caller's slice it keeps | keep | The ingress side of row 188; SF eval 26 and cxuu go-defensive (row 259) state it | [copy-out](#rule-copy-out) | Pattern mappings | judgment |
+| <a id="row-190"></a>190 | SF `references/slice-map-safety.md:116-131` | `slices.Clone` and `maps.Clone` as the preferred way to copy | keep | Same rule; the source calls Clone "the preferred way" (SF `references/slice-map-safety.md:131`), not the only one | [copy-out](#rule-copy-out) | Pattern mappings | judgment |
 | <a id="row-191"></a>191 | SF `SKILL.md:36`, `:158-182`, `:267`; evals 4, 18, 27, 35 | `defer` in a loop runs at function exit; extract the body | keep | Go pitfall | [defer-loop](#rule-defer-loop) | Go pitfalls | guard candidate |
-| <a id="row-192"></a>192 | SF `SKILL.md:37`, `:115-129`, `:268`; evals 5, 20, 30 | Bounds-check before narrowing an integer | keep | Go pitfall: silent wraparound | [int-narrow](#rule-int-narrow) | Go pitfalls | guard candidate |
+| <a id="row-192"></a>192 | SF `SKILL.md:37`, `:115-129`, `:268`; evals 5, 20, 30 | Bounds-check before narrowing an integer | adapt | Same split as div-zero: Scrub on Entry checks outside values at the boundary, and code past it does not re-check (its "re-validating" misapplication) | [int-narrow](#rule-int-narrow) | Go pitfalls | guard candidate |
 | <a id="row-193"></a>193 | SF `SKILL.md:38`, `:131-141`, `:269`; evals 10, 23 | Compare floats with a tolerance or use `math/big` | keep | Go pitfall | [float-compare](#rule-float-compare) | Go pitfalls | judgment |
-| <a id="row-194"></a>194 | SF eval 23.4, 31.5 | `reflect.DeepEqual` compares floats with `==` | adapt | Eval-only fact that `require.Equal` inherits; spelled for test-whole-value through Whole-Object Assertion step 2 | [test-float](#rule-test-float) | Go pitfalls | judgment |
+| <a id="row-194"></a>194 | SF eval 23.4, 31.5 | `reflect.DeepEqual` compares floats with `==` | adapt | Eval-only fact that `require.Equal` inherits; spelled for test-whole-value by analogy with Whole-Object Assertion step 2 | [test-float](#rule-test-float) | Go pitfalls | judgment |
 | <a id="row-195"></a>195 | SF `SKILL.md:143-156`, `:270`; evals 17, 33, 36 | Guard integer division by zero; float division gives Inf or NaN | adapt | Where zero is invalid input, Scrub on Entry rejects it at the boundary and domain code does not re-check (its "re-validating" misapplication) | [div-zero](#rule-div-zero) | Go pitfalls | judgment |
 | <a id="row-196"></a>196 | SF `SKILL.md:39`, `:210-221`; eval 19 | Design useful zero values | adapt | Same rule as row 160 | [zero-value](#rule-zero-value) | Pattern mappings | judgment |
-| <a id="row-197"></a>197 | SF `references/nil-safety.md:162-180` | A constructor with defaults, making the zero value impossible for outside callers | keep | The other half of the same rule | [zero-value](#rule-zero-value) | Pattern mappings | judgment |
+| <a id="row-197"></a>197 | SF `references/nil-safety.md:162-180` | A constructor that sets defaults | keep | The other half of the same rule; the source's claim that it makes the zero value impossible for outside callers is false for an exported type (`var c pkg.Client` still compiles) | [zero-value](#rule-zero-value) | Pattern mappings | judgment |
 | <a id="row-198"></a>198 | SF `SKILL.md:40`, `:222-238` | `sync.Once` for lazy initialisation under concurrency | keep | Go-specific | [sync-once](#rule-sync-once) | Pattern mappings | judgment |
 | <a id="row-199"></a>199 | SF `SKILL.md:240-242`, `:272` | No ordering assumptions between `init()` functions; explicit constructors instead | keep | Go pitfall | [init-order](#rule-init-order) | Go pitfalls | judgment |
 | <a id="row-200"></a>200 | SF `SKILL.md:244-246` | `errcheck`, `forcetypeassert`, `nilerr`, `govet`, `staticcheck` | keep | Same rule as row 49 | [tool-lint](#rule-tool-lint) | Tooling | tool: golangci-lint linters (named by SF `SKILL.md:246`) |
-| <a id="row-201"></a>201 | SF `references/nil-safety.md:19-43`; eval 14 | Check for nil before calling methods on pointers from external sources; never call a method on a nil pointer | adapt | Checked where the pointer enters (Scrub on Entry step 4); code past that point does not re-check it (Scrub on Entry outcome) | [nil-entry](#rule-nil-entry) | Pattern mappings | judgment |
-| <a id="row-202"></a>202 | SF `references/nil-safety.md:45-58` | Nil-safe receivers sparingly, documented when nil is expected | keep | Go-specific | [nil-entry](#rule-nil-entry) | Pattern mappings | judgment |
+| <a id="row-201"></a>201 | SF `references/nil-safety.md:19-43`; eval 14 | Check for nil before calling methods on pointers from external sources; never call a method on a nil pointer | adapt | Checked where external data crosses the system boundary (Scrub on Entry steps 1 and 4); code past that point does not re-check it (Scrub on Entry outcome) | [nil-entry](#rule-nil-entry) | Pattern mappings | judgment |
+| <a id="row-202"></a>202 | SF `references/nil-safety.md:45-58` | Nil-safe receivers sparingly, documented when nil is expected | keep | Go-specific; the source's optional components are an example, not the only case (SF `references/nil-safety.md:47`, `:58`) | [nil-entry](#rule-nil-entry) | Pattern mappings | judgment |
 | <a id="row-203"></a>203 | SF `references/nil-safety.md:60-96`; evals 8, 22, 32 | Never call a nil func; check it or give a no-op default | keep | Go pitfall | [nil-func](#rule-nil-func) | Go pitfalls | judgment |
 | <a id="row-204"></a>204 | SF `references/nil-safety.md:127-160` | Generic code handles the zero value of type parameters correctly | drop | The failing case does not compile; the rest names nothing to apply | [dropped](#drop-204) | — | - |
 | <a id="row-205"></a>205 | SF `references/slice-map-safety.md:18-43`, `:45-63` | Before Go 1.22, never capture or take the address of a loop variable | drop | Applies only to modules on Go 1.21 or older | [dropped](#drop-205) | — | - |
-| <a id="row-206"></a>206 | SF `references/slice-map-safety.md:65` | Prefer `&items[i]` to `&item` even on Go 1.22+ | drop | Both are correct on Go 1.22+; a preference no strategy needs | [dropped](#drop-206) | — | - |
+| <a id="row-206"></a>206 | SF `references/slice-map-safety.md:65` | Prefer `&items[i]` to `&item` even on Go 1.22+ | drop | `&items[i]` aliases the element, `&item` points at a per-iteration copy; which one is right follows from whether the code must change the element, so no preference rule is needed | [dropped](#drop-206) | — | - |
 | <a id="row-207"></a>207 | SF `references/slice-map-safety.md:91-114`; evals 6, 21, 29 | Clone a small piece kept from a large slice so the array can be freed | keep | Go pitfall | [subslice-retain](#rule-subslice-retain) | Go pitfalls | judgment |
 | <a id="row-208"></a>208 | SF `references/slice-map-safety.md:133-149`; eval 16 | Never depend on map iteration order; sort the keys | keep | Go pitfall | [map-order](#rule-map-order) | Go pitfalls | judgment |
 | <a id="row-209"></a>209 | SF `references/slice-map-safety.md:166-187` | Delete from a slice with `slices.DeleteFunc` or backwards, not inside a forward `range` | keep | Go pitfall | [slice-delete](#rule-slice-delete) | Go pitfalls | guard candidate |
@@ -272,7 +273,7 @@ row. Drop rows have "-".
 | <a id="row-216"></a>216 | CU `go-testing/SKILL.md:55-68` | No assertion libraries; `cmp.Diff` | drop | Contradicts test-require (bjornstack.md row 39) | [dropped](#drop-50) | — | - |
 | <a id="row-217"></a>217 | CU `go-testing/SKILL.md:35-51` | Failure messages name function, inputs, got and want; got first | drop | test-messages (bjornstack.md row 92) and `require`'s diff cover it | [dropped](#drop-217) | — | - |
 | <a id="row-218"></a>218 | CU `go-testing/SKILL.md:72-80` | `t.Error` by default, `t.Fatal` only when continuing is impossible | drop | Contradicts test-require (bjornstack.md row 39) | [dropped](#drop-50) | — | - |
-| <a id="row-219"></a>219 | CU `go-testing/SKILL.md:82-83`; ES `go-test-quality/SKILL.md:206-209` | `t.Fatal`, `t.FailNow` and `require` only on the test goroutine | keep | Go pitfall: from another goroutine they cannot stop the test | [test-goroutine-fatal](#rule-test-goroutine-fatal) | Go pitfalls | tool: `go vet` testinggoroutine (named by ES `go-test-quality/SKILL.md:207-208`) |
+| <a id="row-219"></a>219 | CU `go-testing/SKILL.md:82-83`; ES `go-test-quality/SKILL.md:206-209` | `t.Fatal`, `t.FailNow` and `require` only on the test goroutine | keep | Go pitfall: from another goroutine they cannot stop the test | [test-goroutine-fatal](#rule-test-goroutine-fatal) | Go pitfalls | tool: `go vet` testinggoroutine for `t.Fatal`/`t.FailNow`, testifylint go-require for `require.*` (named by ES `go-test-quality/SKILL.md:207-209`) |
 | <a id="row-220"></a>220 | CU `go-testing/SKILL.md:91-101` | A single `shouldErr` bool in a table is acceptable | drop | Contradicts test-table (bjornstack.md row 64): assertion functions, no conditionals | [dropped](#drop-220) | — | - |
 | <a id="row-221"></a>221 | CU `go-testing/SKILL.md:107-122`; ES `go-test-quality/SKILL.md:124-125` | Helpers register teardown with `t.Cleanup`, not `defer` | keep | Runs after `t.FailNow` and is scoped to the test | [test-cleanup](#rule-test-cleanup) | Pattern mappings | guard candidate |
 | <a id="row-222"></a>222 | CU `go-testing/SKILL.md:126-144` | Test error semantics, not message strings | drop | Failure Identity step 6 says it for every language; row 74 gives the Go spelling | [dropped](#drop-222) | — | - |
@@ -284,13 +285,13 @@ row. Drop rows have "-".
 | <a id="row-228"></a>228 | CU `go-error-handling/SKILL.md:163-164` | `%w` at the end of the format string | keep | Keeps the wrapped chain reading outermost first | [err-string](#rule-err-string) | Pattern mappings | guard candidate |
 | <a id="row-229"></a>229 | CU `go-error-handling/SKILL.md:24` | `%v` at a storage or RPC boundary | already ours | bjornstack.md row 48 (err-wrap-verb) | [err-wrap-verb](bjornstack.md#rule-err-wrap-verb) | Go pitfalls | judgment |
 | <a id="row-230"></a>230 | CU `go-context/SKILL.md:52-70` | No custom Context types or interfaces in signatures | keep | Go convention | [ctx-no-custom](#rule-ctx-no-custom) | Pattern mappings | guard candidate |
-| <a id="row-231"></a>231 | CU `go-context/SKILL.md:72-91` | Data goes in parameters, then receivers, then globals; ctx values only for request-scoped data | already ours | bjornstack.md row 47 (ctx-scope) | [ctx-scope](bjornstack.md#rule-ctx-scope) | Pattern mappings | judgment |
+| <a id="row-231"></a>231 | CU `go-context/SKILL.md:72-91` | Data goes in parameters, then receivers, then globals; ctx values only for request-scoped data | adapt | Differs: CU's "request-scoped data" is wider and lists auth info (`go-context/SKILL.md:83`); ctx-scope (bjornstack.md row 47) narrows it (see row 103) | [ctx-scope](bjornstack.md#rule-ctx-scope) | Pattern mappings | judgment |
 | <a id="row-232"></a>232 | CU `go-interfaces/SKILL.md:109-127` | Interface satisfaction checks only where no other static conversion catches it | adapt | The limit row 163 takes | [iface-assert-compile](#rule-iface-assert-compile) | Pattern mappings | judgment |
-| <a id="row-233"></a>233 | CU `go-interfaces/SKILL.md:102-105` | Avoid embedding types in public structs | adapt | The warning row 170 takes | [embed-when](#rule-embed-when) | Pattern mappings | judgment |
-| <a id="row-234"></a>234 | ES `go-test-quality/SKILL.md:122-123` | Factory functions with options for complex test objects | already ours | bjornstack.md row 80 (test-sut-options) | [test-sut-options](bjornstack.md#rule-test-sut-options) | Pattern mappings | judgment |
+| <a id="row-233"></a>233 | CU `go-interfaces/SKILL.md:102-105` | Avoid embedding types in public structs | adapt | The warning row 170 takes, softened: embedding is allowed where the whole method set is meant to be public | [embed-when](#rule-embed-when) | Pattern mappings | judgment |
+| <a id="row-234"></a>234 | ES `go-test-quality/SKILL.md:122-123` | Factory functions with options for complex test objects | already ours | bjornstack.md row 27 (builders-a); test-sut-options is for when a full builder would be more than the type needs | [builders-a](bjornstack.md#rule-builders-a) | Pattern mappings | judgment |
 | <a id="row-235"></a>235 | ES `go-test-quality/SKILL.md:137` | Golden files in `testdata/` for complex output (JSON, HTML, SQL) | adapt | Whole-Object Assertion's misapplication: output with a structure the language can compare, such as JSON, is decoded and compared as a value | [test-golden](#rule-test-golden) | Pattern mappings | judgment |
-| <a id="row-236"></a>236 | ES `go-test-quality/SKILL.md:142-148` | Don't mock value objects, pure functions, the stdlib, or your own code in the same package | drop | The last item contradicts Unit Testing step 3.3; step 2.1 already covers the rest | [dropped](#drop-236) | — | - |
-| <a id="row-237"></a>237 | ES `go-test-quality/SKILL.md:158-160` | No `t.Parallel()` with shared mutable state; `t.Setenv` and `t.Chdir` panic in a parallel test | adapt | The exit row 7 takes | [test-parallel](#rule-test-parallel) | Pattern mappings | tool: paralleltest (named by T `SKILL.md:396`) |
+| <a id="row-236"></a>236 | ES `go-test-quality/SKILL.md:142-148` | Don't mock value objects, pure functions, the stdlib, or your own code in the same package | drop | The last item contradicts Unit Testing step 3.3, and "don't mock the stdlib" contradicts step 3.2; step 2.1 already covers the rest | [dropped](#drop-236) | — | - |
+| <a id="row-237"></a>237 | ES `go-test-quality/SKILL.md:158-160` | No `t.Parallel()` with shared mutable state or shared files; `t.Setenv` and `t.Chdir` panic in a parallel test | adapt | The exit row 7 takes, narrowed to process-wide state; shared files and data get scoped instead | [test-parallel](#rule-test-parallel) | Pattern mappings | tool: paralleltest (named by T `SKILL.md:396`) |
 | <a id="row-238"></a>238 | ES `go-test-quality/SKILL.md:174-175` | Never synchronise a test with `time.Sleep` | keep | Same rule as row 48 | [test-no-sleep](#rule-test-no-sleep) | Pattern mappings | guard candidate |
 | <a id="row-239"></a>239 | ES `go-test-quality/SKILL.md:183-185` | Any package that starts goroutines checks for leaks with goleak | keep | Same rule as row 9 | [test-goleak](#rule-test-goleak) | Tooling | guard candidate |
 | <a id="row-240"></a>240 | ES `go-test-quality/SKILL.md:189-191`; `go-context/SKILL.md:206-207` | Tests use `t.Context()`, not `context.Background()` | keep | The test half of row 97 | [ctx-root](#rule-ctx-root) | Pattern mappings | guard candidate |
@@ -307,6 +308,17 @@ row. Drop rows have "-".
 | <a id="row-251"></a>251 | ES `go-context/SKILL.md:213-219` | `WithCancelCause`, `WithTimeoutCause` to record why work was cancelled | keep | A cancellation that says why (Fail Early and Loud) | [ctx-cause](#rule-ctx-cause) | Pattern mappings | judgment |
 | <a id="row-252"></a>252 | ES `go-context/SKILL.md:221-224` | Detached work always gets its own timeout | adapt | Joins row 105's `WithoutCancel` | [ctx-detach](#rule-ctx-detach) | Pattern mappings | judgment |
 | <a id="row-253"></a>253 | ES `go-context/SKILL.md:233` | `context.TODO()` is a smell in production code; replace it before shipping | keep | The limit row 99 takes | [ctx-todo](#rule-ctx-todo) | Pattern mappings | guard candidate |
+| <a id="row-254"></a>254 | CU `go-defensive/SKILL.md:107-119`, `:30`, `:44` | Enums start at `iota + 1` unless zero is the sensible default | keep | Go pitfall: an unset field reads as the first enum value | [enum-zero](#rule-enum-zero) | Go pitfalls | judgment |
+| <a id="row-255"></a>255 | CU `go-defensive/SKILL.md:31`, `:140-150` | `crypto/rand` for keys and tokens, never `math/rand` | keep | Go pitfall: `math/rand` output is predictable | [rand-crypto](#rule-rand-crypto) | Go pitfalls | guard candidate |
+| <a id="row-256"></a>256 | CU `go-defensive/SKILL.md:29`, `:43` | `time.Time` and `time.Duration` instead of raw integers | keep | Go-specific; the type carries the unit | [time-types](#rule-time-types) | Pattern mappings | judgment |
+| <a id="row-257"></a>257 | CU `go-defensive/SKILL.md:171` | No panic across package boundaries | adapt | A broken invariant still panics to the top, since nothing recovers to carry on (err-recover) | [err-panic](#rule-err-panic) | Pattern mappings | judgment |
+| <a id="row-258"></a>258 | CU `go-defensive/SKILL.md:156-157`, `:172` | Library functions avoid panic; a panic in `init()` is acceptable | keep | Same rule as row 81 | [err-panic](#rule-err-panic) | Pattern mappings | judgment |
+| <a id="row-259"></a>259 | CU `go-defensive/SKILL.md:25`, `:40`, `:63-65` | Copy slices and maps received from callers at every API boundary | keep | The ingress side of row 188, as row 189 | [copy-out](#rule-copy-out) | Pattern mappings | judgment |
+| <a id="row-260"></a>260 | T eval 10.2, 10.4 | `t.Helper()` is the first line of a test helper | already ours | bjornstack.md row 91 (test-helper) | [test-helper](bjornstack.md#rule-test-helper) | Pattern mappings | guard candidate |
+| <a id="row-261"></a>261 | SF eval 12.1 | Receive with comma-ok to tell a closed channel from a zero value | keep | Go pitfall: a closed channel yields zero values forever | [chan-close](#rule-chan-close) | Go pitfalls | judgment |
+| <a id="row-262"></a>262 | SF eval 12.4 | A function taking channels as variadic arguments handles a nil one | keep | Same pitfall as row 185 | [nil-collections](#rule-nil-collections) | Go pitfalls | judgment |
+| <a id="row-263"></a>263 | SF eval 12.2 | An output channel is closed exactly once, by its sender | keep | Go pitfall: a second close panics | [chan-close](#rule-chan-close) | Go pitfalls | judgment |
+| <a id="row-264"></a>264 | SF eval 14.2 | Return a meaningful error when a `Notifier` dependency is nil | drop | Contradicts SF's own text (`references/nil-safety.md:52`) and nil-entry; a collaborator the constructor receives is not re-checked per call (coord-inject) | [dropped](#drop-264) | — | - |
 
 ## Rules
 
@@ -316,28 +328,18 @@ that skill. Strategy citations are at bjornstack `67b1213`.
 
 ### Tooling
 
-<a id="rule-test-integration-tag"></a>**test-integration-tag.** A test file that needs the
-service's infrastructure running (tool-bb-infra) starts with
-`//go:build integration`; `testing.Short()` is not the switch. The
-finish run (tool-finish) and every coverage run also run
-`go test -tags=integration ./...`, so these tests are never skipped.
-Source: T `d68d80a` `SKILL.md:52`, `:360-384`, eval 2,
-`references/coverage.md:44`; read 2026-11-16.
-Differs: T says nothing about the finish run; tool-finish's
-`go test ./... -count=1` alone would skip tagged tests. See Open for
-owner 1.
-↩ rows [4](#row-4), [5](#row-5)
-
 <a id="rule-tool-race"></a>**tool-race.** CI runs the tests with `go test -race ./...`.
 Source: T `d68d80a` `SKILL.md:60`, `:419`, eval 14.2; read 2026-11-16.
 ↩ row [13](#row-13)
 
-<a id="rule-tool-coverage"></a>**tool-coverage.** Measure coverage with `-coverpkg=./...`:
-without it, a package exercised only by another package's tests,
-including its `foo_test` and black-box tests, reports nothing. A
-coverage run combined with `-race` or `t.Parallel()` uses
-`-covermode=atomic`.
+<a id="rule-tool-coverage"></a>**tool-coverage.** A plain `-cover`
+measures a package through its own tests, `foo_test` files in its
+directory included. Code exercised only by tests in other packages,
+black-box tests among them, needs `-coverpkg=./...`, or it reports
+nothing. A coverage run of `t.Parallel()` tests without `-race` passes
+`-covermode=atomic`; `-race` already sets it.
 Source: T `d68d80a` `references/coverage.md:35-43`; read 2026-11-16.
+Differs: T asks for `-covermode=atomic` with `-race` as well.
 ↩ rows [37](#row-37), [38](#row-38)
 
 <a id="rule-tool-lint"></a>**tool-lint.** golangci-lint runs from a `.golangci.yml` at the module
@@ -376,11 +378,13 @@ Source: EH `d68d80a` `SKILL.md:49`, evals 1.1, 7.3, 10.3; read
 2026-11-16.
 ↩ row [83](#row-83)
 
-<a id="rule-layout-workspace"></a>**layout-workspace.** Use `go.work` only while developing several
-modules that import each other. A single module with many packages
-has none.
-Source: PL `d68d80a` `SKILL.md:98-100`, `references/workspaces.md:12-25`,
-eval 6; read 2026-11-16.
+<a id="rule-layout-workspace"></a>**layout-workspace.** Use `go.work`
+only to develop several modules together, for the uses PL lists: such
+as a repository holding several modules that import each other, or
+testing a change across modules locally. A single module with many
+packages has none.
+Source: PL `d68d80a` `SKILL.md:98-100`,
+`references/workspaces.md:12-25`, eval 6; read 2026-11-16.
 ↩ row [136](#row-136)
 
 <a id="rule-mod-path"></a>**mod-path.** The module path is the repository URL, lower-case,
@@ -391,13 +395,17 @@ Source: PL `d68d80a` `SKILL.md:54-59`, eval 4; read 2026-11-16.
 
 ### Pattern mappings
 
-<a id="rule-test-parallel"></a>**test-parallel.** Every test and subtest calls `t.Parallel()`
-unless it shares mutable process state: it calls `t.Setenv` or
-`t.Chdir` (both panic in a parallel test), changes a package-level
-variable, or uses infrastructure its data is not scoped in
-(bb-parallel).
+<a id="rule-test-parallel"></a>**test-parallel.** Tests and subtests
+call `t.Parallel()` wherever they can. Only a test that changes
+process-wide state stays serial: it calls `t.Setenv` or `t.Chdir`
+(both panic in a parallel test), or changes a package-level variable.
+A test that would collide with another on shared files or
+infrastructure data does not opt out; it gets its data scoped, such as
+with `t.TempDir()` (bb-parallel; Isolated Test Execution step 4).
 Source: T `d68d80a` `SKILL.md:54`, `:302-326`, eval 3.1-3.2; ES
 `e25b517` `go-test-quality/SKILL.md:158-160`; read 2026-11-16.
+Differs: T and ES let any test with shared mutable state opt out, ES
+naming shared files; ours scopes the data instead.
 ↩ rows [7](#row-7), [237](#row-237)
 
 <a id="rule-test-file-name"></a>**test-file-name.** A package's tests for `foo.go` live in
@@ -411,14 +419,18 @@ Differs: T has no black-box exception; Black Box Integration step 4
 organises those by feature.
 ↩ rows [19](#row-19), [20](#row-20)
 
-<a id="rule-test-examples"></a>**test-examples.** Document a package's exported API with `ExampleXxx`
-functions that `go test` runs. Each ends with `// Output:`, or
-`// Unordered output:` when lines come in no stable order, such as map
-iteration; an example without one is compiled but not run. A variant's
-suffix after the second underscore starts lower-case
-(`ExampleStore_Get_cached`), or godoc detaches it.
+<a id="rule-test-examples"></a>**test-examples.** A package other
+modules import documents its exported API with `ExampleXxx` functions
+that `go test` runs. Prefer ending each with `// Output:`, or `//
+Unordered output:` when lines come in no stable order, such as map
+iteration; without one the example is only compiled, which suits an
+example that needs a live dependency. A variant's suffix after the
+second underscore starts lower-case (`ExampleStore_Get_cached`), or
+godoc detaches it.
 Source: T `d68d80a` `SKILL.md:61`, `:348-352`,
 `references/examples.md:3-40`, eval 8; read 2026-11-16.
+Differs: T asks for examples without limiting them to packages other
+modules import.
 ↩ rows [14](#row-14), [15](#row-15), [16](#row-16), [17](#row-17)
 
 <a id="rule-test-handler-recorder"></a>**test-handler-recorder.** A handler's own test, a coordinator test
@@ -432,12 +444,13 @@ Differs: eval 11 rejects `httptest.NewServer` for handler tests
 outright; black-box tests need the real server.
 ↩ row [23](#row-23)
 
-<a id="rule-test-no-sleep"></a>**test-no-sleep.** No test waits with `time.Sleep`. Code whose result
-depends on time takes the injected clock or runs in `synctest`
-(clock-inject); a black-box test waits for an asynchronous outcome
-with `require.Eventually` (test-eventually).
-Source: T `d68d80a` eval 4.4; ES `e25b517`
-`go-test-quality/SKILL.md:174-175`; read 2026-11-16.
+<a id="rule-test-no-sleep"></a>**test-no-sleep.** No test waits with
+`time.Sleep`. Code whose result depends on time takes the injected
+clock or runs in `synctest` (clock-inject); a black-box test waits for
+an asynchronous outcome with `require.Eventually` (test-eventually).
+Source: T `d68d80a` `SKILL.md:219-223`, `references/mocking.md:181`,
+eval 4.4; ES `e25b517` `go-test-quality/SKILL.md:174-175`; read
+2026-11-16.
 ↩ rows [48](#row-48), [238](#row-238)
 
 <a id="rule-test-fuzz"></a>**test-fuzz.** A function that parses or checks untrusted input gets a
@@ -447,11 +460,13 @@ Source: T `d68d80a` `SKILL.md:328-346`, eval 9; ES `e25b517`
 `go-test-quality/SKILL.md:138`; read 2026-11-16.
 ↩ row [35](#row-35)
 
-<a id="rule-bench-shape"></a>**bench-shape.** A benchmark compares variants, and input sizes, as
-sub-benchmarks with `b.Run`, so each gets its own name for `benchstat`,
-and calls `b.ReportAllocs()`.
+<a id="rule-bench-shape"></a>**bench-shape.** A benchmark compares
+variants, and input sizes, as sub-benchmarks with `b.Run`, so each
+gets its own name for `benchstat`, and reports allocations, with
+`b.ReportAllocs()` or by running with `-benchmem`.
 Source: T `d68d80a` `SKILL.md:273`, `references/benchmarks.md:5-46`,
-eval 13.1-13.2; read 2026-11-16.
+eval 13.1-13.2; ES `e25b517` `go-test-quality/SKILL.md:193`; read
+2026-11-16.
 ↩ rows [28](#row-28), [29](#row-29), [31](#row-31)
 
 <a id="rule-bb-infra-lifecycle"></a>**bb-infra-lifecycle.** Shared infrastructure starts once per test
@@ -483,10 +498,12 @@ Source: TF `d68d80a` `references/mock.md:61-82`, evals 4.4, 6; read
 2026-11-16.
 ↩ rows [55](#row-55), [58](#row-58)
 
-<a id="rule-mock-ctx-anything"></a>**mock-ctx-anything.** Match a `context.Context` argument with
-`mock.Anything`.
-Source: TF `d68d80a` `SKILL.md:137`, `references/mock.md:46-50`, eval
-4.5, 5.4; read 2026-11-16.
+<a id="rule-mock-ctx-anything"></a>**mock-ctx-anything.** A
+`context.Context` argument may be matched with `mock.Anything`; a test
+seldom has a reason to compare contexts.
+Source: TF `d68d80a` eval 4.5; read 2026-11-16.
+Differs: TF's eval states it as a condition ("for arguments that don't
+need specific matching (e.g., context)"), not a rule.
 ↩ row [56](#row-56)
 
 <a id="rule-mock-match-whole"></a>**mock-match-whole.** Match a mock's argument against a whole
@@ -502,17 +519,20 @@ Differs: eval 5 matches level and message text only, because the
 entry's timestamp varies.
 ↩ row [57](#row-57)
 
-<a id="rule-test-suite"></a>**test-suite.** A testify suite may build fresh doubles and the code
-under test in `SetupTest`. `SetupSuite` only starts infrastructure
-(bb-infra-lifecycle) and never creates state tests change (Isolated
-Test Execution step 2). Every assertion goes through `s.Require()`,
-because `s.Equal` and the like behave like `assert` (test-require).
-Each suite has its launcher, `func TestXxx(t *testing.T) {
-suite.Run(t, new(XxxSuite)) }`; without it none of its tests run.
+<a id="rule-test-suite"></a>**test-suite.** A testify suite is used
+only for the infrastructure lifecycle of a black-box test package
+(bb-infra-lifecycle): `SetupSuite` starts infrastructure and never
+creates state tests change (Isolated Test Execution step 2). Suite
+methods keep state on `s` and cannot safely call `t.Parallel()`, so
+unit tests stay plain table tests (test-table, test-parallel). Every
+assertion goes through `s.Require()`, because `s.Equal` and the like
+behave like `assert` (test-require). Each suite has its launcher,
+`func TestXxx(t *testing.T) { suite.Run(t, new(XxxSuite)) }`; without
+it none of its tests run.
 Source: TF `d68d80a` `SKILL.md:141-183`, `:191`, evals 7, 8; read
 2026-11-16.
-Differs: TF uses suite assertions in `assert` style and gives
-`SetupSuite` no limit.
+Differs: TF uses suites for any group of tests with shared setup, uses
+suite assertions in `assert` style and gives `SetupSuite` no limit.
 ↩ rows [59](#row-59), [60](#row-60), [61](#row-61)
 
 <a id="rule-test-eventually-witht"></a>**test-eventually-witht.** Where `require.Eventually` applies
@@ -537,13 +557,13 @@ Source: ES `e25b517` `go-test-quality/SKILL.md:137`; read 2026-11-16.
 Differs: ES lists JSON among golden-file outputs.
 ↩ row [235](#row-235)
 
-<a id="rule-test-testdata"></a>**test-testdata.** Fixture files one package's tests read live in its
-`testdata/` directory, which the go tool ignores when building; files
-tests in several packages read live in `test/fixtures/`. Neither holds
-`.go` files, which the go tool ignores there.
+<a id="rule-test-testdata"></a>**test-testdata.** Fixture files one
+package's tests read live in its `testdata/` directory, which the go
+tool ignores when building, `.go` files in it included.
 Source: PL `d68d80a` `SKILL.md:96`,
-`references/testing-layout.md:161-206`, eval 9.4; read 2026-11-16.
-↩ rows [150](#row-150), [151](#row-151), [152](#row-152)
+`references/testing-layout.md:161-176`, `:203`, `:206`, eval 9.4; read
+2026-11-16.
+↩ rows [150](#row-150), [152](#row-152)
 
 <a id="rule-test-ctx"></a>**test-ctx.** A test of code that could hang derives its ctx from
 `t.Context()` with `context.WithTimeout`, so a hang fails that test
@@ -560,9 +580,11 @@ Source: SI `d68d80a` `SKILL.md:64-81`, `:290`, eval 1; T `SKILL.md:58`,
 `:388-392`, eval 5; read 2026-11-16.
 ↩ rows [11](#row-11), [157](#row-157)
 
-<a id="rule-iface-small"></a>**iface-small.** Keep interfaces to one to three methods; compose a
-larger contract from small ones.
+<a id="rule-iface-small"></a>**iface-small.** An interface holds only
+what its consumer calls (iface-consumer). Past three methods, look for
+a split into smaller interfaces that compose.
 Source: SI `d68d80a` `SKILL.md:28-52`, `:289`; read 2026-11-16.
+Differs: SI says interfaces should have one to three methods.
 ↩ row [156](#row-156)
 
 <a id="rule-iface-return-concrete"></a>**iface-return-concrete.** Accept interfaces, return concrete
@@ -585,13 +607,14 @@ standard signature: `String() string` for `fmt.Stringer`, never
 Source: SI `d68d80a` `SKILL.md:150-163`, `:297`; read 2026-11-16.
 ↩ row [162](#row-162)
 
-<a id="rule-iface-assert-compile"></a>**iface-assert-compile.** Put `var _ I = (*T)(nil)` beside `T` when
-`T` must satisfy `I` and no other static conversion would catch it
-breaking, such as a type that implements `json.Marshaler`. Not for
-every interface.
+<a id="rule-iface-assert-compile"></a>**iface-assert-compile.** Put
+`var _ I = (*T)(nil)` beside `T` when `T` must satisfy `I` and no
+other static conversion would catch it breaking, such as a type that
+implements `json.Marshaler`. Not for every interface.
 Source: SI `d68d80a` `SKILL.md:165-173`, `:296`, eval 6; CU `91f0c2e`
 `go-interfaces/SKILL.md:109-127`; read 2026-11-16.
-Differs: SI lists a missing check as a mistake for any type.
+Differs: SI lists a missing check as a mistake for any type; CU
+contradicts itself (`go-interfaces/SKILL.md:126-127` against `:129`).
 ↩ rows [163](#row-163), [232](#row-232)
 
 <a id="rule-iface-optional"></a>**iface-optional.** Check for an optional capability by asserting to
@@ -602,12 +625,15 @@ Source: SI `d68d80a` `SKILL.md:177`,
 `references/type-assertions.md:39-64`, eval 8; read 2026-11-16.
 ↩ rows [165](#row-165), [166](#row-166)
 
-<a id="rule-embed-when"></a>**embed-when.** Embed a type only to expose its whole method set;
-otherwise hold it in a named field and delegate. Embedding in an
-exported struct makes the inner type's methods part of the public API
-(Intentionally Public step 3).
+<a id="rule-embed-when"></a>**embed-when.** Embed a type only to
+expose its whole method set; otherwise hold it in a named field and
+delegate. Embedding in an exported struct makes the inner type's
+methods part of the public API (Intentionally Public step 3).
 Source: SI `d68d80a` `SKILL.md:181-221`, `:293`, eval 5; CU `91f0c2e`
 `go-interfaces/SKILL.md:102-105`; read 2026-11-16.
+Differs: CU says to avoid embedding types in public structs and use
+unexported fields instead (`go-interfaces/SKILL.md:104-105`); ours
+allows it where the whole method set is meant to be public.
 ↩ rows [170](#row-170), [233](#row-233)
 
 <a id="rule-generics-over-any"></a>**generics-over-any.** Use a type parameter, not `any`, when the
@@ -617,14 +643,18 @@ Source: SI `d68d80a` `SKILL.md:138-148`, `:300`, eval 10; SF
 `SKILL.md:30`; read 2026-11-16.
 ↩ rows [161](#row-161), [180](#row-180)
 
-<a id="rule-tags"></a>**tags.** Every exported field of a type that is marshalled has an
-explicit tag; such types are wire types in the boundary adapter
-(scrub-boundary). Unexported fields are never serialized, so a tag on
-one does nothing. `omitempty` drops zero values; where zero and absent
-mean different things, use a pointer or `omitzero` (Go 1.24).
+<a id="rule-tags"></a>**tags.** Every exported field of a type that is
+marshalled has an explicit tag; such types are wire types in the
+boundary adapter (scrub-boundary). Unexported fields are not
+serialized, so a tag on one does nothing; the exception is an embedded
+unexported struct, not a pointer, whose exported fields
+`encoding/json` promotes. `omitempty` drops zero values; where zero
+and absent mean different things, use a pointer or `omitzero` (Go
+1.24).
 Source: SI `d68d80a` `SKILL.md:243-254`, `:294`,
 `references/struct-fields.md:3-35`; read 2026-11-16.
-Differs: SI also offers `mo.Option`.
+Differs: SI also offers `mo.Option`, and says unexported fields are
+never serialized.
 ↩ rows [172](#row-172), [173](#row-173), [174](#row-174)
 
 <a id="rule-receivers"></a>**receivers.** Use a pointer receiver when the method changes the
@@ -651,25 +681,29 @@ uses `sync.Once`.
 Source: SF `d68d80a` `SKILL.md:40`, `:222-238`; read 2026-11-16.
 ↩ row [198](#row-198)
 
-<a id="rule-copy-out"></a>**copy-out.** An exported function or method that returns a slice or
-map the type keeps returns a copy, and a constructor that keeps a
-caller's slice or map stores a copy; use `slices.Clone` and
-`maps.Clone`. Collection fields stay unexported.
+<a id="rule-copy-out"></a>**copy-out.** An exported function or method
+that returns a slice or map the type keeps returns a copy, unless its
+documentation says the caller must not modify the result. A
+constructor or method that keeps a slice or map a caller passed in
+stores a copy. Prefer `slices.Clone` and `maps.Clone`. Collection
+fields stay unexported.
 Source: SF `d68d80a` `SKILL.md:35`, `:188-208`, `:271`,
-`references/slice-map-safety.md:116-131`, evals 3, 11, 15, 26, 34;
-read 2026-11-16.
-Differs: SF's text covers only the copy out; eval 26 adds the copy in.
-↩ rows [188](#row-188), [189](#row-189), [190](#row-190)
+`references/slice-map-safety.md:116-131`, evals 3, 11, 15, 26, 34; CU
+`91f0c2e` `go-defensive/SKILL.md:25`, `:40`, `:63-65`; read
+2026-11-16.
+Differs: SF's text covers only the copy out; SF eval 26 and CU
+go-defensive add the copy in at every API boundary.
+↩ rows [188](#row-188), [189](#row-189), [190](#row-190), [259](#row-259)
 
-<a id="rule-nil-entry"></a>**nil-entry.** A pointer that arrives from outside is checked for nil
-where it enters (Scrub on Entry step 4); code past that point does
-not check it again. A method that accepts a nil receiver says so in
-its documentation; use one only for optional parts, because a nil
-receiver usually means a bug.
+<a id="rule-nil-entry"></a>**nil-entry.** A pointer in external data
+is checked for nil where that data crosses the system boundary (Scrub
+on Entry steps 1 and 4); code past that point does not check it again.
+A nil receiver is valid only where the method's documentation says so;
+use that sparingly.
 Source: SF `d68d80a` `references/nil-safety.md:19-58`, eval 14; read
 2026-11-16.
 Differs: SF does not say where the check happens; Scrub on Entry puts
-it at the boundary.
+it at the system boundary.
 ↩ rows [201](#row-201), [202](#row-202)
 
 <a id="rule-err-results"></a>**err-results.** A function that can fail returns `error` last. When
@@ -679,14 +713,14 @@ Source: EH `d68d80a` `references/error-creation.md:25-39`; CU
 `91f0c2e` `go-error-handling/SKILL.md:64-67`; read 2026-11-16.
 ↩ rows [67](#row-67), [68](#row-68), [225](#row-225)
 
-<a id="rule-err-string"></a>**err-string.** Error strings start lower-case, except for an
-exported name, a proper noun or an acronym, and end without
-punctuation. They add only what this layer did (`fetching user`), not
-the package or function name and not "failed to". `%w` goes at the end
-of the format string.
-Source: EH `d68d80a` `SKILL.md:42`, `references/error-creation.md:42-60`,
-eval 4.2-4.3; CU `91f0c2e` `go-error-handling/SKILL.md:48-62`,
-`:163-164`; read 2026-11-16.
+<a id="rule-err-string"></a>**err-string.** Error strings start
+lower-case, except for an exported name, a proper noun or an acronym,
+and end without punctuation. They say what this unit was doing, the
+call it made (`fetching user`), not the package or type name. `%w`
+goes at the end of the format string.
+Source: EH `d68d80a` `SKILL.md:42`,
+`references/error-creation.md:42-60`, eval 4.2-4.3; CU `91f0c2e`
+`go-error-handling/SKILL.md:48-62`, `:163-164`; read 2026-11-16.
 Differs: EH has no exception for names and acronyms.
 ↩ rows [70](#row-70), [71](#row-71), [224](#row-224), [228](#row-228)
 
@@ -718,19 +752,29 @@ Source: EH `d68d80a` `SKILL.md:46`,
 2026-11-16.
 ↩ row [79](#row-79)
 
-<a id="rule-err-panic"></a>**err-panic.** Return an error for any failure a caller can expect,
-such as a missing file or a timeout. Panic only for a programmer error
-or a broken invariant; a `MustX` helper that panics is called only
-while initialising.
-Source: EH `d68d80a` `SKILL.md:48`, `references/error-handling.md:50-74`;
-read 2026-11-16.
-↩ row [81](#row-81)
+<a id="rule-err-panic"></a>**err-panic.** Return an error for any
+failure a caller can expect, such as a missing file or a timeout; a
+library returns errors to its callers. Panic only for a programmer
+error, or for a broken invariant whose failure leaves state
+unrecoverable, with a message naming the invariant. A `Must` helper
+panics, so call it only where a failure is a programmer error, such as
+package initialisation.
+Source: EH `d68d80a` `SKILL.md:48`,
+`references/error-handling.md:50-74`; CU `91f0c2e`
+`go-defensive/SKILL.md:156-157`, `:171-172`; read 2026-11-16.
+Differs: CU keeps every panic inside its package
+(`go-defensive/SKILL.md:171`); an invariant panic here reaches the
+top, because nothing recovers to carry on (err-recover).
+↩ rows [81](#row-81), [257](#row-257), [258](#row-258)
 
-<a id="rule-err-recover"></a>**err-recover.** At a goroutine boundary, such as a handler or a
-worker, recover panics in a deferred function and log them with the
-stack, so one panic does not stop the process.
+<a id="rule-err-recover"></a>**err-recover.** Recover a panic only to
+fail that unit of work loudly: answer 500, or mark the job failed, and
+log the panic with its stack. Never carry on the work. net/http
+already recovers panics in handlers; a goroutine the code starts
+itself needs its own deferred recover.
 Source: EH `d68d80a` `references/error-handling.md:76-97`; read
 2026-11-16.
+Differs: EH recovers so that one panic does not stop the process.
 ↩ row [82](#row-82)
 
 <a id="rule-err-no-inband"></a>**err-no-inband.** Never signal failure with an in-band value such as
@@ -744,20 +788,24 @@ its method, path, status and duration as attributes.
 Source: EH `d68d80a` `SKILL.md:51`; read 2026-11-16.
 ↩ row [85](#row-85)
 
-<a id="rule-log-static-msg"></a>**log-static-msg.** A log call's message is a fixed string; IDs,
-paths and counts go in `slog` attributes. This governs log messages
-only: an error's own message still names the values involved (Failure
-Identity step 5).
+<a id="rule-log-static-msg"></a>**log-static-msg.** A log call's
+message is a fixed string; IDs, paths and counts go in `slog`
+attributes. This governs log messages only: an error's own message
+still names the values involved (Failure Identity step 5).
 Source: EH `d68d80a` `SKILL.md:54`,
-`references/error-creation.md:94-115`, evals 7.4-7.5, 10.4; read
+`references/error-creation.md:94-115`, evals 2.1, 7.4-7.5, 10.4; read
 2026-11-16.
-Differs: EH's evals keep values out of error strings too (row 89).
+Differs: EH's text prefers static strings at the log boundary with a
+"sometimes" exit; its evals drop the exit and keep values out of error
+strings too (row 89).
 ↩ row [88](#row-88)
 
-<a id="rule-ctx-root"></a>**ctx-root.** `context.Background()` appears only in `main` and
-`init`. A handler uses `r.Context()`; a test uses `t.Context()`
-(Go 1.24). Code below them uses the ctx it was given, or one derived
-from it.
+<a id="rule-ctx-root"></a>**ctx-root.** `context.Background()` appears
+only in `main`, `init` and `TestMain`, which has no `t`. A handler
+uses `r.Context()`; a test uses `t.Context()` (Go 1.24), and a
+`t.Cleanup` function uses `context.WithoutCancel(t.Context())`,
+because `t.Context()` is already cancelled when cleanup runs. Code
+below them uses the ctx it was given, or one derived from it.
 Source: CX `d68d80a` `SKILL.md:35`, `:41-49`,
 `references/http-services.md:9-29`, evals 1.1, 7.2; ES `e25b517`
 `go-test-quality/SKILL.md:189-191`, `go-context/SKILL.md:206-207`;
@@ -773,13 +821,16 @@ Source: CX `d68d80a` `SKILL.md:36`, eval 7; ES `e25b517`
 Differs: CX sets no deadline for replacing it.
 ↩ rows [99](#row-99), [253](#row-253)
 
-<a id="rule-ctx-keys"></a>**ctx-keys.** Each ctx value has an unexported key type, an exported
-setter that middleware calls with `r.WithContext`, and an exported
-getter that reports a missing value; callers never type-assert
-`ctx.Value` themselves.
+<a id="rule-ctx-keys"></a>**ctx-keys.** Each ctx value has an
+unexported key type, an exported setter that middleware calls with
+`r.WithContext`, and an exported getter that reports a missing value;
+callers never type-assert `ctx.Value` themselves. The logger is the
+exception: its getter returns a logger that discards everything when
+ctx carries none (ctx-scope).
 Source: CX `d68d80a` `SKILL.md:37`,
-`references/values-tracing.md:7-31`, `references/http-services.md:31-61`,
-eval 3; ES `e25b517` `go-context/SKILL.md:194-196`; read 2026-11-16.
+`references/values-tracing.md:7-31`,
+`references/http-services.md:31-61`, eval 3; ES `e25b517`
+`go-context/SKILL.md:194-196`; read 2026-11-16.
 ↩ rows [100](#row-100), [101](#row-101), [110](#row-110), [248](#row-248)
 
 <a id="rule-ctx-detach"></a>**ctx-detach.** Work that must outlive the request gets
@@ -805,10 +856,13 @@ Source: CX `d68d80a` `references/cancellation.md:146-161`, eval 10;
 read 2026-11-16.
 ↩ row [108](#row-108)
 
-<a id="rule-ctx-client-gone"></a>**ctx-client-gone.** When a handler's call fails and `ctx.Err()` is
-set, the client is gone: return without writing a response.
+<a id="rule-ctx-client-gone"></a>**ctx-client-gone.** When a handler's
+call fails and `errors.Is(r.Context().Err(), context.Canceled)`, the
+client is gone: write nothing. When the handler's own deadline fired,
+the client is still waiting: answer 503 or 504.
 Source: CX `d68d80a` `references/http-services.md:17-24`, eval 1.5;
 read 2026-11-16.
+Differs: CX writes nothing whenever `ctx.Err()` is set.
 ↩ row [109](#row-109)
 
 <a id="rule-ctx-trace-out"></a>**ctx-trace-out.** An outgoing request carries the trace ID from ctx
@@ -817,9 +871,11 @@ Source: CX `d68d80a` `references/http-services.md:63-77`,
 `references/values-tracing.md:44-78`; read 2026-11-16.
 ↩ row [111](#row-111)
 
-<a id="rule-ctx-retry-timeout"></a>**ctx-retry-timeout.** Each retry attempt derives its own timeout
-from the caller's ctx, and cancels it before the next attempt.
+<a id="rule-ctx-retry-timeout"></a>**ctx-retry-timeout.** Where a
+retry attempt can hang, it derives its own timeout from the caller's
+ctx and cancels it before the next attempt.
 Source: CX `d68d80a` eval 2; read 2026-11-16.
+Differs: CX eval 2 gives every attempt its own timeout.
 ↩ row [113](#row-113)
 
 <a id="rule-ctx-no-custom"></a>**ctx-no-custom.** Signatures take `context.Context`, never a custom
@@ -842,11 +898,12 @@ Source: PL `d68d80a` `SKILL.md:80`,
 2026-11-16.
 ↩ rows [126](#row-126), [127](#row-127), [132](#row-132), [133](#row-133)
 
-<a id="rule-layout-internal"></a>**layout-internal.** An application's packages live under
-`internal/`; `pkg/` holds only packages meant for other modules
-(Intentionally Public steps 1-2).
+<a id="rule-layout-internal"></a>**layout-internal.** An application's
+packages live under `internal/`; `pkg/` holds only a package another
+module imports now (Intentionally Public steps 1-2).
 Source: PL `d68d80a` `SKILL.md:80`, `:114-115`, eval 5; read
 2026-11-16.
+Differs: PL allows `pkg/` for code useful to other modules.
 ↩ rows [128](#row-128), [129](#row-129)
 
 <a id="rule-layout-library"></a>**layout-library.** A library puts its public packages at the module
@@ -858,10 +915,20 @@ Differs: PL's own table (`SKILL.md:45`) puts a library under
 `pkg/{name}/` (row 125).
 ↩ row [130](#row-130)
 
-<a id="rule-pkg-dir"></a>**pkg-dir.** A package's name is singular and matches its directory;
-pkg-naming covers the rest.
+<a id="rule-pkg-dir"></a>**pkg-dir.** A package's name matches its
+directory, except `package main` (under `cmd/<name>/`) and `_test`
+packages; pkg-naming covers the rest.
 Source: PL `d68d80a` `SKILL.md:74-76`; read 2026-11-16.
+Differs: PL also asks for singular names, which the standard library
+does not follow.
 ↩ row [141](#row-141)
+
+<a id="rule-time-types"></a>**time-types.** Times and durations are
+`time.Time` and `time.Duration`, not raw integers of seconds or
+milliseconds.
+Source: CU `91f0c2e` `go-defensive/SKILL.md:29`, `:43`; read
+2026-11-16.
+↩ row [256](#row-256)
 
 ### Go pitfalls
 
@@ -887,9 +954,13 @@ is the Go 1.24 experiment, only for a module that targets Go 1.24 with
 Source: T `d68d80a` `SKILL.md:255`; read 2026-11-16.
 ↩ row [25](#row-25)
 
-<a id="rule-bench-loop"></a>**bench-loop.** A benchmark loops with `for b.Loop()` (Go 1.24), not
-over `b.N`. Setup before the loop is not timed, and the result needs
-no sink or `b.ResetTimer`.
+<a id="rule-bench-loop"></a>**bench-loop.** New benchmarks loop with
+`for b.Loop()` (Go 1.24), not over `b.N`. A `b.N` loop stays only
+where the module targets Go older than 1.24, or in existing benchmark
+code, which keeps its form until a migration is asked for (owner
+ruling on migrations, bs-f3o.2 comment 2026-11-16). With `b.Loop`,
+setup before the loop is not timed, and the result needs no sink or
+`b.ResetTimer`.
 Source: T `d68d80a` `SKILL.md:273`, `references/benchmarks.md:48-50`,
 eval 13.3; read 2026-11-16.
 ↩ row [30](#row-30)
@@ -900,24 +971,27 @@ Source: TF `d68d80a` `SKILL.md:108`, `:189`, evals 1.5, 3.4; read
 2026-11-16.
 ↩ row [52](#row-52)
 
-<a id="rule-test-error-is"></a>**test-error-is.** `require.Equal` on a returned error compares it
-with `DeepEqual`, so a sentinel wrapped with context no longer
-matches. Check a sentinel with `require.ErrorIs`; take a typed failure
-out with `require.ErrorAs`, then compare its data whole (scrub-collect,
-err-is-fresh-pointer).
-Source: TF `d68d80a` `SKILL.md:188`, eval 3; read 2026-11-16.
+<a id="rule-test-error-is"></a>**test-error-is.** `require.Equal` on a
+returned error compares it with `DeepEqual`, so a sentinel wrapped
+with context no longer matches. Check a sentinel with
+`require.ErrorIs`; take a typed failure out with `require.ErrorAs`,
+then compare its data whole (scrub-collect, err-is-fresh-pointer).
+Source: TF `d68d80a` `SKILL.md:188`, eval 3.1-3.2; read 2026-11-16.
 ↩ row [62](#row-62)
 
-<a id="rule-test-float"></a>**test-float.** `require.Equal` is `reflect.DeepEqual`, which compares
-floats with `==`. Check a float the code computes with
-`require.InDelta`, then copy it into `want` before the whole-value
-comparison (Whole-Object Assertion step 2, capture and verify).
+<a id="rule-test-float"></a>**test-float.** `require.Equal` is
+`reflect.DeepEqual`, which compares floats with `==`. Check a float
+the code computes with `require.InDelta`, then copy it into `want`
+before the whole-value comparison. This borrows Whole-Object Assertion
+step 2's capture and verify by analogy: step 2 covers
+non-deterministic fields, and a computed float is deterministic, only
+inexact.
 Source: SF `d68d80a` evals 23.4, 31.5; read 2026-11-16.
 ↩ row [194](#row-194)
 
-<a id="rule-err-check"></a>**err-check.** Check every returned error. Discard one with `_` only
-where it cannot fail, with a comment saying why
-(`n, _ := b.Write(p) // bytes.Buffer.Write never fails`).
+<a id="rule-err-check"></a>**err-check.** Check every returned error.
+Discard one with `_` only deliberately, with a comment saying why (`n,
+_ := b.Write(p) // bytes.Buffer.Write never fails`).
 Source: EH `d68d80a` `SKILL.md:40`,
 `references/error-creation.md:25-40`; CU `91f0c2e`
 `go-error-handling/SKILL.md:74-87`; read 2026-11-16.
@@ -984,10 +1058,13 @@ Source: SI `d68d80a` `references/type-assertions.md:35-37`; read
 2026-11-16.
 ↩ rows [167](#row-167), [168](#row-168)
 
-<a id="rule-nocopy"></a>**nocopy.** A struct that must not be copied after first use, such as
-one holding a mutex, embeds a `noCopy` field whose `Lock` and `Unlock`
-do nothing, and is passed by pointer; `go vet`'s copylocks reports
-every copy.
+<a id="rule-nocopy"></a>**nocopy.** A struct that must not be copied
+after first use, and holds no lock of its own, carries an unexported
+named field `noCopy noCopy` whose `Lock` and `Unlock` do nothing, and
+is passed by pointer; `go vet`'s copylocks reports every copy. A
+struct that already holds a `sync.Mutex` needs none: copylocks reports
+it already. The field is named, not embedded, so `Lock` and `Unlock`
+do not join the type's method set.
 Source: SI `d68d80a` `SKILL.md:269-275`,
 `references/struct-fields.md:40-71`, eval 9; read 2026-11-16.
 ↩ row [179](#row-179)
@@ -1001,12 +1078,14 @@ Source: SF `d68d80a` `SKILL.md:32`, `:44-67`, `:264`,
 `go-error-handling/SKILL.md:35-46`; read 2026-11-16.
 ↩ rows [183](#row-183), [223](#row-223)
 
-<a id="rule-nil-collections"></a>**nil-collections.** Writing to a nil map panics, and a nil channel
-blocks every send and receive forever. Initialise both before use, or
-lazily (zero-value).
+<a id="rule-nil-collections"></a>**nil-collections.** Writing to a nil
+map panics, and a nil channel blocks every send and receive forever.
+Initialise both before use, or lazily (zero-value), unless a nil
+channel deliberately disables a `select` case. A function that takes
+several channels handles a nil one among them.
 Source: SF `d68d80a` `SKILL.md:33`, `:69-91`, `:265`, `:273`, evals 9,
-28; read 2026-11-16.
-↩ rows [184](#row-184), [185](#row-185)
+12.4, 28; read 2026-11-16.
+↩ rows [184](#row-184), [185](#row-185), [262](#row-262)
 
 <a id="rule-nil-func"></a>**nil-func.** Calling a nil func panics. An optional func field gets a
 no-op default from the constructor, or a nil check where it is called.
@@ -1033,11 +1112,16 @@ Source: SF `d68d80a` `SKILL.md:36`, `:158-182`, `:267`, evals 4, 18, 27,
 35; read 2026-11-16.
 ↩ row [191](#row-191)
 
-<a id="rule-int-narrow"></a>**int-narrow.** Converting to a narrower integer type wraps silently.
-Check the value against the target's bounds first and return an
-error when it does not fit.
-Source: SF `d68d80a` `SKILL.md:37`, `:115-129`, `:268`, evals 5, 20, 30;
-read 2026-11-16.
+<a id="rule-int-narrow"></a>**int-narrow.** Converting to a narrower
+integer type wraps silently. Where the value comes from outside, Scrub
+on Entry checks it against the target's bounds at the boundary and
+rejects it there; code past that point does not check it again. A
+value the code computes itself is checked against the bounds before
+narrowing, returning an error when it does not fit.
+Source: SF `d68d80a` `SKILL.md:37`, `:115-129`, `:268`, evals 5, 20,
+30; read 2026-11-16.
+Differs: SF bounds-checks before every narrowing conversion; Scrub on
+Entry's misapplication rules out re-checking scrubbed values.
 ↩ row [192](#row-192)
 
 <a id="rule-float-compare"></a>**float-compare.** Floating-point arithmetic is not exact: compare
@@ -1047,15 +1131,16 @@ Source: SF `d68d80a` `SKILL.md:38`, `:131-141`, `:269`, evals 10, 23;
 read 2026-11-16.
 ↩ row [193](#row-193)
 
-<a id="rule-div-zero"></a>**div-zero.** Integer division by zero panics; float division by zero
-gives Inf or NaN. Where zero is a valid divisor, the code defines the
-result for it before dividing. Where zero is invalid input, Scrub on
-Entry rejects it at the boundary, and domain code does not check it
-again.
-Source: SF `d68d80a` `SKILL.md:143-156`, `:270`, evals 17, 33, 36; read
-2026-11-16.
-Differs: SF eval 17.3 has every function guard its own divisor;
-Scrub on Entry's misapplication rules out re-checking scrubbed values.
+<a id="rule-div-zero"></a>**div-zero.** Integer division by zero
+panics; float division by zero gives Inf or NaN. Where zero is a valid
+divisor, the code defines the result for it before dividing. Where
+zero is invalid input, Scrub on Entry rejects it at the boundary, and
+domain code does not check it again.
+Source: SF `d68d80a` `SKILL.md:143-156`, `:270`, evals 17, 33, 36;
+read 2026-11-16.
+Differs: SF's text (`SKILL.md:270`, the average example at `:147-153`)
+and eval 17.3 guard every division; Scrub on Entry's misapplication
+rules out re-checking scrubbed values.
 ↩ row [195](#row-195)
 
 <a id="rule-init-order"></a>**init-order.** The order of `init()` functions across files is not
@@ -1088,6 +1173,27 @@ caller guarantees it.
 Source: SF `d68d80a` eval 6.3; read 2026-11-16.
 ↩ row [213](#row-213)
 
+<a id="rule-enum-zero"></a>**enum-zero.** An enum's constants start at
+`iota + 1`, so the zero value means unset, unless zero is the sensible
+default.
+Source: CU `91f0c2e` `go-defensive/SKILL.md:30`, `:44`, `:107-119`;
+read 2026-11-16.
+↩ row [254](#row-254)
+
+<a id="rule-rand-crypto"></a>**rand-crypto.** Keys, tokens and
+anything else an attacker must not guess come from `crypto/rand`,
+never `math/rand`.
+Source: CU `91f0c2e` `go-defensive/SKILL.md:31`, `:140-150`; read
+2026-11-16.
+↩ row [255](#row-255)
+
+<a id="rule-chan-close"></a>**chan-close.** A receive that must tell a
+closed channel from a zero value uses the comma-ok form, `v, ok :=
+<-ch`. The sender closes an output channel, exactly once; a second
+close panics.
+Source: SF `d68d80a` evals 12.1-12.2; read 2026-11-16.
+↩ rows [261](#row-261), [263](#row-263)
+
 ## Dropped
 
 One section per drop, or per group of drops with one reason: what the
@@ -1118,6 +1224,23 @@ Dropped because: A tool, not a rule; the shape a table takes is
 test-table's.
 
 ↩ row [2](#row-2)
+
+### <a id="drop-4"></a>Rows 4-5: Integration build tag
+
+Source: T `SKILL.md:52`: integration tests behind `//go:build
+integration`, `testing.Short()` no substitute;
+`references/coverage.md:44`: tagged tests are invisible to coverage
+unless the tag is passed.
+
+In practice: Every test run that should include infrastructure tests
+passes `-tags=integration`, the finish run (tool-finish) included.
+
+Dropped because: tool-bb-infra (bjornstack.md row 7) already starts
+the infrastructure inside the tests, so a tag buys nothing. It hides
+black-box tests from a plain `go test ./...` and from gopls, and would
+change the owner's finish command (tool-finish, bjornstack.md row 78).
+
+↩ rows [4](#row-4), [5](#row-5)
 
 ### <a id="drop-6"></a>Row 6: Tests independent of order
 
@@ -1197,7 +1320,7 @@ than a target".
 In practice: Read uncovered lines; set no coverage target.
 
 Dropped because: Language-neutral advice. No layer of bjornstack holds
-it; it belongs in a strategy if anywhere.
+it yet; bs-1ep finds it a home.
 
 ↩ row [36](#row-36)
 
@@ -1237,18 +1360,6 @@ Dropped because: Shared seed data (row 42) and an export made for
 tests (Public API Surface Testing misapplication).
 
 ↩ row [43](#row-43)
-
-### <a id="drop-45"></a>Row 45: Mocks alongside the mocked code
-
-Source: T `references/mocking.md:77`: "organize mocks alongside the
-code they mock".
-
-In practice: A mock per interface, kept near the interface.
-
-Dropped because: Test Data Builders step 2 says where a double lives
-for every language: in the consumer's test file, unless stateful.
-
-↩ row [45](#row-45)
 
 ### <a id="drop-46"></a>Row 46: Package-level fixtures
 
@@ -1308,14 +1419,19 @@ pointers point to. testify's `Same` is the address check.
 ### <a id="drop-72"></a>Row 72: %v at the public API
 
 Source: EH `references/error-wrapping.md:32`: "Use `%w` within your
-module ... Use `%v` at public API / system boundaries".
+module ... Use `%v` at public API / system boundaries"; example at
+`:36-46`.
 
 In practice: A service's exported method breaks the chain; internal
 packages pass outside identities up to it.
 
-Dropped because: err-wrap-verb (bjornstack.md row 48) puts `%v` at the
-edge where an outside error enters, so no unit above it ever sees the
-outside identity (Failure Identity step 3).
+Dropped because: EH's "`%v` at system boundaries" (`SKILL.md:43`)
+agrees with err-wrap-verb (bjornstack.md row 48), and row 73 takes
+EH's gateway example as already ours. Only the public-API example
+diverges: it lets outside identities travel up to the exported method,
+where err-wrap-verb puts `%v` at the edge where an outside error
+enters, so no unit above it sees the outside identity (Failure
+Identity step 3).
 
 ↩ row [72](#row-72)
 
@@ -1334,11 +1450,13 @@ error types, and log-static-msg keeps log attributes in `slog`.
 
 ### <a id="drop-86"></a>Row 86: Log levels
 
-Source: EH `SKILL.md:52`: "Use log levels to indicate error severity".
+Source: EH `SKILL.md:52`: "Use log levels to indicate error severity";
+`references/error-handling.md:138` points log levels to another skill.
 
 In practice: Nothing specific: no levels or mapping are named.
 
-Dropped because: It decides nothing a reader can apply.
+Dropped because: It decides nothing a reader can apply, and the skill
+it points to is outside this table's sources.
 
 ↩ row [86](#row-86)
 
@@ -1360,24 +1478,29 @@ static (no row numbers in error string)".
 
 In practice: An error says "csv parsing error" without the row.
 
-Dropped because: Failure Identity step 5 asks the message to name the
-values involved; the skill's own text allows it
-(`references/error-creation.md:115`). log-static-msg keeps log
-messages stable instead.
+Dropped because: EH's text prefers static strings at the log boundary
+but leaves an exit ("sometimes", "may":
+`references/error-creation.md:76`, `:101-115`; `SKILL.md:54`); the
+evals drop that exit. Failure Identity step 5 asks an error's message
+to name the values involved. log-static-msg keeps log messages stable
+instead.
 
 ↩ row [89](#row-89)
 
 ### <a id="drop-103"></a>Rows 103 and 247: Authenticated user in ctx
 
 Source: CX `references/values-tracing.md:38`: "Authenticated
-user/tenant | Yes"; ES `go-context/SKILL.md:190-191`.
+user/tenant | Yes"; ES `go-context/SKILL.md:190-191`; CU
+`go-context/SKILL.md:83` lists auth info as a ctx value.
 
 In practice: Services read the user or tenant out of ctx.
 
 Dropped because: ctx-scope (bjornstack.md row 47) limits ctx to
 cancellation and per-goroutine settings the whole program needs, such
-as the logger and trace ID; the user a request acts for is input
-(Unit Testing step 3.2). See Open for owner 2.
+as the logger and trace ID; the user a request acts for is input (Unit
+Testing step 3.2). CX contradicts itself
+(`references/values-tracing.md:41`), and eval 9.4 is satisfied by a
+trace ID alone. See Open for owner 1.
 
 ↩ rows [103](#row-103), [247](#row-247)
 
@@ -1419,18 +1542,20 @@ over-packaging misapplication say it for every language.
 
 ### <a id="drop-117"></a>Rows 117-124: 12-factor and secrets
 
-Source: PL `SKILL.md:38`: "config via environment variables, logs to
+Source: PL `SKILL.md:36-38`: "For applications (services, APIs,
+workers)" follow 12-factor: "config via environment variables, logs to
 stdout, stateless processes, graceful shutdown, backing services as
 attached resources, and admin tasks as one-off commands";
 `references/config.md:51`: "Configuration MUST be loaded from env
 vars, files, or flags — NEVER hardcoded. Sensitive values MUST come
-from env vars or secret managers, NEVER config files."
+from env vars or secret managers, NEVER config files." Eval 10.4
+allows config files for non-sensitive values.
 
-In practice: How a service is configured, logs and is deployed.
+In practice: How an application is configured, logs and is deployed.
 
 Dropped because: Each is a deployment rule for any language, and none
-is about Go code; no layer of bjornstack holds them yet. See Open for
-owner 3.
+is about Go code. No layer of bjornstack holds them yet; bs-1ep finds
+them a home.
 
 ↩ rows [117](#row-117), [118](#row-118), [119](#row-119), [120](#row-120), [121](#row-121), [122](#row-122), [123](#row-123), [124](#row-124)
 
@@ -1510,9 +1635,9 @@ Source: PL `references/testing-layout.md:21-23`, `:131`, `:224-225`.
 In practice: Benchmarks and examples in their own files, in the code's
 package.
 
-Dropped because: test-file-name keeps one test file per source file
-unless a split is needed, and test-pkg keeps every test file out of
-`package foo`; T's own `references/examples.md:40` agrees.
+Dropped because: test-pkg keeps every test file out of `package foo`;
+T's own `references/examples.md:40` agrees. The file names alone would
+pass test-file-name, which allows a split by concern.
 
 ↩ row [148](#row-148)
 
@@ -1530,6 +1655,21 @@ technical role (proto-packages). Other packages cannot import a
 `_test.go` file either.
 
 ↩ row [149](#row-149)
+
+### <a id="drop-151"></a>Row 151: Shared fixtures in test/fixtures/
+
+Source: PL `references/testing-layout.md:178-188`, `:205`: fixture
+files shared across packages in `test/fixtures/`, offered as "Option
+2" (`:163`, `:178`).
+
+In practice: Tests in several packages read one `users.json`.
+
+Dropped because: Isolated Test Execution step 2 says "factories, not
+fixtures", and builders-a builds shared test data per test. The go
+tool also compiles `.go` files under `test/fixtures/`; only
+`testdata/` is ignored.
+
+↩ row [151](#row-151)
 
 ### <a id="drop-153"></a>Row 153: Run go version
 
@@ -1557,24 +1697,29 @@ Dropped because: The owner ruled that no skill is installed
 ### <a id="drop-176"></a>Row 176: Round-trip test for field names
 
 Source: SI `references/struct-fields.md:38`: "round-trip test:
-marshal, unmarshal, compare — catches field-name drift".
+marshal, unmarshal, compare — catches field-name drift the compiler
+cannot see".
 
 In practice: A test that encodes and decodes a value.
 
-Dropped because: After a rename both directions use the new name, so
-the round trip still passes; it cannot catch the drift it claims to.
+Dropped because: A round trip passes after a rename, the case the
+source names, because both directions use the new name; tags covers
+renames. It does catch a field that silently drops out (`json:"-"`,
+two fields with one JSON name), which no rule here asks a test for.
 
 ↩ row [176](#row-176)
 
 ### <a id="drop-204"></a>Row 204: Zero values in generic code
 
 Source: SF `references/nil-safety.md:131`: "Generic code MUST handle
-the zero value of type parameters correctly".
+the zero value of type parameters correctly"; `:133-144`.
 
 In practice: Care with `var zero T` comparisons.
 
 Dropped because: The failing case (`v == nil` for an unconstrained
-`T`) does not compile; the rest gives nothing to apply.
+`T`) does not compile, and the advice at `:133-144`, comparing against
+the zero value under a `comparable` constraint, is what the compiler
+already demands; nothing is left to apply.
 
 ↩ row [204](#row-204)
 
@@ -1596,8 +1741,11 @@ Source: SF `references/slice-map-safety.md:65`.
 
 In practice: Index-based loops to take addresses.
 
-Dropped because: Both are correct on Go 1.22+; a preference no
-strategy needs.
+Dropped because: The source's point is that `&items[i]` aliases the
+slice element while `&item` points at a per-iteration copy. Which one
+is right follows from whether the code must change the element in the
+slice; a blanket preference would take the alias where a copy was
+meant.
 
 ↩ row [206](#row-206)
 
@@ -1669,42 +1817,59 @@ Source: ES `go-test-quality/SKILL.md:145-146`: "Do NOT mock: value
 objects, pure functions, the standard library, or your own code in the
 same package".
 
-In practice: A coordinator's collaborator in the same package is used
-for real.
+In practice: A coordinator's collaborator in the same package, or a
+standard-library function that does I/O, is used for real.
 
 Dropped because: Unit Testing step 3.3 replaces every direct
-collaborator, never a subset; step 2.1 already keeps doubles out of
-computation tests.
+collaborator, never a subset, and step 3.2 counts package functions
+that do I/O as collaborators, standard library included; step 2.1
+already keeps doubles out of computation tests.
 
 ↩ row [236](#row-236)
 
-### <a id="drop-245"></a>Row 245: Always add context
+### <a id="drop-245"></a>Rows 69 and 245: Always add context
 
-Source: ES `go-error-handling/SKILL.md:113`: "ALWAYS add context when
-propagating errors up the stack"; `:126`: "Bad — no context: return
-nil, err".
+Source: EH `SKILL.md:41`, `references/error-wrapping.md:15-28`: wrap
+every error with context at each layer; ES
+`go-error-handling/SKILL.md:113`: "ALWAYS add context when propagating
+errors up the stack"; `:126`: "Bad — no context: return nil, err".
 
 In practice: Every return wraps.
 
 Dropped because: err-wrap-where (bjornstack.md row 121) returns a
 private helper's error unwrapped.
 
-↩ row [245](#row-245)
+↩ rows [69](#row-69), [245](#row-245)
+
+### <a id="drop-264"></a>Row 264: Error for a nil dependency
+
+Source: SF eval 14.2: "Returns a meaningful error when Notifier is
+nil".
+
+In practice: Every method checks its collaborators for nil and returns
+an error.
+
+Dropped because: It contradicts SF's own text
+(`references/nil-safety.md:52`). A collaborator comes fully built from
+the constructor (coord-inject), and nil-entry checks a pointer only
+where external data enters.
+
+↩ row [264](#row-264)
 
 ## Open for owner
 
 Questions this table raises. Each row named stands as decided until
-the owner rules.
+the owner rules; both are listed as still open on bs-f3o.2 (comment
+2026-11-16).
 
-1. **Build tag for infrastructure tests (rows 4-5).** T requires
-   `//go:build integration`; tool-finish (bjornstack.md row 78) runs
-   `go test ./... -count=1`, which would then skip black-box tests.
-   Row 4 adds `-tags=integration` to the finish run. The alternative is
-   no tag, with black-box tests always in `go test ./...`.
-2. **Authenticated user in ctx (rows 103, 247).** Dropped against
-   ctx-scope. If the owner counts the request's user as a
-   per-goroutine setting, it becomes a ctx-keys value.
-3. **Deployment rules (rows 117-124).** Config through the
-   environment, logs to stdout, secrets never in config files and the
-   rest of 12-factor hold for any language, so go.md leaves them out.
-   They have no home in another layer either.
+1. **Authenticated user in ctx (rows 103, 247).** Dropped against
+   ctx-scope. The proposed adapt: middleware may put the authenticated
+   principal in the request ctx (ctx-keys); the handler reads it once
+   and passes it on as input (Unit Testing step 3.2); nothing below the
+   handler reads it from ctx. net/http has no other path from auth
+   middleware to the handler. Suggested: yes.
+2. **main.go at the root for a single binary (row 133).** layout-cmd
+   puts every `main` in `cmd/<name>/`, as PL does; for a single-binary
+   tool that adds structure Domain-First Packaging's SKIP WHEN warns
+   against. Suggested: root for a single binary, `cmd/<name>/` only for
+   several.
