@@ -5,8 +5,9 @@ TENET: Earned Abstraction
    problem.
    - Describe the abstract pattern your solution follows — what it
      does, not how.
-   - If PATTERNS.md exists, consult it — is this pattern family
-     already represented? If not, search the code directly.
+   - If `.bjornstack/patterns.md` exists, consult it — is this
+     pattern family already represented? If not, search the code
+     directly.
    - Search using the vocabulary's established terms, or by purpose
      if no vocabulary exists.
    - Count the distinct cases found — implementations that solve a
@@ -19,10 +20,10 @@ TENET: Earned Abstraction
      that happens regardless of case count.
    - When the pattern is a plausible building block — something
      likely to recur across domains — register the pattern family
-     in PATTERNS.md and annotate the implementation so the
-     vocabulary's terms appear in searchable code. This is the
+     in `.bjornstack/patterns.md` and annotate the implementation
+     so the vocabulary's terms appear in searchable code. This is the
      signal that lets future implementations discover they're
-     case #3. If PATTERNS.md doesn't exist yet, create it.
+     case #3. If the file doesn't exist yet, create it.
 3. At three or more cases, evaluate whether they share a genuine
    shared part. Identify what's stable across all cases and what
    varies. The stable part is the candidate abstraction; the varying
@@ -89,9 +90,9 @@ MISAPPLICATIONS:
 - Configuration bloat disguised as extraction — a type hierarchy
   that doesn't clarify what varies and what's shared, just adds
   indirection.
-- Vocabulary as gatekeeping — using PATTERNS.md to decide what
-  must exist rather than what does exist. It's a discovery aid,
-  not a governance mechanism.
+- Vocabulary as gatekeeping — using `.bjornstack/patterns.md` to
+  decide what must exist rather than what does exist. It's a
+  discovery aid, not a governance mechanism.
 SKIP WHEN: Local helpers within a single file. Extracting repetition
 to a file-scoped helper has one consumer, costs nothing to undo, and
 serves Highlight the Difference — it's not the kind of cross-consumer
@@ -106,7 +107,8 @@ questioning the strategy. Not needed for routine application. -->
 ### The pattern vocabulary
 
 Steps 1, 2, 3, and 4 all reference a pattern vocabulary — a living
-taxonomy of the codebase's pattern families maintained in PATTERNS.md.
+taxonomy of the codebase's pattern families maintained in
+`.bjornstack/patterns.md`.
 This is the mechanism that makes EA's discovery step work reliably.
 Without it, discovery depends on naming luck: the implementer and
 the searcher independently choosing the same terms.

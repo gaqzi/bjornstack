@@ -162,6 +162,10 @@ Installation tooling is planned. For now, copy what you need.
 bs install go
 ```
 
+A project that uses the method keeps its records about the project in
+a `.bjornstack/` directory; see
+[Project records](docs/WORKFLOW.md#project-records).
+
 <!--
 ## Planned guards (Go)
 

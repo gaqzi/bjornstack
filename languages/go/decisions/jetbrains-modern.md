@@ -45,7 +45,7 @@ check is named, or when the row is left to the go fix guard,
 |---|---|---|---|---|---|---|---|
 | <a id="row-1"></a>1 | G:3 `generic_methods` | Generic method when the operation belongs to the type; package-level helper when it belongs to no one receiver | keep | Go 1.27 form; both sides kept; scoped to generic helpers, as the source is | [generic-methods](#rule-generic-methods) | Pattern mappings | judgment |
 | <a id="row-2"></a>2 | G:46 `json_v2` | `encoding/json/v2` for new JSON code on Go 1.27+ | already ours | bjornstack.md row 60a (new-stdlib); the release-notes check is bs-f3o.2.7's | new-stdlib (bjornstack.md) | Tooling | guard candidate |
-| <a id="row-3"></a>3 | G:46 `json_v2` | Leave existing `encoding/json` code unchanged unless a migration is asked for, because a compiling import change can alter wire behaviour | adapt | v2 rejects invalid UTF-8 and duplicate names and encodes nil slices and maps as empty; on a public contract that changes the meaning of what exists (Grow Don't Break step 1). Owner ruling (bs-f3o.2, 2026-11-16, Migrations): the whole package stays on v1, so sibling endpoints keep one wire form, and the old form is called out | [json-v2-existing](#rule-json-v2-existing) | Tooling | judgment |
+| <a id="row-3"></a>3 | G:46 `json_v2` | Leave existing `encoding/json` code unchanged unless a migration is asked for, because a compiling import change can alter wire behaviour | adapt | v2 rejects invalid UTF-8 and duplicate names and encodes nil slices and maps as empty; on a public contract that changes the meaning of what exists (Grow Don't Break step 1). Owner ruling (bs-f3o.2, 2026-11-16, Migrations): the whole package stays on v1, so sibling endpoints keep one wire form, and the old form is called out. The record is `.bjornstack/conventions.md` (bs-f3o.2.12) | [json-v2-existing](#rule-json-v2-existing) | Tooling | judgment |
 | <a id="row-4"></a>4 | G:46 `json_v2` | A migration starts from `jsonv1.DefaultOptionsV1()`, tests output and accepted input, then removes compatibility options one at a time | keep | Each removed option is a separate wire change that can be checked on its own | [json-v2-migrate](#rule-json-v2-migrate) | Tooling | judgment |
 | <a id="row-5"></a>5 | G:152 `promoted_field_literals` | Set promoted fields directly in a keyed literal | keep | Modernizer flag set | go fix guard (bs-1y3) | Tooling | guard candidate |
 | <a id="row-6"></a>6 | G:152 `promoted_field_literals` | Do not mix a promoted field with its embedded field; pointer-embedded paths are not supported | drop | Describes what the language does not accept, not a choice | [dropped](#drop-6) | — | - |
@@ -132,8 +132,9 @@ it too; new code elsewhere uses `encoding/json/v2` (new-stdlib).
 Swapping the import can compile and still change what goes over the
 wire: v2 rejects invalid UTF-8 and duplicate object names, and
 encodes nil slices and maps as `[]` and `{}`, so a mix gives sibling
-endpoints different output. Call out that the package is on the old
-form so a migration can be considered.
+endpoints different output. Record the package as an old form in
+`.bjornstack/conventions.md` (Recorded Old Forms), so a migration can
+be considered.
 Source: JetBrains go-modern-guidelines `guidelines.json` `json_v2`,
 `155dc7c`, read 2026-11-16.
 Differs: the source leaves open whether new code in a v1 package uses
@@ -247,8 +248,9 @@ Source: JetBrains go-modern-guidelines `guidelines.json`
 <a id="rule-atomic-new"></a>**atomic-new.** New code uses typed atomics such as `atomic.Int64` and
 `atomic.Pointer[T]`, not the untyped `atomic` functions. An existing
 type stays on its form until a migration is asked for
-(atomic-migrate); call out that it is on the old form so a migration
-can be considered. The go fix guard (bs-1y3) runs without the
+(atomic-migrate); record the type as an old form in
+`.bjornstack/conventions.md` (Recorded Old Forms), so a migration can
+be considered. The go fix guard (bs-1y3) runs without the
 `atomictypes` analyzer, because that analyzer rewrites fields of
 existing types.
 Source: JetBrains go-modern-guidelines `guidelines.json`

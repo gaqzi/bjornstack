@@ -9,7 +9,7 @@ TENET: Fail Early and Loud
    - Good: each assumption the domain makes, written down; such as a
      quantity above zero, or an end date after the start date.
 4. Validate all acted-on fields at the boundary. Check each record in full and report every violation, naming the fields it involves, so the caller can fix them all in one round. A failure of the system rather than the input, such as a refused connection, is not a violation: stop checking at once and report only that failure, not the violations found so far.
-   - When the input holds many records, a project may cap how many records it reports, at a number that suits who reads the rejection, or stop checking early, between records. Each reported record still lists every violation in it, and a capped rejection must say how many errors it found after checking how many records, and how many it shows, such as "1,200 errors in 5,000 rows; first 20 shown" or "25 errors in the first 400 rows, all shown; stopped checking".
+   - When the input holds many records, report at most 20 of the records in error, or the number the project records in `.bjornstack/conventions.md` to suit who reads the rejection; a project may also stop checking early, between records. Each reported record still lists every violation in it, and a capped rejection must say how many errors it found after checking how many records, and how many it shows, such as "1,200 errors in 5,000 rows; first 20 rows shown" or "25 errors in the first 400 rows, all shown; stopped checking".
    - Bad: an operational failure collected as a violation; such as a
      lookup service refusing the connection while checking row 12's
      product code, the failure recorded against row 12, and every later
@@ -72,14 +72,15 @@ is for the people who run the system; an end user sees only a general
 message, such as "Unknown system error, please try again later".
 
 A large input, such as a file of thousands of rows, can fail in thousands
-of places. Whether to cap, and where, depends on who reads the rejection:
+of places. How many records to show depends on who reads the rejection:
 a program calling an API can take every error and sort them itself, while
 a person uploading a file is better served by the first few. Ten records
-can be a lot in one place and a hundred too few in another, so the
-strategy names no number. Where a cap helps, it keeps the rejection
-readable; saying how many errors were found after checking how many
-records, and how many are shown, keeps it honest, since the caller knows
-how much is left and whether checking stopped early. The cap falls between
+can be a lot in one place and a hundred too few in another, so 20 is
+only a default; a project that needs another number records it in
+`.bjornstack/conventions.md`. The cap keeps the rejection readable;
+saying how many errors were found after checking how many records, and
+how many are shown, keeps it honest, since the caller knows how much is
+left and whether checking stopped early. The cap falls between
 records, never inside one, so each record shown can be fixed in one go.
 
 Stopping the checking itself early is a separate call. When checking is

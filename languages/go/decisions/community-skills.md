@@ -187,7 +187,7 @@ row. Drop rows have "-".
 | <a id="row-130"></a>130 | PL `references/directory-layouts.md:72-96`; eval 8 | A library: public packages at the root, private code in `internal/`, no `cmd/` | keep | Go-specific layout | [layout-library](#rule-layout-library) | Pattern mappings | judgment |
 | <a id="row-131"></a>131 | PL `references/directory-layouts.md:15-51` | Universal layout with `internal/{app,config,handler,model,service}` | drop | Technical-role packages: Domain-First Packaging step 1 and proto-packages | [dropped](#drop-131) | — | - |
 | <a id="row-132"></a>132 | PL `references/directory-layouts.md:143-150`; eval 3.1 | No `src/` directory | keep | Mechanical, Go-specific | [layout-cmd](#rule-layout-cmd) | Pattern mappings | guard candidate |
-| <a id="row-133"></a>133 | PL `references/directory-layouts.md:146`; eval 3.6 | No `main.go` at the module root | adapt | Owner ruling 2026-11-17 (bs-f3o.2, S-7): `cmd/<name>/` by default; a root `main.go` is a local exception, decided when the tool is created | [layout-cmd](#rule-layout-cmd) | Pattern mappings | guard candidate |
+| <a id="row-133"></a>133 | PL `references/directory-layouts.md:146`; eval 3.6 | No `main.go` at the module root | adapt | Owner ruling 2026-11-17 (bs-f3o.2, S-7): `cmd/<name>/` by default; a root `main.go` is a local exception, decided when the tool is created. The record is `.bjornstack/conventions.md` (bs-f3o.2.12) | [layout-cmd](#rule-layout-cmd) | Pattern mappings | guard candidate |
 | <a id="row-134"></a>134 | PL `references/directory-layouts.md:147-149`; eval 3.2-3.5 | No `utils/`, `helpers/`, `common/` packages | already ours | bjornstack.md row 3 (proto-packages) | [proto-packages](bjornstack.md#rule-proto-packages) | For the protocols | guard candidate |
 | <a id="row-135"></a>135 | PL `references/directory-layouts.md:152-163` | The fix: `internal/util/` "specific utility names" | drop | Still a technical-role name (proto-packages) | [dropped](#drop-135) | — | - |
 | <a id="row-136"></a>136 | PL `SKILL.md:47`, `:98-100`; `references/workspaces.md:12-25`; eval 6 | `go.work` for developing several modules together: a monorepo, modules that import each other, local cross-module testing | keep | Go-specific; the uses the source lists | [layout-workspace](#rule-layout-workspace) | Tooling | judgment |
@@ -916,9 +916,10 @@ Source: ES `e25b517` `go-context/SKILL.md:213-219`; read 2026-11-16.
 and no `src/` directory. `main` parses flags
 and configuration, builds the collaborators (coord-inject) and calls
 `Run`; no business logic lives in `cmd/`. A module with one binary
-uses `cmd/<name>/` too, unless it is made a local exception with
-`main.go` at the root. When a tool is created, ask the owner whether
-it will have several binaries and whether to add the folder.
+uses `cmd/<name>/` too, unless a root `main.go` is recorded as a
+local exception in `.bjornstack/conventions.md`. When a tool is
+created, ask the owner whether it will have several binaries and
+whether to add the folder.
 Source: PL `d68d80a` `SKILL.md:80`,
 `references/directory-layouts.md:98-150`, evals 2, 3.1, 3.6, 11; read
 2026-11-16; owner ruling, bs-f3o.2 comment "Owner rulings from

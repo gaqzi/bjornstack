@@ -21,7 +21,9 @@ TENET: Don't Fly Blind
      calculation.
 3. Select the layer by what you're verifying. Unit tests and black box
    integration tests apply to nearly every project. Contract and
-   end-to-end tests are adopted per-project based on need.
+   end-to-end tests are adopted per-project based on need; decide at
+   setup which ones the project adopts, and record that choice in
+   `.bjornstack/conventions.md`.
    - Logic and computation → unit test (per Unit Testing strategy).
    - Behavior as consumers see it → black box integration test. Test
      through the public interface (HTTP for an API, browser for a UI,

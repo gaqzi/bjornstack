@@ -115,13 +115,14 @@ layer above them coordinates.
 
 ### Relationship to Earned Abstraction
 
-When wrapping external dependencies (step 6), search PATTERNS.md for an
-existing pattern family — multiple domain packages often wrap similar
-external concerns independently (HTTP clients, queue consumers,
-serialization adapters). EA's vocabulary tracks these pattern families so
-the third wrapper finds the first two instead of reinventing them. DFP
-decides where the wrapper lives; EA decides when similar wrappers have
-earned a shared abstraction.
+When wrapping external dependencies (step 6), search
+`.bjornstack/patterns.md` for an existing pattern family — multiple
+domain packages often wrap similar external concerns independently
+(HTTP clients, queue consumers, serialization adapters). EA's
+vocabulary tracks these pattern families so the third wrapper finds
+the first two instead of reinventing them. DFP decides where the
+wrapper lives; EA decides when similar wrappers have earned a shared
+abstraction.
 
 ### Relationship to Be Your Name
 

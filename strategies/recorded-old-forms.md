@@ -1,12 +1,12 @@
 # Recorded Old Forms
 TENET: Consistent Beats Correct
 
-1. Keep one conventions record for the codebase, with an entry for
-   each old form the code stays on deliberately while a better one
-   exists: what the code uses, why, and what would trigger the move.
-   For example: "serializer v1, not v2: v2 changes wire output; move
-   when we do a full pass." If the codebase has no record yet, ask
-   the owner where it should live before creating one.
+1. Keep one conventions record for the codebase, in
+   `.bjornstack/conventions.md`, and in it an entry for each old form
+   the code stays on deliberately while a better one exists: what the
+   code uses, why, and what would trigger the move. For example:
+   "serializer v1, not v2: v2 changes wire output; move when we do a
+   full pass."
 2. When work meets an old form, take the first case that fits:
    1. The record has an entry for it: follow the entry, hold new code
       to it, and suggest no migration, in delivery and in review, even
@@ -17,9 +17,10 @@ TENET: Consistent Beats Correct
       that breaks another tenet, suggest fixing it everywhere. A
       reviewer asks the author to add the entry.
 3. In a periodic review of the codebase or system, go through the
-   record and raise each entry whose trigger has fired, or where the
-   better form is now worth migrating to in one go, with what the move
-   changes. A migration moves every use and removes the entry.
+   record and raise each entry whose trigger has fired, or, for an old
+   form, where the better form is now worth migrating to in one go,
+   with what the move changes. A migration moves every use and removes
+   the entry.
 
 OUTCOMES:
 - Every old form the code stays on deliberately has an entry naming

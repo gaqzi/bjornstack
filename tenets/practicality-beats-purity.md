@@ -52,7 +52,10 @@ This tenet is not meant to be easy to invoke. The process is:
 3. **Document the tradeoff** — so the next person who encounters this code
    understands it's a deliberate exception, not ignorance or sloppiness. The
    documentation should explain why the tenet doesn't apply here, not just
-   that you chose to skip it.
+   that you chose to skip it. A choice that holds beyond one place in
+   the code, such as for a package or the whole project, goes in the
+   project's conventions record, `.bjornstack/conventions.md`, once it
+   is agreed.
 
 ### If you're invoking this often, the tenet needs updating
 

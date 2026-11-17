@@ -246,6 +246,24 @@ script/
 Filenames use kebab-case: `no-conditional-test-logic.md`,
 `data-driven-test-cases.md`.
 
+## Project records
+
+A project that uses the method keeps the method's records about it in
+one `.bjornstack/` directory at the project root, so it is clear they
+belong to this way of working. It holds two files, each created when
+its first entry is needed:
+
+- `.bjornstack/conventions.md`: the project's standing choices where
+  it departs from the method or fills in what the method leaves open,
+  such as a package kept on an old library version, the contract and
+  end-to-end test layers it adopts, or how many records a rejection
+  reports. Each entry says what the project does, why, and what would
+  trigger a move. Recorded Old Forms step 3 reviews it.
+- `.bjornstack/patterns.md`: the project's pattern families, their
+  names, and why the members are kept separate. A family with fewer
+  than three cases is an abstraction deferred on purpose. Earned
+  Abstraction reads and updates it.
+
 ## Supported languages
 
 | Language   | Status      |

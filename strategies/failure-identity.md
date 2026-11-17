@@ -183,10 +183,10 @@ edge keeps the outside message without its identity.
   the failures a caller branches on are part of that contract, and this
   strategy says which ones and how a caller recognises them.
 - **Scrub on Entry**: SOE reports every violation in a record before
-  rejecting, and may cap how many records it reports for a large
-  input; FI step 4 decides whether that rejection is one failure or one
-  per record, by what the caller acts on, and lists the reported
-  violations for the human.
+  rejecting, and for a large input reports at most 20 records, or the
+  number the project records; FI step 4 decides whether that rejection
+  is one failure or one per record, by what the caller acts on, and
+  lists the reported violations for the human.
 - **Unit Testing**: a coordinator's N+1 error tests (Unit Testing step
   3.4) each check that one collaborator's failure comes out through
   the coordinator's consistent error interface; FI step 3 says that
