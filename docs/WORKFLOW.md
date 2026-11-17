@@ -211,7 +211,8 @@ Language config captures two types of information:
   (e.g., testify for assertions in Go, table-driven test style, t.Helper()
   for test helpers).
 
-The format and location of language configuration is not yet defined.
+Each language's configuration lives in `languages/<lang>.md`, built
+from the source tables in `languages/<lang>/decisions/`.
 
 ### Validation
 
@@ -231,9 +232,9 @@ strategies/
   FORMAT.md                          # How to write strategies
   <strategy-name>.md                 # Individual strategy files
 
-implementation/
-  <lang>/                            # e.g. go/, typescript/
-    config.yaml                      # Language tooling preferences (planned)
+languages/
+  <lang>.md                          # Language configuration, e.g. go.md
+  <lang>/decisions/                  # Source tables the configuration is built from
 
 guards/
   <lang>/                            # e.g. go/, typescript/
@@ -275,7 +276,7 @@ guards are language-specific.
 
 ### Adding a new language
 
-1. Create `implementation/<lang>/` directory with `config.yaml`.
+1. Write the language configuration in `languages/<lang>.md`.
 2. Generate protocols for the language using the protocol generation skill.
 3. Review the generated protocols for language-specific accuracy.
 4. Add the language to the table above and in `README.md`.
