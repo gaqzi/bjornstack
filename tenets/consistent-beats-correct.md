@@ -8,6 +8,9 @@ Follow established patterns even when a locally better approach exists — the a
 - Good: a pattern that violates another tenet, changed everywhere it
   appears; such as replacing an error-swallowing pattern in every handler, or renaming
   a vague naming convention across the codebase.
+- Good: an old form stays the only form until the whole codebase
+  moves together; such as a new package on the old library version, or
+  a review that suggests no migration of it.
 - Bad: a better pattern introduced in one file while the old one stays
   in twenty others.
 
@@ -54,8 +57,10 @@ create hidden behavior or obscure intent.
 If the established pattern silently swallows errors (FEAL violation), don't
 perpetuate it — fix it everywhere. If the established naming convention is
 vague (BYN violation), improve it everywhere. CBC yields to other tenets
-when the pattern itself is the problem. But you fix it *consistently* — don't
-fix it in one file and leave the old pattern in twenty others.
+when the pattern itself is the problem, unless the conventions record
+keeps it (see the Recorded Old Forms strategy). But you fix it
+*consistently* — don't fix it in one file and leave the old pattern in
+twenty others.
 
 ### CBC in greenfield projects
 
@@ -82,6 +87,15 @@ With AI-assisted refactoring, "it would take too long to change everywhere" is
 less true than it used to be. CBC is still valuable — the consistency itself
 has value — but the bar for "let's actually fix the pattern everywhere" is
 lower when the tooling can help apply the change across the codebase.
+
+### When a better form arrives
+
+A new library version or language feature can offer a better form of
+something the code already does. The codebase still moves as a whole:
+new code uses the old form too, until the whole codebase moves in one
+go. A new package in an existing codebase is not greenfield. The
+Recorded Old Forms strategy covers how that choice is recorded and
+when a migration is raised.
 
 ### Earning an exception
 

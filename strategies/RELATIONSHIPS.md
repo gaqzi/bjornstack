@@ -40,6 +40,7 @@ graph TD
         GDB["Grow Don't Break"] <--> FYC["Flag Your Changes"]
         ToC["Tidy or Change"] <--> FYC
         EA["Earned Abstraction"]
+        ROF["Recorded Old Forms"]
     end
 
     BC <--> GDB
@@ -68,7 +69,7 @@ cross-references are authoritative, not this diagram.
 ┌────────────────┰──────────────────────────┰──────────────────┐
 │                ┃                          ┃                  │
 │  DFP  ·  IP    ┃  TLS  ·  UT  ·  BBIB     ┃  GDB  ·  FYC     │
-│                ┃  OILD  ·  CT             ┃  ToC             │
+│                ┃  OILD  ·  CT             ┃  ToC  ·  ROF     │
 │  SOE  ·  SIO   ┃  ITE  ·  TDB  ·  PAST    ┃                  │
 │  FI  ·  UTC    ┃  PTS  ·  WOA  ·  CTS     ┃                  │
 │                ┃                          ┃                  │
@@ -85,7 +86,8 @@ apart, and where its reasoning is written down.
 data builders, assertions.
 
 **Evolution** — how code changes safely: separating cleanup from behavior,
-progressive rollout, earned abstraction.
+progressive rollout, earned abstraction, and which old forms the code
+keeps until it moves as a whole.
 
 Two strategies straddle families:
 - **BC** defines boundary contracts (structure) but is heavily referenced by
@@ -115,3 +117,5 @@ points per family:
 - **FYC** for progressive rollout of new behavior.
 - **GDB** for backward-compatible boundary evolution.
 - **EA** as a check — is abstraction earned or premature?
+- **ROF** when a better form arrives — record the old form the code
+  keeps, and raise the migration in the periodic review.
