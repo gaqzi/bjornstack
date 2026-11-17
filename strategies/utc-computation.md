@@ -28,7 +28,11 @@ TENET: Consistent Beats Correct
 2. Convert every instant to UTC where it enters your code: parsed
    input, values read back from storage, and the clock. Asking the
    clock for the time is reading an input. Values that step 1 keeps
-   as local time plus a zone name stay as they are.
+   as local time plus a zone name stay as they are. Elapsed time and
+   timeouts within one process are measured with a monotonic clock,
+   one that setting the system time does not move, and its readings
+   are not instants and are never converted. A deadline that is
+   stored or sent to another process is an instant.
    - Good: every instant is UTC from the moment it enters, whatever its
      source; such as a command that reads the clock, converts the
      result to UTC and passes that on, or `2026-03-02T01:30:00+02:00`
@@ -89,6 +93,7 @@ OUTCOMES:
   down once.
 - Every instant is UTC from the point it enters the code, the current
   time included, unless step 1 keeps it local with its zone name.
+  Durations within one process come from a monotonic clock.
 - Changing the zone the inputs carry, or the zone the machine is set
   to, changes no stored value and no computed result, apart from
   values step 1 keeps local and output for people.
@@ -113,13 +118,13 @@ MISAPPLICATIONS:
 - A calendar date with no time, such as a birthday or an invoice date,
   turned into midnight UTC. Shown west of UTC it becomes the day
   before. A date with no time is not an instant and stays a date.
-- Durations and timeouts converted to UTC: elapsed time has no zone,
-  and converting it adds code that does nothing.
+- Durations and timeouts measured as the difference between two
+  readings of the system time, in UTC or any zone: elapsed time has
+  no zone, and such readings jump when the system time is set.
 
 SKIP WHEN: The code never turns an instant into a date or a time of
-day: it only measures elapsed time, sets timeouts, handles calendar
-dates that have no time, or passes a timestamp on without reading
-it.
+day and measures no elapsed time: it only handles calendar dates
+that have no time, or passes a timestamp on without reading it.
 
 ---
 <!-- Rationale below — read when creating protocols, reviewing, or
@@ -127,19 +132,31 @@ questioning the strategy. Not needed for routine application. -->
 
 ## Rationale
 
+### The intent: no surprises across zones and daylight saving
+
+The point of this strategy is not UTC itself. It is that code which
+handles time gives the same answer wherever it runs, whoever reads
+the result, and whether or not a daylight saving change falls in
+between. A stored value does not shift when a server moves to
+another region. A date does not depend on the hour of the day the
+code runs. A duration does not gain or lose an hour, or go negative,
+because a clock was changed. UTC is the means for instants and dates:
+it has no daylight saving, every library supports it, and most
+systems already store it. A monotonic clock is the means for
+durations.
+
 ### Why one default
 
 Consistent Beats Correct asks for one default that every reader can
-assume, with deviations visible. UTC is a cheap default: it has no
-daylight saving, every library supports it, and most systems already
-store it. The interesting cases are the exceptions, and step 1 makes
-each one an explicit input with a written reason, so a reader who sees
-a zone other than UTC knows it was chosen. A computation that quietly
-uses local time is exactly the difference Consistent Beats Correct
-warns about: the reader cannot tell whether it is meant or accidental.
-UTC itself needs no written reason, because it is the default. Any
-other reason to deviate falls under Consistent Beats Correct and is
-stated once, in the design document, in the same way.
+assume, with deviations visible. UTC is that default. The interesting
+cases are the exceptions, and step 1 makes each one an explicit input
+with a written reason, so a reader who sees a zone other than UTC
+knows it was chosen. A computation that quietly uses local time is
+exactly the difference Consistent Beats Correct warns about: the
+reader cannot tell whether it is meant or accidental. UTC itself
+needs no written reason, because it is the default. Any other reason
+to deviate falls under Consistent Beats Correct and is stated once,
+in the design document, in the same way.
 
 Step 1 comes first because converting at entry throws away the
 sender's offset, which can be the only sign of whose day they meant.
@@ -208,7 +225,7 @@ date.
   the same design document, and a test at a moment inside the
   transition hour.
 
-### Cross-language expression
+### Language quirks
 
 Some languages' time values carry a zone; others carry none and leave
 the zone to convention. Where values carry none, the protocol for that
@@ -216,6 +233,30 @@ language states that they are UTC and makes it true at the entry
 points in step 2, since nothing in the value will say so. Most test
 runners take the machine's zone from the environment, which is how
 step 6 is done.
+
+Some languages' defaults break the intent in ways that are easy to
+miss, and the protocol for each says how the steps get around them.
+Some that protocol authors must plan for:
+
+- Go: a time read from the clock carries a second, monotonic reading
+  that is used only to measure elapsed time and is not affected by
+  changes to the system clock. Converting the time to UTC, or to any
+  other zone, removes that reading, and the difference between two
+  times falls back to the wall clock when either lacks it. A duration
+  measured from converted readings jumps, or goes negative, when the
+  system clock is adjusted.
+- Python: a datetime with no zone, called naive, is what the current
+  time comes back as unless a zone is asked for, and it holds the
+  machine's local time. Many methods treat a naive value as local
+  time, and subtracting two naive values works on the clock face, so
+  an interval across a daylight saving change is an hour off. Two
+  values that carry the same named zone subtract on the clock face
+  too; only values in UTC, or in different zones, are subtracted as
+  instants.
+- JavaScript: a Date holds a UTC instant, but its basic methods for
+  reading a date or a time of day work in the machine's zone, and an
+  ISO date-and-time string without an offset is parsed as local time
+  while an ISO date-only string is parsed as UTC.
 
 ### Cross-references
 
