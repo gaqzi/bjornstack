@@ -10,6 +10,7 @@ TENET: Fail Early and Loud
      quantity above zero, or an end date after the start date.
 4. Validate all acted-on fields at the boundary. Check each record in full and report every violation, naming the fields it involves, so the caller can fix them all in one round. A failure of the system rather than the input, such as a refused connection, is not a violation: stop checking at once and report only that failure, not the violations found so far.
    - When the input holds many records, report at most 20 of the records in error, or the number the project records in `.bjornstack/conventions.md` to suit who reads the rejection; a project may also stop checking early, between records. Each reported record still lists every violation in it, and a capped rejection must say how many errors it found after checking how many records, and how many it shows, such as "1,200 errors in 5,000 rows; first 20 rows shown" or "25 errors in the first 400 rows, all shown; stopped checking".
+   - By default a rejection covers the whole input: no record in it is saved. What is saved, a passing input or the chosen valid records, is saved so that a failure part way leaves none of it saved, such as in one transaction. When an input can hold more than one record, and neither the feature's design document nor `.bjornstack/conventions.md` records the choice, ask the owner whether to save the valid ones and reject the rest, and record the answer in the feature's design document, or in `.bjornstack/conventions.md` when it holds for the whole project; when it is chosen, the reply names the records saved.
    - Bad: an operational failure collected as a violation; such as a
      lookup service refusing the connection while checking row 12's
      product code, the failure recorded against row 12, and every later
@@ -20,6 +21,7 @@ TENET: Fail Early and Loud
 OUTCOMES:
 - Domain logic contains no defensive nil-checks, type coercions, or "just in case" defaults for external data.
 - Each reported record names every invalid field and the constraint it violated; a capped rejection states how many errors it found after checking how many records, and how many it shows.
+- A rejected input saves nothing, unless saving its valid records was chosen and recorded.
 - Fields you don't act on are excluded from validation — rejections only fire on things that would actually cause failures.
 
 MISAPPLICATIONS:
@@ -88,6 +90,21 @@ expensive and a large share of the records so far have failed, the input
 is likely wrong as a whole, such as the wrong file or shifted columns, and
 checking the rest only repeats the same error: stop between records, and
 say how many errors you found after checking how many records.
+
+### Why all or nothing
+
+When a rejection saves nothing, the caller fixes the input and sends it
+again as it is. When part of it was saved, the caller must work out
+which records went in and send only the rest, or the receiver must
+accept the same record twice without harm. Either is work, so it is
+worth doing only when the owner wants valid records through despite
+bad ones, such as a nightly feed where one bad row should not hold
+back the rest. One transaction keeps it so when the save itself fails
+part way: a full disk at row 600 leaves nothing saved, and the caller
+sends the whole input again. A call to an outside service during the
+save, such as an email per record, is not undone with it, so make such
+calls once the save has committed; if one must happen during the save,
+ask the owner, as for saving the valid records.
 
 ### Pass-through services
 
