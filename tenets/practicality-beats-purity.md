@@ -57,6 +57,43 @@ This tenet is not meant to be easy to invoke. The process is:
    project's conventions record, `.bjornstack/conventions.md`, once it
    is agreed.
 
+### Robust in proportion to what a failure costs
+
+Protection against a failure is built in proportion to what the
+failure costs. Take the first of these that fits:
+
+1. The project or feature says it cannot accept the failure, in its
+   tenets or alongside its story, such as "a customer is never charged
+   twice for one order". Prevent it, even when that costs a lot. The
+   statement says what that takes to run, and which rare cases are
+   left to be put right by hand, since a business can often handle a
+   truly exceptional case that way. Setting the statement aside is an
+   exception, held to "The bar is high".
+2. Leaving it unguarded would break a tenet that does not itself
+   accept the failure, such as sending an email before its event is
+   stored. That is an exception, held to "The bar is high". A rare
+   crash does not lower that bar.
+3. Preventing it would cost far more than the failure, including
+   putting it right by hand, counted at the volume the system runs.
+   Accept it, and say so where the next reader will meet it. This is
+   not an exception and needs no second person. It is usually a
+   failure that needs several unlikely things to happen together.
+4. Otherwise, guard against it.
+
+How rare one case sounds is not the measure: at four million
+transactions a day, a one-in-a-million case happens four times a day.
+
+Design for Replay builds for the normal case and aims for no
+duplicates: each email is recorded as sent, and a payment passes an
+idempotency key. What is left is a user working around it, such as
+paying again on a new order, or something highly unlikely, such as a
+crash between sending an email and recording it. A double-confirmed
+write on the store, so that a duplicate email can never go out, would
+cost far more than a rare repeat, which is far from the end of the
+world. A duplicate payment costs more, but "never" is generally out of
+reach there too: the rare case is put right by hand, under rule 3 or
+as a case a rule 1 statement names.
+
 ### If you're invoking this often, the tenet needs updating
 
 Frequent exceptions to the same tenet are a signal. Either the tenet
