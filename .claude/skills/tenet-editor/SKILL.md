@@ -30,7 +30,8 @@ match against, and a **rationale section** that captures the thinking.
 
 ```
 # [Tenet Name]
-[One constraint, clearly stated.]
+[One constraint, clearly stated: one sentence, or a one-line lead plus
+a short numbered list of its parts (at most five items).]
 
 - Good: [Optional. The property that makes it good]; such as [one
   form], or [a contrasting form].
@@ -347,9 +348,13 @@ optional.
   PASS: "Compute or Coordinate."
 
 - **Definition states one constraint clearly.** The constraint should be
-  expressible as one sentence, though qualifying clauses (em-dashes,
-  subordinate phrases) are fine when they carve out what IS and ISN'T a
-  violation. The test: if a qualifying clause can be removed and the tenet
+  expressible as one sentence, or as a one-line lead plus a short
+  numbered list of its parts (at most five items; the lead states the
+  constraint, each item is a part of it, not a rule of its own: breaking
+  the item must break the lead as written, or the item is a separate
+  tenet; items are conditions that all hold at once, not steps in
+  order). Qualifying clauses (em-dashes, subordinate phrases) are fine
+  when they carve out what IS and ISN'T a violation. The test: if a qualifying clause can be removed and the tenet
   still makes sense, the clause is elaboration that belongs in the rationale.
   If removing it changes what counts as a violation, it's part of the
   constraint.

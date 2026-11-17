@@ -17,7 +17,8 @@ Every tenet file has two parts: a tight **tenet block** and a
 
 ```
 # [Tenet Name]
-[One constraint, clearly stated.]
+[One constraint, clearly stated: one sentence, or a one-line lead plus
+a short numbered list of its parts (at most five items).]
 
 - Good: [Optional. The property that makes it good]; such as [one
   form], or [a contrasting form].
@@ -154,8 +155,13 @@ breakers are not violations, how conditional test logic belongs here, etc.]
   rule. Names should be memorable and conversational — something you'd say at
   a whiteboard, not in a corporate memo.
 - The **definition** states one constraint clearly. If you can't say it in one
-  sentence (with qualifying clauses as needed), you don't understand the
-  tenet yet — or you have two tenets hiding in one.
+  sentence (with qualifying clauses as needed), or in a one-line lead plus
+  a short numbered list of its parts (at most five items), you don't
+  understand the tenet yet — or you have two tenets hiding in one. In the
+  list form the lead states the constraint and each item is a part of it,
+  not a rule of its own: breaking the item must break the lead as
+  written, or the item is a separate tenet. Items are conditions that all
+  hold at once, not steps in order; steps belong in a strategy.
 - The **Good and Bad cases** show where the constraint applies and where it
   stops. Each Good case names a property, so the agent learns what makes
   an answer acceptable rather than one answer to copy.
