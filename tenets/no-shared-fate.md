@@ -121,3 +121,7 @@ becomes writable, No Shared Fate applies.
   Isolation without validation lets garbage flow through the boundary contract.
   Validation without isolation means the validated data can still be corrupted
   by shared mutable state.
+- **Design for Replay** (complementary): a reaction that reads stored
+  events, rather than the producer's tables, shares no mutable state with
+  the code that produced them; NSF names the coupling, DfR gives a way to
+  avoid it inside one system.

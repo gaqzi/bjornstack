@@ -22,6 +22,10 @@ graph TD
     MMMSS <-->|complementary| HTD
     MMMSS <-->|tension| CBC
     MMMSS <-->|complementary| EA
+    DfR["Design for Replay"] <-->|complementary| FEAL
+    DfR <-->|complementary| NSF
+    DfR <-->|complementary| CoC
+    DfR <-->|tension| EA
 ```
 
 ## Architectural and delivery families
@@ -34,7 +38,7 @@ approximate — the cross-references are authoritative, not this diagram.
  ┌─────────────────────────┰─────────────────────────────┐
  │                         ┃                             │
  │  SII  ·  CoC  ·  NSF    ┃   MMMSS  ·  DFB  ·  PBP     │
- │                         ┃                             │
+ │         DfR             ┃                             │
  │              BYN ·······╂······ HTD                   │
  │                    EA ··╂·· CBC                       │
  │                       FEAL                            │
@@ -70,6 +74,8 @@ questions:
 **Architecture work** (what are the big pieces, how do they communicate):
 - Start with **SII** and **CoC** — lay out domains, classify code roles.
 - **NSF** follows naturally — verify boundaries don't share fate.
+- **DfR** shapes how each system records change — events first, state
+  and reactions derived from them.
 - **BYN** and **EA** refine — name things by role, resist premature abstraction.
 
 **Delivery work** (how to sequence, validate, ship):

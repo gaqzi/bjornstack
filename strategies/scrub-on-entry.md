@@ -101,10 +101,9 @@ worth doing only when the owner wants valid records through despite
 bad ones, such as a nightly feed where one bad row should not hold
 back the rest. One transaction keeps it so when the save itself fails
 part way: a full disk at row 600 leaves nothing saved, and the caller
-sends the whole input again. A call to an outside service during the
-save, such as an email per record, is not undone with it, so make such
-calls once the save has committed; if one must happen during the save,
-ask the owner, as for saving the valid records.
+sends the whole input again. An email, a charge or any other reaction
+to the saved records happens after the save, never inside it, as
+Design for Replay describes.
 
 ### Pass-through services
 

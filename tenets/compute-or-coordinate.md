@@ -106,3 +106,6 @@ Every other testing tenet builds on this classification.
 - **Earned Abstraction** (upstream): premature abstractions produce objects
   that both compute and coordinate because the abstraction doesn't understand
   its own role yet. CoC's classification is downstream of EA's discipline.
+- **Design for Replay** (complementary): deciding which events a request
+  produces and applying an event to state are computation; storing events
+  and running reactions are coordination. DfR's shape keeps the two apart.

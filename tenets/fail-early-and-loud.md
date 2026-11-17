@@ -153,3 +153,8 @@ pick different options explicitly.
 - **Consistent Beats Correct** (yields to FEAL): when the established pattern
   silently swallows errors, CBC defers — fix the pattern everywhere rather
   than perpetuating a FEAL violation.
+- **Design for Replay** (complementary): FEAL's check on entry decides
+  which requests become events at all; DfR makes storing the event the
+  moment of change, so a failure before it is loud and leaves nothing
+  half done, and a reaction that keeps failing after it is reported, not
+  retried in silence.

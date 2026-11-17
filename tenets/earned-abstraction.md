@@ -136,3 +136,8 @@ they encode assumptions from too few cases and warp under real variation.
   not abstracting. A walking skeleton is coordination wiring, not abstraction.
   MMMSS governs delivery; EA governs design. Ship concrete implementations
   first, earn the abstraction later.
+- **Design for Replay** (tension): DfR asks every system to record events,
+  which invites a general-purpose event bus on the first one. Resolution:
+  each system writes the specific events, table and loop it needs; a
+  shared bus is extracted only after about three have been written by
+  hand.
