@@ -8,8 +8,12 @@ TENET: Fail Early and Loud
 3. For every acted-on field, define what values are valid — including relationships between fields. The constraints are whatever your domain logic assumes to be true.
    - Good: each assumption the domain makes, written down; such as a
      quantity above zero, or an end date after the start date.
-4. Validate all acted-on fields at the boundary. Check each record in full and report every violation, naming the fields it involves, so the caller can fix them all in one round.
+4. Validate all acted-on fields at the boundary. Check each record in full and report every violation, naming the fields it involves, so the caller can fix them all in one round. A failure of the system rather than the input, such as a refused connection, is not a violation: stop checking at once and report only that failure, not the violations found so far.
    - When the input holds many records, a project may cap how many records it reports, at a number that suits who reads the rejection, or stop checking early, between records. Each reported record still lists every violation in it, and a capped rejection must say how many errors it found after checking how many records, and how many it shows, such as "1,200 errors in 5,000 rows; first 20 shown" or "25 errors in the first 400 rows, all shown; stopped checking".
+   - Bad: an operational failure collected as a violation; such as a
+     lookup service refusing the connection while checking row 12's
+     product code, the failure recorded against row 12, and every later
+     row calling the service again and recording the same failure.
 5. Discard fields you don't act on. They aren't part of your domain — don't model what you don't use.
 6. Construct a domain object from validated data. After this point, domain logic never questions whether its inputs are valid.
 
@@ -55,6 +59,17 @@ discovering another is a miserable experience. A single rejection that
 surfaces every problem lets them fix everything in one pass. This is still
 failing early and loud — you're just being loud about *everything* at once
 rather than drip-feeding errors.
+
+Collecting is for violations only. A violation is a fact about the input,
+and one bad field does not stop the next from being checked. An
+operational failure, such as a full disk, a refused connection or a lookup
+service that does not answer, is a fact about the system, not the input:
+later checks that need the same system would hit it again. A lookup that
+answers "no such product" has found a violation; a lookup that cannot
+answer has failed. A retry around the call itself, where the project has
+one, may try first; once it gives up, checking stops. The failure's detail
+is for the people who run the system; an end user sees only a general
+message, such as "Unknown system error, please try again later".
 
 A large input, such as a file of thousands of rows, can fail in thousands
 of places. Whether to cap, and where, depends on who reads the rejection:
