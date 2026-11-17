@@ -28,9 +28,12 @@ TENET: Compute or Coordinate
       If the coordinator constructs its own dependencies, reads
       global state, or calls package functions that do real work —
       I/O, or domain logic with branches — those are hidden
-      collaborators: they can't be replaced in tests. Diagnostic
-      logging and metrics, unlike audit records the work requires,
-      are the accepted exception: passing them through every call
+      collaborators: they can't be replaced in tests. A value built
+      inside one call only to fit its data to an interface the
+      coordinator doesn't own may not be one; Rationale, "Signatures
+      that say what they work on", says when. Diagnostic logging
+      and metrics, unlike audit records the work requires, are
+      another accepted exception: passing them through every call
       costs more than it gives, so they are not collaborators and
       stay out of the count, the doubles and the N+1 tests.
       For each data value in its signature, ask what it is for. One
@@ -215,6 +218,23 @@ does nothing with them but hand them on. Built into the source and
 the store, they leave `Sync(source, store)`: calls, and checks on
 what they return. The tests shrink with it: each builds its doubles
 already set up instead of repeating five arguments.
+
+A coordinator may build a value inside one call only to fit that
+call's data to an interface it doesn't own, such as adapting what it
+reads so the reading stops when the call is cancelled. That value is
+part of the call's work, not a collaborator, when all of these hold:
+
+- it holds nothing chosen while setting up the work;
+- nothing keeps it after the call returns;
+- it does no I/O beyond calling what it adapts;
+- it decides nothing beyond fitting the call's data, so the
+  coordinator's tests need one case for it, such as the one that
+  cancels the call, checked through what the collaborator it is
+  handed to sees.
+
+Failing any of these, it is a hidden collaborator (step 3.2), or
+computation to extract if it decides more than fitting the call's
+data, such as whether to drop a byte-order mark (step 3.5).
 
 ### Why N+1
 
