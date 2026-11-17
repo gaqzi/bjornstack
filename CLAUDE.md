@@ -94,11 +94,17 @@ When drafting or changing a tenet, strategy, protocol or guard:
 - When a change is hard to judge in the abstract, have one subagent
   build a worked example, another review it, and show the owner.
 - Select findings; don't apply them all. Rounds converge on edge
-  cases.
-- Re-review after the last substantive revision before calling a
-  draft clean.
+  cases. Don't add a step or check against a failure that needs
+  several unlikely things to happen together, when preventing it
+  costs far more than the failure would; a failure the design
+  already accepts, such as an email sent twice after a rare crash,
+  is not reopened. Where a project or feature cannot accept such a
+  failure, its tenets or bead say so, and the stricter rule applies.
+- Re-review after the last edit that changes what the text means
+  before calling a draft clean.
 - Keep the diff small, show it to the owner in place, and commit only
-  after the owner agrees.
+  after the owner agrees. When showing it, say which review roles ran
+  on the final text and list any edits made after that review.
 
 Pick model and effort by what the role needs: reasoning about how
 rules interact needs the strongest model and more effort; checking
