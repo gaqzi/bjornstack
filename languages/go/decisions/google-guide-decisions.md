@@ -95,7 +95,7 @@ stable; a row marked "open" waits for an owner pick.
 | <a id="row-54"></a>54 | D:1092-1094 | A function taking a `context.Context` usually returns an `error` | keep | Lets the caller see a cancellation; "usually" kept | [ctx-returns-error](#rule-ctx-returns-error) | Pattern mappings | judgment |
 | <a id="row-55"></a>55 | D:1104-1119 | Error strings start lower-case (exceptions: exported names, proper nouns, acronyms) and end without punctuation | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-56"></a>56a | D:1121-1134 | Test failure messages are usually capitalized | drop | Assertion messages follow bjornstack.md test-messages, lower-case "expected ..." | [dropped](#drop-56) | — | - |
-| <a id="row-56b"></a>56b | D:1121-1134 | Log messages and messages shown to people (API responses, UI) are usually capitalized | open | Owner pick, still open for the owner's batch (bs-f3o.2 2026-11-16): ctx-scope says where the logger comes from, not how its messages read | - | — | - |
+| <a id="row-56b"></a>56b | D:1121-1134 | Log messages and messages shown to people (API responses, UI) are usually capitalized | drop | Owner ruling 2026-11-17 (bs-f3o.2, S-9): no rule; plain style with no reason of ours behind it | [dropped](#drop-56b) | — | - |
 | <a id="row-57"></a>57 | D:1142-1151 | Every error is handled, returned, or, exceptionally, ends the program | keep | Fail Early and Loud, spelled for Go | [err-handle](#rule-err-handle) | Pattern mappings | guard candidate |
 | <a id="row-58"></a>58 | D:1153-1163 | An error is discarded with `_` only rarely, with a comment saying why that is safe | keep | Fail Early and Loud: a silent discard needs a stated reason | [err-handle](#rule-err-handle) | Pattern mappings | guard candidate |
 | <a id="row-59"></a>59 | D:1177-1231 | In general no in-band errors (-1, "", nil); return an extra `ok bool` or `error`, last; a documented in-band value, as in the `strings` package, is allowed | keep | Fail Early and Loud's "silent default substitution" | [err-in-band](#rule-err-in-band) | Pattern mappings | judgment |
@@ -148,8 +148,8 @@ stable; a row marked "open" waits for an owner pick.
 | <a id="row-105"></a>105 | D:2700-2703 | Type definitions for new types; aliases only to aid migration | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-106"></a>106 | D:2713-2734 | Quote strings in human output with `%q` | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-107"></a>107 | D:2740-2743 | `any` in new code, not `interface{}` | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
-| <a id="row-108"></a>108 | D:2755-2777 | Flag names in snake_case with a camelCase variable, using Google's internal flag package | drop | Google prefers snake_case flag names in Go binaries (D:2755-2760), separate from its internal flag package; flag-name style is an owner choice, still open for the owner's batch (bs-f3o.2 2026-11-16) | [dropped](#drop-108) | — | - |
-| <a id="row-109"></a>109 | D:2779-2787 | Flags only in `package main`; libraries are configured through Go APIs, rarely exported globals | adapt | Adds Unit Testing step 3.2: a coordinator that reads global state has a hidden collaborator. Differs: leaves out Google's "extremely rare" library-flag exception (D:2783-2786); keeping it is an owner pick, still open for the owner's batch | [flags-main](#rule-flags-main) | Pattern mappings | guard candidate |
+| <a id="row-108"></a>108 | D:2755-2777 | Flag names in snake_case with a camelCase variable, using Google's internal flag package | adapt | Owner ruling 2026-11-17 (bs-f3o.2, S-10): flag names are kebab-case, not Google's snake_case; Google's internal flag package is not in our stack | [flag-names](#rule-flag-names) | Pattern mappings | guard candidate |
+| <a id="row-109"></a>109 | D:2779-2787 | Flags only in `package main`; libraries are configured through Go APIs, rarely exported globals | adapt | Adds Unit Testing step 3.2: a coordinator that reads global state has a hidden collaborator. Keeps Google's "extremely rare" library-flag exception (D:2783-2786): owner ruling 2026-11-17 (bs-f3o.2, S-11) | [flags-main](#rule-flags-main) | Pattern mappings | guard candidate |
 | <a id="row-110"></a>110 | D:2789-2790 | Global flag variables sit in their own `var` group after the imports | drop | Standard Go convention, followed through go-conventions; go.md carries only our additions (owner ruling 2026-11-16) | [dropped](#drop-conventions) | — | - |
 | <a id="row-111"></a>111 | D:2810-2822 | Google's `log` (glog) package; `log.Info` over `log.Infof` without formatting | drop | We log through ctx (bjornstack.md ctx-scope: `logctx.From(ctx)`), not glog | [dropped](#drop-111) | — | - |
 | <a id="row-112"></a>112 | D:2851-2856 | `context.Context` is always the first parameter | already ours | bjornstack.md row 46 (ctx-per-call) | [ctx-per-call](bjornstack.md#rule-ctx-per-call) | Pattern mappings | guard candidate |
@@ -328,12 +328,19 @@ Source: D:2370-2373 "Interfaces", `a9c5f82`, read 2026-11-16.
 arguments or struct fields; importing a package never adds flags. An
 exported global variable is a rare last resort, and a coordinator
 never reads one: global state it reads is a hidden collaborator (Unit
-Testing step 3.2, `testing__unit.md:27-32`).
-Source: D:2779-2787 "Flags", `a9c5f82`, read 2026-11-16.
-Differs: Google allows, in extremely rare cases, a library flag named
-for its package; we keep flags in `main`. Whether to keep Google's
-exception is still open for the owner.
+Testing step 3.2, `testing__unit.md:27-32`). In an extremely rare
+case a library may define a flag, named for its package, as Google
+allows; it needs a stated reason.
+Source: D:2779-2787 "Flags", `a9c5f82`, read 2026-11-16; owner ruling,
+bs-f3o.2 comment "Owner rulings from go-decisions (2026-11-17)", S-11.
 ↩ row [109](#row-109)
+
+<a id="rule-flag-names"></a>**flag-names.** Command-line flag names are kebab-case:
+`--max-retries`, not `--max_retries`.
+Source: D:2755-2761 "Flags", `a9c5f82`, read 2026-11-16; owner ruling,
+bs-f3o.2 comment "Owner rulings from go-decisions (2026-11-17)", S-10.
+Differs: Google names flags in snake_case.
+↩ row [108](#row-108)
 
 <a id="rule-ctx-sources"></a>**ctx-sources.** Code takes ctx from its caller, unless the caller's
 is the wrong one. Where no caller hands one over: an HTTP handler uses
@@ -681,9 +688,19 @@ Source: D:1121-1124: the full displayed message (logging, test failure, API resp
 
 In practice: `t.Errorf("Op(%q) failed ...")`.
 
-Dropped because: Assertion messages follow bjornstack.md test-messages, which start lower-case ("expected the total to include tax"). The log and UI half of the same source lines is row 56b, still open for the owner.
+Dropped because: Assertion messages follow bjornstack.md test-messages, which start lower-case ("expected the total to include tax"). The log and UI half of the same source lines is row 56b, dropped by the owner (S-9).
 
 ↩ row [56](#row-56)
+
+### <a id="drop-56b"></a>Row 56b: Capitalize log and UI messages
+
+Source: D:1121-1124: the full displayed message (logging, test failure, API response) "should typically be capitalized".
+
+In practice: `log.Info("Import started")` and an API error "Invalid quantity".
+
+Dropped because: Plain style with no reason of ours behind it, and go.md carries only our additions. Owner ruling, bs-f3o.2 comment "Owner rulings from go-decisions (2026-11-17)", S-9: "I have no strong opinion on this".
+
+↩ row [56b](#row-56b)
 
 ### <a id="drop-69"></a>Row 69: Table cases omit zero-valued fields
 
@@ -714,16 +731,6 @@ In practice: Doubles stay unexported in the package's own tests.
 Dropped because: Test Data Builders step 2 (`test-data-builders.md:31-37`) moves a shared stateful double under the exported builders' entry point `test/a`, as double-package (row 90) states.
 
 ↩ row [89b](#row-89b)
-
-### <a id="drop-108"></a>Row 108: snake_case flag names
-
-Source: D:2755-2761: Google's internal flag package; "the flag name should be in snake case, and the variable name should be the equivalent name in camel case".
-
-In practice: `flag.Duration("poll_interval", ...)`.
-
-Dropped because: Nothing in our material chooses a flag-name style. Google states the snake_case preference for flag names in Go binaries (D:2755-2760), separately from its internal flag package, so the drop is not forced; whether to adopt it is an owner pick, still open for the owner's batch.
-
-↩ row [108](#row-108)
 
 ### <a id="drop-111"></a>Row 111: Google's log package
 

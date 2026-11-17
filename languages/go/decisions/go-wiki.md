@@ -625,10 +625,8 @@ Dropped because: Be Your Name makes descriptive names the default and allows a s
 
 ## Open for owner
 
-Rows where the decision rests on a reading the owner may not share:
-
-1. **Section placement.** Go style rules that map to no strategy are
-   placed in For the protocols, which widens that section beyond the
-   bs-f3o.2 acceptance ("material left for bs-y5h"). Under the owner's
-   2026-11-16 conventions ruling, bs-f3o.2.9 drops the ordinary-
-   convention rows among them when it writes go.md.
+None. The owner ruled on the earlier question on 2026-11-17 (bs-f3o.2
+comment "Owner rulings from go-decisions", S-13): Go style rules that
+map to no strategy go in a new go.md section, "Go style", not in For
+the protocols. bs-f3o.2.9 places them there when it writes go.md; the
+Section column above still reads For the protocols.

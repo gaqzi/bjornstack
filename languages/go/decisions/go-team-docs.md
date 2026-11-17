@@ -95,7 +95,7 @@ bjornstack.md row it names.
 | <a id="row-36"></a>36 | ER Examining errors with Is and As | Compare errors with `errors.Is` and `errors.As`, not `==` or a type assertion; they examine the whole chain | keep | Go form of Failure Identity step 2 (the caller compares the identity) | [err-is-as](#rule-err-is-as) | Go pitfalls | guard candidate |
 | <a id="row-37"></a>37 | ER Examining errors with Is and As | Prefer `errors.Is`/`errors.As` over `errors.Unwrap` | keep | Same rule | [err-is-as](#rule-err-is-as) | Go pitfalls | guard candidate |
 | <a id="row-38"></a>38 | ER Examining errors with Is and As | The `errors.As` target is a pointer to a variable of the error's type, so a pointer to a pointer for a pointer error | already ours | bjornstack.md [row 51](bjornstack.md#row-51) | [err-as-pointer](bjornstack.md#rule-err-as-pointer) | Go pitfalls | guard candidate |
-| <a id="row-39"></a>39 | ER Whether to Wrap | Wrap to expose a cause to callers; don't wrap when that exposes implementation details, because wrapping makes the error part of the API | adapt | Open for the owner (bs-f3o.2 comment 2026-11-16): ER's `io.Reader` example wraps, at the edge, the error of a reader the caller supplied, while bjornstack.md [row 48](bjornstack.md#row-48) err-wrap-verb uses `%v` at the edge and carves out only ctx errors. Suggested: `%w` for errors from a collaborator the caller supplied. No wording until ruled | [err-wrap-verb](bjornstack.md#rule-err-wrap-verb) | Go pitfalls | judgment |
+| <a id="row-39"></a>39 | ER Whether to Wrap | Wrap to expose a cause to callers; don't wrap when that exposes implementation details, because wrapping makes the error part of the API | adapt | ER's `io.Reader` example wraps, at the edge, the error of a reader the caller supplied. Owner ruling 2026-11-17 (bs-f3o.2, S-2): err-wrap-verb wraps an error from a collaborator the caller supplied with `%w`, even at the edge, as it does ctx errors (bjornstack.md [row 48](bjornstack.md#row-48)) | [err-wrap-verb](bjornstack.md#rule-err-wrap-verb) | Go pitfalls | judgment |
 | <a id="row-40"></a>40 | ER Errors and package APIs | An error from another package is converted so it does not expose the underlying error (`fmt.Errorf("%v", err)`), unless you commit to returning it | already ours | bjornstack.md [row 48](bjornstack.md#row-48) | [err-wrap-verb](bjornstack.md#rule-err-wrap-verb) | Go pitfalls | judgment |
 | <a id="row-41"></a>41 | ER Customizing error tests with Is and As methods | An error type can define an `Is` method, such as one matching a template's non-zero fields | drop | A typed failure is checked with `errors.As` and its fields read as data (bjornstack.md err-is-fresh-pointer, row 87; Failure Identity step 2); a matching `Is` adds a second way to the same check | [dropped](#drop-41) | — | - |
 | <a id="row-42"></a>42 | ER Errors and package APIs | A package documents which properties of its errors callers may rely on | drop | Failure Identity step 2 ("document it with the operation that reports it") says it for every language | [dropped](#drop-42) | — | - |
@@ -124,7 +124,7 @@ bjornstack.md row it names.
 | <a id="row-65"></a>65 | RN27 net/http/httptest | `httptest.NewTestServer` creates a server on an in-memory fake network suitable for `testing/synctest` | keep | The HTTP server for a test that uses synctest | [synctest-http](#rule-synctest-http) | Pattern mappings | judgment |
 | <a id="row-66"></a>66 | RN25 New experimental encoding/json/v2 package | `encoding/json/v2` behind `GOEXPERIMENT=jsonv2` | drop | Superseded by RN27, where the package needs no experiment | [dropped](#drop-66) | — | - |
 | <a id="row-67"></a>67 | RN27 New encoding/json/v2 and encoding/json/jsontext packages | `encoding/json/v2` is available without an experiment, with stricter defaults | already ours | bjornstack.md [row 60a](bjornstack.md#row-60a); its condition is met, see [Check for row 60a](#check-60a). Owner ruling 2026-11-16: an existing wire format or package stays on v1 until a migration is asked for | [new-stdlib](bjornstack.md#rule-new-stdlib) | Tooling | guard candidate |
-| <a id="row-68"></a>68 | RN27 New uuid package | The standard library's new `uuid` package generates and parses UUIDs | already ours | bjornstack.md [row 60a](bjornstack.md#row-60a); its condition is met for the package, see [Check for row 60a](#check-60a). Whether it generates v7 is open | [new-stdlib](bjornstack.md#rule-new-stdlib) | Tooling | guard candidate |
+| <a id="row-68"></a>68 | RN27 New uuid package | The standard library's new `uuid` package generates and parses UUIDs | already ours | bjornstack.md [row 60a](bjornstack.md#row-60a); its condition is met for the package, see [Check for row 60a](#check-60a). It generates UUIDv7: the owner checked (bs-f3o.2, 2026-11-17, S-8) | [new-stdlib](bjornstack.md#rule-new-stdlib) | Tooling | guard candidate |
 | <a id="row-69"></a>69 | RN27 Vet | The `printf` analyzer reports `fmt.Errorf("...: %w", p)` where `p` is a `*E` and `E` itself implements `error`: the pointer makes type checks and `errors.Is` miss | already ours | bjornstack.md [row 78](bjornstack.md#row-78): `go vet ./...` clean; the same trap family as [err-as-pointer](bjornstack.md#rule-err-as-pointer) | [tool-finish](bjornstack.md#rule-tool-finish) | Tooling | tool: gofmt, go vet, go test (named by the P0 brief) |
 | <a id="row-70"></a>70 | RN22 Vet | In a file on Go 1.22 or later, vet no longer reports a function literal that captures a loop variable, because each iteration has its own variable | drop | The per-iteration copy (`tc := tc`) is dead code from Go 1.22 on; nothing for go.md to require | [dropped](#drop-70) | — | - |
 
@@ -490,8 +490,8 @@ Two things the notes leave to us:
   on it until a migration is asked for.
 - bjornstack.md builders-ids and TD's `a.UUID()` assume UUIDv7. The
   notes don't say whether the standard library's package generates v7.
-  This stays an open check: it needs a lookup beyond the pinned source,
-  and the owner has it in the open batch on bs-f3o.2.
+  The owner looked it up: it does (bs-f3o.2 comment "Owner rulings
+  from go-decisions (2026-11-17)", S-8).
 
 Proposed wording for go.md, replacing the conditional one:
 
@@ -503,9 +503,9 @@ go.md names the module as being on the old form, so a migration can
 be considered.
 Source: Go 1.27 release notes, go.dev/doc/go1.27, read 2026-11-16;
 bs-f3o.2 comment 2026-11-03 09:09; owner ruling, bs-f3o.2 comment
-2026-11-16 16:26.
-Open: whether the `uuid` package generates UUIDv7, which
-builders-ids assumes.
+2026-11-16 16:26; owner check that the `uuid` package generates
+UUIDv7, bs-f3o.2 comment "Owner rulings from go-decisions
+(2026-11-17)", S-8.
 
 ## Dropped
 

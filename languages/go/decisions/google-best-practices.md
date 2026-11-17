@@ -107,7 +107,7 @@ Drop rows have "—" and "-".
 | <a id="row-65"></a>65 | BP When to panic (:1443-1460) | `panic("unreachable")` after a call the compiler does not know never returns | keep | Go-specific | [panic-scope](#rule-panic-scope) | For the protocols | judgment |
 | <a id="row-66"></a>66 | BP When to panic (:1462) | Don't call `log` functions before flags are parsed | drop | glog-specific | [dropped](#drop-66) | — | - |
 | <a id="row-67"></a>67 | BP When to panic (:1463-1465) | A panic may replace fatal logging in `init` or a `Must` function | keep | Go convention | [panic-scope](#rule-panic-scope) | For the protocols | judgment |
-| <a id="row-68"></a>68 | BP Parameters and configuration (:1498-1536) | Not every parameter needs documenting; document the error-prone and non-obvious, saying why | adapt | Say It Once step 1 leaves existing caller documentation alone even when it repeats the name | [doc-params](#rule-doc-params) | Pattern mappings | judgment |
+| <a id="row-68"></a>68 | BP Parameters and configuration (:1498-1536) | Not every parameter needs documenting; document the error-prone and non-obvious, saying why | adapt | Say It Once step 1 leaves existing caller documentation alone even when it repeats the name; owner ruling 2026-11-17 (S-12) | [doc-params](#rule-doc-params) | Pattern mappings | judgment |
 | <a id="row-69"></a>69 | BP Contexts (:1556-1579) | Cancellation interrupting the call and returning `ctx.Err()` is implied; don't restate it | adapt | Same as row 68 | [doc-ctx](#rule-doc-ctx) | Pattern mappings | judgment |
 | <a id="row-70"></a>70 | BP Contexts (:1581-1626) | Document ctx where behaviour differs: another error on cancellation, other interruption, expectations of lifetime, lineage or values | keep | Say It Once step 4.2: a rule callers follow goes in their documentation | [doc-ctx](#rule-doc-ctx) | Pattern mappings | judgment |
 | <a id="row-71"></a>71 | BP Contexts (:1628-1630) | Avoid APIs that make such demands of ctx | keep | Fits ctx-scope (bjornstack.md [row 47](bjornstack.md#row-47)) | [doc-ctx](#rule-doc-ctx) | Pattern mappings | judgment |
@@ -135,10 +135,10 @@ Drop rows have "—" and "-".
 | <a id="row-93"></a>93 | BP Size hints (:2167-2180) | Size hints only with measurement or a known final size; default to none | keep | Go convention | [size-hints](#rule-size-hints) | For the protocols | judgment |
 | <a id="row-94"></a>94 | BP Channel direction (:2188-2216) | Specify channel direction where possible | keep | Go-specific; the compiler then catches misuse, but not a missing direction | [chan-direction](#rule-chan-direction) | For the protocols | guard candidate |
 | <a id="row-95"></a>95 | BP Function argument lists (:2229-2237) | Don't let a signature grow long; split a highly configurable function into simpler ones | adapt | Unit Testing step 2.1: past three or four values, look for a domain concept; the number prompts the question, it is not a limit | [func-args](#rule-func-args) | Pattern mappings | judgment |
-| <a id="row-96"></a>96 | BP Option structure (:2261-2274, :2333-2337) | Collect arguments in an option struct, preferred when all callers set some, many set many, or functions share the options | adapt | Unit Testing's misapplication "a wrapper made for one call" rules out a struct that only carries one function's arguments | [func-options](#rule-func-options) | Pattern mappings | judgment |
-| <a id="row-97"></a>97 | BP Option structure (:2263-2264) | Export the option struct only if an exported function uses it | keep | Intentionally Public step 2 | [func-options](#rule-func-options) | Pattern mappings | guard candidate |
+| <a id="row-96"></a>96 | BP Option structure (:2261-2274, :2333-2337) | Collect arguments in an option struct, preferred when all callers set some, many set many, or functions share the options | adapt | Owner ruling 2026-11-17 (bs-f3o.2, S-3): optional settings are variadic `WithX` options with sane defaults, never an option struct; Unit Testing's misapplication "a wrapper made for one call" already ruled out a struct that only carries one function's arguments | [func-options](#rule-func-options) | Pattern mappings | judgment |
+| <a id="row-97"></a>97 | BP Option structure (:2263-2264) | Export the option struct only if an exported function uses it | adapt | No option structs (owner ruling 2026-11-17, S-3); Intentionally Public step 2 still governs the type the options change | [func-options](#rule-func-options) | Pattern mappings | guard candidate |
 | <a id="row-98"></a>98 | BP Option structure (:2331) | Contexts are never in option structs | already ours | bjornstack.md [row 46](bjornstack.md#row-46) (ctx-per-call: never stored in a struct) | [ctx-per-call](bjornstack.md#rule-ctx-per-call) | Pattern mappings | guard candidate |
-| <a id="row-99"></a>99 | BP Variadic options (:2343-2365, :2461-2470) | Variadic options cost much code; use them when several of these hold: most callers pass none, options are many or take arguments, can fail, or others define their own | keep | Go-specific pattern with its own conditions | [func-options](#rule-func-options) | Pattern mappings | judgment |
+| <a id="row-99"></a>99 | BP Variadic options (:2343-2365, :2461-2470) | Variadic options cost much code; use them when several of these hold: most callers pass none, options are many or take arguments, can fail, or others define their own | adapt | Owner ruling 2026-11-17 (S-3): variadic options are the one form for optional settings, so BP's conditions no longer choose between forms | [func-options](#rule-func-options) | Pattern mappings | judgment |
 | <a id="row-100"></a>100 | BP Variadic options (:2472-2482) | An option takes its value as a parameter (`FailFast(bool)`), not by presence | keep | Same | [func-options](#rule-func-options) | Pattern mappings | judgment |
 | <a id="row-101"></a>101 | BP Variadic options (:2484-2485) | Options apply in order; the last one wins | keep | Same | [func-options](#rule-func-options) | Pattern mappings | judgment |
 | <a id="row-102"></a>102 | BP Variadic options (:2487-2490) | The option functions' parameter type is unexported by default | keep | Intentionally Public step 1 | [func-options](#rule-func-options) | Pattern mappings | judgment |
@@ -334,7 +334,8 @@ documenting. Document the error-prone and non-obvious ones and say why
 they matter; "format is the format" adds nothing. Caller documentation
 that already restates the obvious stays (Say It Once step 1).
 Source: BP "Parameters and configuration" (:1498-1536),
-`a9c5f82b1981`, read 2026-11-16.
+`a9c5f82b1981`, read 2026-11-16; owner ruling, bs-f3o.2 comment
+"Owner rulings from go-decisions (2026-11-17)", S-12.
 Differs: BP's bad example reads as text to remove; Say It Once step 1
 leaves a public name's caller documentation alone even when it repeats
 the name.
@@ -390,24 +391,24 @@ Source: BP "Function argument lists" (:2229-2247), `a9c5f82b1981`,
 read 2026-11-16.
 ↩ row [95](#row-95)
 
-<a id="rule-func-options"></a>**func-options.** An option struct is the last argument and is
-exported only if its function is. It fits when several functions
-share the options, or when it names a concept of the domain. A struct
+<a id="rule-func-options"></a>**func-options.** Optional settings are variadic options,
+`New(addr, WithTimeout(5*time.Second))`, with sane defaults, so a
+caller passes only what differs. There are no option structs: a struct
 that only carries one function's arguments is the one-call wrapper
 Unit Testing names as a misapplication (`testing__unit.md`, "A wrapper
-made for one call"). ctx never goes in it (ctx-per-call).
-Variadic options cost much code: use them when several of these
-hold: most callers pass no options, the options are many or take
-arguments, an option can fail, or other packages may define their own. An option takes its value as
+made for one call"), and a value that names a domain concept is passed
+as that type, not as an option. ctx is never an option (ctx-per-call).
+An option takes its value as
 a parameter, `FailFast(enable bool)`, not `EnableFailFast()`. Options
 apply in order, the last winning when one is given twice. The type the
 option functions change is unexported unless other packages are meant
 to define options.
 Source: BP "Option structure" and "Variadic options" (:2259-2490),
-`a9c5f82b1981`, read 2026-11-16.
-Differs: BP also prefers an option struct for a single function whose
-callers all set some options or often set many; Unit Testing names
-that a one-call wrapper.
+`a9c5f82b1981`, read 2026-11-16; owner ruling, bs-f3o.2 comment
+"Owner rulings, round 2 (2026-11-17)", S-3.
+Differs: BP prefers an option struct in several cases and keeps
+variadic options for when their cost pays; we use variadic options for
+all optional settings.
 ↩ rows [96](#row-96), [97](#row-97), [99](#row-99), [100](#row-100), [101](#row-101), [102](#row-102)
 
 <a id="rule-cli-layout"></a>**cli-layout.** A subcommand needs no package of its own; package
@@ -1017,17 +1018,12 @@ Dropped because: test-require (bjornstack.md row 39): `require` stops at the fir
 
 ## Open for owner
 
-Rows whose decision rests on reading a strategy or an owner ruling
-against this source, where another reading is possible:
+None. The owner ruled on both earlier questions on 2026-11-17 (bs-f3o.2
+comments "Owner rulings from go-decisions" and "Owner rulings, round
+2"):
 
-1. **Option structs and variadic options (row 96).** Unit Testing's
-   "wrapper made for one call" is read as covering BP's
-   single-function option struct (`ReplicationOptions`), yet
-   func-options allows variadic options for one function, which carry
-   the same one-call arguments. Suggested: one test for both forms,
-   used only when the options are shared across functions or name a
-   domain concept. Alternative: allow both for optional settings with
-   working defaults. Still open on bs-f3o.2.
-2. **Documentation that restates the obvious (rows 68, 69).** BP's
-   bad examples read as text to delete; Say It Once step 1 leaves a
-   public name's caller documentation alone.
+1. **Option structs and variadic options (row 96):** variadic `WithX`
+   options with sane defaults only, as func-options states (S-3).
+2. **Documentation that restates the obvious (rows 68, 69):** new code
+   doesn't write it, and existing caller documentation is left alone,
+   as doc-params and doc-ctx state (S-12).

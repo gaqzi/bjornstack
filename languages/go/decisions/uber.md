@@ -94,7 +94,7 @@ and a "covered by C" row those of the C row it names. Drop rows, and
 | <a id="row-48"></a>48 | U Exit Once (:1790-1906) | Exit at most once in `main`; the logic goes in a `run` function returning an error or exit code | keep | Go-specific; "if possible, prefer" keeps it a judgment | [main-run](#rule-main-run) | For the protocols | judgment |
 | <a id="row-49"></a>49 | U Use field tags in marshaled structs (:1908-1954) | Every marshaled field carries a tag naming it | keep | The serialized form is a contract (Boundary Communication step 3); the tag keeps it fixed when the Go field is renamed. Such types live in the boundary adapter (bjornstack.md scrub-boundary, [row 20](bjornstack.md#row-20)) | [wire-tags](#rule-wire-tags) | Pattern mappings | guard candidate |
 | <a id="row-50"></a>50 | U Don't fire-and-forget goroutines (:1967, :1971-1977) | Every goroutine has a predictable end or a stop signal, and a way to wait for it | keep | C1 [row 86](google-guide-decisions.md#row-86) (go-lifetime) accepts documenting when a goroutine exits instead of a way to wait; Uber's requirement is kept on top of it, as go-owner already does for background goroutines | [go-wait](#rule-go-wait) | Pattern mappings | judgment |
-| <a id="row-51"></a>51 | U Don't fire-and-forget goroutines (:1968-1969) | Test packages that may start goroutines for leaks with `go.uber.org/goleak` | keep | A check the source names | [tool-goleak](#rule-tool-goleak) | Tooling | tool: goleak (named by the source) |
+| <a id="row-51"></a>51 | U Don't fire-and-forget goroutines (:1968-1969) | Test packages that may start goroutines for leaks with `go.uber.org/goleak` | keep | A check the source names; a guard candidate, not part of tool-finish (owner ruling 2026-11-17, S-5) | [tool-goleak](#rule-tool-goleak) | Tooling | guard candidate |
 | <a id="row-52"></a>52 | U Wait for goroutines to exit (:2036-2067) | `sync.WaitGroup` for several goroutines, a `done` channel for one | keep | The `WaitGroup` is already in C1 [row 86](google-guide-decisions.md#row-86) (go-lifetime); the `done` channel for a single goroutine is not | [go-wait](#rule-go-wait) | Pattern mappings | judgment |
 | <a id="row-53"></a>53 | U No goroutines in `init()` (:2074-2078) | A package's background goroutine is owned by an object the user creates, whose `Close`, `Stop` or `Shutdown` signals it and waits | keep | Adds an owner to go-lifetime; no C row says it | [go-owner](#rule-go-owner) | For the protocols | judgment |
 | <a id="row-54"></a>54 | U Performance (:2150); Prefer strconv over fmt (:2152-2155) | On the hot path, `strconv` over `fmt` for primitives | keep | Hot-path scope kept | [perf-hot-path](#rule-perf-hot-path) | For the protocols | judgment |
@@ -106,7 +106,7 @@ and a "covered by C" row those of the C row it names. Drop rows, and
 | <a id="row-60"></a>60 | U Be Consistent (:2381-2383) | Apply a guideline at package level or larger, not to part of a package | covered by C | C1 [row 15](google-guide-decisions.md#row-15), dropped: Consistent Beats Correct's "changed everywhere it appears" | [dropped in C1](google-guide-decisions.md#drop-15) | — | - |
 | <a id="row-61"></a>61 | U Group Similar Declarations (:2385-2454) | Group imports, constants, variables and types in parenthesised blocks | keep | Go convention; no C row covers it | [decl-group](#rule-decl-group) | For the protocols | guard candidate |
 | <a id="row-62"></a>62 | U Group Similar Declarations (:2456-2489) | Only related declarations share a group | keep | The other side of row 61 | [decl-group](#rule-decl-group) | For the protocols | judgment |
-| <a id="row-63"></a>63 | U Group Similar Declarations (:2491-2562) | Inside functions, adjacent variables go in one `var ( ... )` group, even unrelated ones | covered by C | C2 [row 85](google-best-practices.md#row-85) (var-decl): a non-zero initial value uses `:=`, not `var x = ...`; the source's own Local Variable Declarations agrees (row 83) | [var-decl](google-best-practices.md#rule-var-decl) | For the protocols | guard candidate |
+| <a id="row-63"></a>63 | U Group Similar Declarations (:2491-2562) | Inside functions, adjacent variables go in one `var ( ... )` group, even unrelated ones | drop | Plain style the standard conventions leave free; go.md carries only our additions (owner ruling 2026-11-17, S-6) | [dropped](#drop-63) | — | - |
 | <a id="row-64"></a>64 | U Import Group Ordering (:2564-2600) | Two import groups: standard library, then everything else | covered by C | C1 [row 48](google-guide-decisions.md#row-48) (import-groups): up to four groups | [import-groups](google-guide-decisions.md#rule-import-groups) | For the protocols | guard candidate |
 | <a id="row-65"></a>65 | U Package Names (:2606, :2608-2609) | Package names are lower case, short and succinct | already ours | bjornstack.md [row 1](bjornstack.md#row-1) (pkg-naming) | [pkg-naming](bjornstack.md#rule-pkg-naming) | Pattern mappings | judgment |
 | <a id="row-66"></a>66 | U Package Names (:2607) | A package name needs no renaming at most call sites | covered by C | C2 [row 21](google-best-practices.md#row-21) (shadow-pkg-name) | [shadow-pkg-name](google-best-practices.md#rule-shadow-pkg-name) | For the protocols | judgment |
@@ -158,8 +158,8 @@ and a "covered by C" row those of the C row it names. Drop rows, and
 | <a id="row-112"></a>112 | U Parallel Tests (:3896-3922) | With `t.Parallel()`, assign the loop variable inside the loop | drop | Since Go 1.22, in a module declaring `go 1.22` or later, each iteration has its own loop variable; jetbrains-modern [row 27](jetbrains-modern.md#row-27) already decides redundant `v := v` copies | [dropped](#drop-112) | — | - |
 | <a id="row-113"></a>113 | U Functional Options (:3926-4009) | Variadic options for optional arguments of constructors and public APIs expected to grow, especially at three or more arguments | covered by C | C2 [row 99](google-best-practices.md#row-99) (func-options): C's criteria (most callers pass none, the options are many or take arguments, an option can fail, other packages define their own) replace Uber's "expected to grow, three or more arguments" | [func-options](google-best-practices.md#rule-func-options) | Pattern mappings | judgment |
 | <a id="row-114"></a>114 | U Functional Options (:4011-4071) | Implement options as an `Option` interface with an unexported `apply` method on an unexported `options` struct, not closures | adapt | The source calls it "our suggested way" (:4011), so it is a preference. It clashes with C2 func-options where other packages may define options: an unexported `apply` method rules that out, so there the option type stays open to them | [option-iface](#rule-option-iface) | For the protocols | judgment |
-| <a id="row-115"></a>115 | U Linting (:4083-4096) | Lint consistently, with at least `errcheck`, `goimports`, `revive`, `govet` and `staticcheck` | keep | Extends tool-finish (bjornstack.md [row 78](bjornstack.md#row-78)); `errcheck` checks C1 err-handle | [tool-lint](#rule-tool-lint) | Tooling | tool: errcheck, goimports, revive, go vet, staticcheck (named by the source) |
-| <a id="row-116"></a>116 | U Lint Runners (:4098-4103) | Run the linters with `golangci-lint` | keep | Same | [tool-lint](#rule-tool-lint) | Tooling | tool: golangci-lint (named by the source) |
+| <a id="row-115"></a>115 | U Linting (:4083-4096) | Lint consistently, with at least `errcheck`, `goimports`, `revive`, `govet` and `staticcheck` | keep | A guard candidate, not part of tool-finish; merged into community-skills.md tool-lint (owner ruling 2026-11-17, S-4); `errcheck` checks C1 err-handle | [tool-lint](community-skills.md#rule-tool-lint) | Tooling | tool: errcheck, goimports, revive, go vet, staticcheck (named by the source) |
+| <a id="row-116"></a>116 | U Lint Runners (:4098-4103) | Run the linters with `golangci-lint` | keep | Same | [tool-lint](community-skills.md#rule-tool-lint) | Tooling | tool: golangci-lint (named by the source) |
 
 ### Headings with no rule
 
@@ -188,16 +188,18 @@ at `1d60a91aa5e8`, read 2026-11-16.
 ### Tooling
 
 <a id="rule-tool-goleak"></a>**tool-goleak.** A package that may start goroutines checks for
-leaked goroutines in its tests with `go.uber.org/goleak`.
+leaked goroutines in its tests with `go.uber.org/goleak`. This is a
+guard candidate, not part of tool-finish (owner ruling, bs-f3o.2
+comment "Owner rulings from go-decisions (2026-11-17)", S-5).
 Source: U "Don't fire-and-forget goroutines" (:1966-1969),
 `1d60a91aa5e8`, read 2026-11-16.
 ↩ row [51](#row-51)
 
-<a id="rule-tool-lint"></a>**tool-lint.** Lint the same way across the codebase, with at least
-`errcheck`, `goimports`, `revive`, `go vet` and `staticcheck`, run
-through `golangci-lint`. These run beside tool-finish.
-Source: U "Linting" and "Lint Runners" (:4083-4103), `1d60a91aa5e8`,
-read 2026-11-16.
+<a id="rule-tool-lint"></a>**tool-lint.** Merged into community-skills.md
+[tool-lint](community-skills.md#rule-tool-lint), which lists this
+source's linters with the others (owner ruling, bs-f3o.2 comment
+"Owner rulings from go-decisions (2026-11-17)", S-4). go.md takes that
+rule.
 ↩ rows [115](#row-115), [116](#row-116)
 
 ### Pattern mappings
@@ -590,6 +592,16 @@ Dropped because: A fact that asks nothing of the code; the source says it "tends
 
 ↩ row [22](#row-22)
 
+### <a id="drop-63"></a>Row 63: Grouping local variables
+
+Source: U "Group Similar Declarations" (:2491-2562): inside functions, adjacent variables go in one `var ( ... )` group, even unrelated ones.
+
+In practice: `var n int` and `var err error` on adjacent lines become one `var ( ... )` block.
+
+Dropped because: Plain style that gofmt and the standard conventions leave free, and go.md carries only our additions. Owner ruling, bs-f3o.2 comment "Owner rulings from go-decisions (2026-11-17)", S-6.
+
+↩ row [63](#row-63)
+
 ### <a id="drop-109"></a>Row 109: Narrowest unit and test depth
 
 Source: U "Avoid Unnecessary Complexity in Table Tests" (:3776-3788): "Some ideals to aim for are: Focus on the narrowest unit of behavior; Minimize "test depth" ..."
@@ -612,19 +624,8 @@ Dropped because: Since Go 1.22, in a module whose `go.mod` declares `go 1.22` or
 
 ## Open for owner
 
-Decisions still open after the 2026-11-16 review (bs-f3o.2, owner
-rulings):
-
-1. **goleak (row 51).** tool-goleak adds `go.uber.org/goleak` as a
-   test dependency. Suggested: a guard candidate, not part of
-   tool-finish.
-2. **Linters (rows 115-116).** tool-lint adds `errcheck`, `revive`,
-   `staticcheck` and `golangci-lint` beside tool-finish. That is a
-   tooling choice and a set of dependencies, not only a style rule.
-   Suggested: guard candidates, not part of tool-finish.
-   community-skills.md defines the same rule id, tool-lint, so the
-   two must be merged before go.md is assembled.
-3. **Grouping local variables (row 63).** C has no rule on grouping
-   locals, and C2 var-decl conflicts only for initialised variables,
-   so grouping adjacent zero-value variables (`var err error`) is left
-   undecided. Suggested: drop.
+None. The owner ruled on all three earlier questions on 2026-11-17
+(bs-f3o.2 comment "Owner rulings from go-decisions"): goleak (row 51)
+and the linters (rows 115-116) are guard candidates, not part of
+tool-finish; tool-lint is merged into community-skills.md; grouping
+local variables (row 63) is dropped.

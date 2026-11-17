@@ -80,8 +80,8 @@ person or an agent has to decide. Drop rows have "-".
 | <a id="row-44"></a>44 | O-0908b | `require.Equal` compares `time.Time` fields, not the instant | keep | Confirmed by R; it is why O-1103b chose require, so go.md states it as a pitfall | [test-time](#rule-test-time) | Go pitfalls | guard candidate |
 | <a id="row-45"></a>45 | O-0908b | `require` stops at the first failure, weakening loops over `errors.Join` causes | adapt | Answer is one comparison over all causes, not a loop of `ErrorIs`; also follows Failure Identity step 6 | [scrub-collect](#rule-scrub-collect) | Pattern mappings | judgment |
 | <a id="row-46"></a>46 | O-1019 | `context.Context` passed per call, not stored, as the exception to Unit Testing 3.2 | keep | Owner decision; Unit Testing 3.2 at `e31ec16` still says a coordinator never hands on a set-up value | [ctx-per-call](#rule-ctx-per-call) | Pattern mappings | guard candidate |
-| <a id="row-47"></a>47 | O-1021 | ctx is a narrowly scoped global: cancellation and program-wide per-goroutine settings only | keep | Owner decision; matches Unit Testing 3.2's logging/metrics exception | [ctx-scope](#rule-ctx-scope) | Pattern mappings | judgment |
-| <a id="row-48"></a>48 | O-1029a | `%w` vs `%v`, and a second `%w`, leak a cause's identity | keep | Go form of Failure Identity step 3; owner chose 2026-11-16: `%v` at the edge, single `%w` above it, ctx errors always `%w` | [err-wrap-verb](#rule-err-wrap-verb) | Go pitfalls | judgment |
+| <a id="row-47"></a>47 | O-1021 | ctx is a narrowly scoped global: cancellation and program-wide per-goroutine settings only | keep | Owner decision; matches Unit Testing 3.2's logging/metrics exception; owner ruling 2026-11-17 (S-1): "almost never", not "never", with the authenticated principal as the exception | [ctx-scope](#rule-ctx-scope) | Pattern mappings | judgment |
+| <a id="row-48"></a>48 | O-1029a | `%w` vs `%v`, and a second `%w`, leak a cause's identity | keep | Go form of Failure Identity step 3; owner chose 2026-11-16: `%v` at the edge, single `%w` above it, ctx errors always `%w`; owner ruling 2026-11-17 (S-2): errors from a collaborator the caller supplied always `%w` | [err-wrap-verb](#rule-err-wrap-verb) | Go pitfalls | judgment |
 | <a id="row-49"></a>49 | O-1029a | An `Unwrap` method on an identity type leaks the cause | keep | Same | [err-unwrap](#rule-err-unwrap) | Go pitfalls | judgment |
 | <a id="row-50"></a>50 | O-1029a | `errors.Is`/`As` match any member of `errors.Join` | keep | Go form of Failure Identity's "combined failure checked for one cause" | [err-join-match](#rule-err-join-match) | Go pitfalls | judgment |
 | <a id="row-51"></a>51 | O-1029a | `errors.As` into a value type misses a pointer error | keep | Owner-recorded trap | [err-as-pointer](#rule-err-as-pointer) | Go pitfalls | guard candidate |
@@ -94,7 +94,7 @@ person or an agent has to decide. Drop rows have "-".
 | <a id="row-58"></a>58 | O-1103b | Rejected assertion libraries and why | drop | Rationale for row 57; stays on the bead | [dropped](#drop-58) | — | - |
 | <a id="row-59"></a>59 | O-1103b | Clock: injected by default, `testing/synctest` allowed where injecting is awkward | keep | Owner decision; Whole-Object Assertion step 2's first choice | [clock-inject](#rule-clock-inject) | Pattern mappings | guard candidate |
 | <a id="row-60"></a>60 | O-1103b | Format `languages/<lang>.md`; citation format | drop | Govern docs/WORKFLOW.md (bs-f3o.2) and this file, not Go code | [dropped](#drop-60) | — | - |
-| <a id="row-60a"></a>60a | O-1103b | `encoding/json/v2` and a stdlib uuid for new code on Go 1.27 | adapt | Owner said yes pending a release-notes check, which is outside this bead's pinned sources; carried as conditional until bs-f3o.2.7 checks it | [new-stdlib](#rule-new-stdlib) | Tooling | guard candidate |
+| <a id="row-60a"></a>60a | O-1103b | `encoding/json/v2` and a stdlib uuid for new code on Go 1.27 | adapt | Owner said yes pending a release-notes check; go-team-docs.md [Check for row 60a](go-team-docs.md#check-60a) confirms both packages, and the owner confirmed the `uuid` package generates UUIDv7 (2026-11-17, S-8). Existing v1 code stays on v1 (owner ruling 2026-11-16) | [new-stdlib](#rule-new-stdlib) | Tooling | guard candidate |
 | <a id="row-61"></a>61 | P0 | Outside-in order: black-box test first, then coordinator, then computation | drop | Outside-In Development Loop says it for every language | [dropped](#drop-61) | — | - |
 | <a id="row-62"></a>62 | P0 | Black-box test imports no production package; parses output with its own local structs | keep | Black Box Integration step 1, spelled for Go | [bb-package](#rule-bb-package) | Pattern mappings | guard candidate |
 | <a id="row-63"></a>63 | P0 | Tests live outside the package; no test files in the package itself; unexported code reached through the public surface | keep | Public API Surface Testing step 1 | [test-pkg](#rule-test-pkg) | Pattern mappings | guard candidate |
@@ -193,12 +193,17 @@ Source: bs-f3o.2 comments 2026-09-08 09:58 and 2026-11-03 09:09, read
 2026-11-03.
 ↩ rows [43](#row-43), [57](#row-57)
 
-<a id="rule-new-stdlib"></a>**new-stdlib.** New code on Go 1.27 uses `encoding/json/v2` and the
-standard library's uuid package, once the Go 1.27 release notes
-confirm both.
-Source: bs-f3o.2 comment 2026-11-03 09:09, read 2026-11-03.
-Differs: conditional until bs-f3o.2.7 checks the release notes; this
-bead could not look them up.
+<a id="rule-new-stdlib"></a>**new-stdlib.** In a module whose `go` directive is 1.27 or later, new
+code uses `encoding/json/v2`, and generates and parses UUIDs with the
+standard library's `uuid` package, which generates UUIDv7. An existing
+wire format or package on `encoding/json` (v1) stays on it until a
+migration is asked for; go.md names the module as being on the old
+form, so a migration can be considered.
+Source: bs-f3o.2 comment 2026-11-03 09:09, read 2026-11-03; Go 1.27
+release notes, go.dev/doc/go1.27, read 2026-11-16 (go-team-docs.md
+[Check for row 60a](go-team-docs.md#check-60a)); owner ruling, bs-f3o.2
+comment 2026-11-16 16:26; owner check of UUIDv7, bs-f3o.2 comment
+"Owner rulings from go-decisions (2026-11-17)", S-8.
 ↩ row [60a](#row-60a)
 
 ### Pattern mappings
@@ -391,13 +396,17 @@ Source: bs-f3o.2 comment 2026-10-19 16:32, read 2026-11-03.
 
 <a id="rule-ctx-scope"></a>**ctx-scope.** ctx carries cancellation and per-goroutine settings the
 whole program needs, such as the logger and trace ID. It does not
-carry data structures because ctx is easy to reach. The logger lives
+carry data structures because ctx is easy to reach. Data in ctx is
+almost never right, not never: the one exception is the authenticated
+principal (community-skills.md
+[ctx-principal](community-skills.md#rule-ctx-principal)). The logger lives
 in ctx only: code takes a fully configured logger with
 `logctx.From(ctx)`, which returns a logger that discards everything
 when ctx carries none, not `slog.Default()`. Tests put their own
 logger in ctx.
 Source: bs-f3o.2 comment 2026-10-21 06:36, read 2026-11-03; owner
-ruling 2026-11-16.
+ruling 2026-11-16; owner ruling, bs-f3o.2 comment "Owner rulings,
+round 2 (2026-11-17)", S-1.
 ↩ row [47](#row-47)
 
 <a id="rule-compliance-suite"></a>**compliance-suite.** When an interface has two implementations, or
@@ -517,12 +526,16 @@ passes the cause's identity on; `go vet` does not catch it. A second
 translated into our own identity, use `%v`. Everywhere above the edge,
 wrap with a single `%w`. `context.Canceled` and
 `context.DeadlineExceeded` are always wrapped with `%w`, even at the
-edge: they are the caller's own signal, not the outside system's.
+edge: they are the caller's own signal, not the outside system's. So
+is an error from a collaborator the caller supplied, such as an
+`io.Reader` passed in: it is the caller's own, and the caller may need
+to recognise it.
 `%v` leaves only a string, so a caller that needs the detail gets our
 own error type, never a match on the text (Failure Identity steps 1-2,
 `failure-identity.md:4-8`, `:19-27`).
 Source: bs-f3o.2 comment 2026-10-29 14:58, read 2026-11-03; owner
-ruling 2026-11-16 (option C).
+ruling 2026-11-16 (option C); owner ruling, bs-f3o.2 comment "Owner rulings
+from go-decisions (2026-11-17)", S-2 (go-team-docs.md row 39).
 ↩ row [48](#row-48)
 
 <a id="rule-err-wrap-where"></a>**err-wrap-where.** Wrap the error returned by a call to another

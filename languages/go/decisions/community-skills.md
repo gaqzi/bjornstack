@@ -157,7 +157,7 @@ row. Drop rows have "-".
 | <a id="row-100"></a>100 | CX `SKILL.md:37`; `references/values-tracing.md:7-31`; eval 3.1-3.2 | ctx value keys are unexported types | keep | Go pitfall: string keys collide across packages | [ctx-keys](#rule-ctx-keys) | Pattern mappings | guard candidate |
 | <a id="row-101"></a>101 | CX `references/values-tracing.md:18-26`; eval 3.3-3.5 | Typed setter and getter per value; the getter reports a missing value | adapt | Except the logger: `logctx.From` reports nothing and returns a discarding logger (ctx-scope) | [ctx-keys](#rule-ctx-keys) | Pattern mappings | judgment |
 | <a id="row-102"></a>102 | CX `SKILL.md:38`; `references/values-tracing.md:3-5`, `:33-41`; eval 9.1, 9.3, 9.5 | Only request-scoped metadata in ctx values; never parameters, connections or flags | adapt | Differs: the source's "request-scoped data" is wider; ctx-scope (bjornstack.md row 47) narrows it to cancellation and program-wide per-goroutine settings (see row 103) | [ctx-scope](bjornstack.md#rule-ctx-scope) | Pattern mappings | judgment |
-| <a id="row-103"></a>103 | CX `references/values-tracing.md:38`; eval 9.4; CU `go-context/SKILL.md:83` | The authenticated user or tenant travels in ctx values | drop | ctx-scope (bjornstack.md row 47) limits ctx to cancellation and program-wide per-goroutine settings; the user a request acts for is input (Unit Testing step 3.2); still open for the owner (Open for owner 1) | [dropped](#drop-103) | — | - |
+| <a id="row-103"></a>103 | CX `references/values-tracing.md:38`; eval 9.4; CU `go-context/SKILL.md:83` | The authenticated user or tenant travels in ctx values | adapt | Owner ruling 2026-11-17 (bs-f3o.2, round 2, S-1): ctx-scope is "almost never", not "never". Middleware puts the principal in ctx and the handler passes it on as input; deeper code may read it from ctx only for finer-grained checks | [ctx-principal](#rule-ctx-principal) | Pattern mappings | judgment |
 | <a id="row-104"></a>104 | CX `references/values-tracing.md:42`; eval 9.2 | Logger in ctx only when enriched with request fields; eval 9.2: never in ctx | drop | Contradicts ctx-scope (bjornstack.md row 47): the logger lives in ctx only | [dropped](#drop-104) | — | - |
 | <a id="row-105"></a>105 | CX `SKILL.md:39`; `references/cancellation.md:163-186`; eval 5 | `context.WithoutCancel` for work that outlives the request | adapt | Add ES's rule (row 252): detached work gets its own timeout | [ctx-detach](#rule-ctx-detach) | Pattern mappings | judgment |
 | <a id="row-106"></a>106 | CX `references/cancellation.md:106-128` | Select on `ctx.Done()` alongside other work | keep | Go mechanism for honouring cancellation | [ctx-listen](#rule-ctx-listen) | Pattern mappings | judgment |
@@ -187,7 +187,7 @@ row. Drop rows have "-".
 | <a id="row-130"></a>130 | PL `references/directory-layouts.md:72-96`; eval 8 | A library: public packages at the root, private code in `internal/`, no `cmd/` | keep | Go-specific layout | [layout-library](#rule-layout-library) | Pattern mappings | judgment |
 | <a id="row-131"></a>131 | PL `references/directory-layouts.md:15-51` | Universal layout with `internal/{app,config,handler,model,service}` | drop | Technical-role packages: Domain-First Packaging step 1 and proto-packages | [dropped](#drop-131) | — | - |
 | <a id="row-132"></a>132 | PL `references/directory-layouts.md:143-150`; eval 3.1 | No `src/` directory | keep | Mechanical, Go-specific | [layout-cmd](#rule-layout-cmd) | Pattern mappings | guard candidate |
-| <a id="row-133"></a>133 | PL `references/directory-layouts.md:146`; eval 3.6 | No `main.go` at the module root | keep | Same rule as row 126; still open for the owner (Open for owner 2) | [layout-cmd](#rule-layout-cmd) | Pattern mappings | guard candidate |
+| <a id="row-133"></a>133 | PL `references/directory-layouts.md:146`; eval 3.6 | No `main.go` at the module root | adapt | Owner ruling 2026-11-17 (bs-f3o.2, S-7): `cmd/<name>/` by default; a root `main.go` is a local exception, decided when the tool is created | [layout-cmd](#rule-layout-cmd) | Pattern mappings | guard candidate |
 | <a id="row-134"></a>134 | PL `references/directory-layouts.md:147-149`; eval 3.2-3.5 | No `utils/`, `helpers/`, `common/` packages | already ours | bjornstack.md row 3 (proto-packages) | [proto-packages](bjornstack.md#rule-proto-packages) | For the protocols | guard candidate |
 | <a id="row-135"></a>135 | PL `references/directory-layouts.md:152-163` | The fix: `internal/util/` "specific utility names" | drop | Still a technical-role name (proto-packages) | [dropped](#drop-135) | — | - |
 | <a id="row-136"></a>136 | PL `SKILL.md:47`, `:98-100`; `references/workspaces.md:12-25`; eval 6 | `go.work` for developing several modules together: a monorepo, modules that import each other, local cross-module testing | keep | Go-specific; the uses the source lists | [layout-workspace](#rule-layout-workspace) | Tooling | judgment |
@@ -301,7 +301,7 @@ row. Drop rows have "-".
 | <a id="row-244"></a>244 | ES `go-error-handling/SKILL.md:98-108` | A custom type that wraps a cause must expose it with `Unwrap` | adapt | Same rule as row 90 | [err-unwrap-where](#rule-err-unwrap-where) | Go pitfalls | judgment |
 | <a id="row-245"></a>245 | ES `go-error-handling/SKILL.md:111-131` | Always add context when propagating; a bare `return err` is bad | drop | Contradicts err-wrap-where (bjornstack.md row 121): a private helper's error returns unwrapped | [dropped](#drop-245) | — | - |
 | <a id="row-246"></a>246 | ES `go-context/SKILL.md:190-192` | ctx values: request ID, trace or span ID, a request-scoped logger | already ours | bjornstack.md row 47 (ctx-scope) | [ctx-scope](bjornstack.md#rule-ctx-scope) | Pattern mappings | judgment |
-| <a id="row-247"></a>247 | ES `go-context/SKILL.md:190-191` | ctx values: the authenticated user | drop | Same as row 103 | [dropped](#drop-103) | — | - |
+| <a id="row-247"></a>247 | ES `go-context/SKILL.md:190-191` | ctx values: the authenticated user | adapt | Same as row 103 | [ctx-principal](#rule-ctx-principal) | Pattern mappings | judgment |
 | <a id="row-248"></a>248 | ES `go-context/SKILL.md:194-196` | Export accessor functions so callers never type-assert `ctx.Value` | keep | Same rule as row 101 | [ctx-keys](#rule-ctx-keys) | Pattern mappings | judgment |
 | <a id="row-249"></a>249 | ES `go-context/SKILL.md:206-208` | Wrap the call under test in `context.WithTimeout` so a hang fails the test | keep | Bounds one test, unlike row 27's panic | [test-ctx](#rule-test-ctx) | Pattern mappings | judgment |
 | <a id="row-250"></a>250 | ES `go-context/SKILL.md:208-209` | Assert `errors.Is(err, context.Canceled)` to prove cancellation is honoured | keep | Works because err-wrap-verb always wraps ctx errors with `%w` | [test-ctx](#rule-test-ctx) | Pattern mappings | judgment |
@@ -344,10 +344,17 @@ Differs: T asks for `-covermode=atomic` with `-race` as well.
 
 <a id="rule-tool-lint"></a>**tool-lint.** golangci-lint runs from a `.golangci.yml` at the module
 root and enables at least errcheck, forcetypeassert, nilerr, govet,
-staticcheck, thelper, paralleltest and testifylint.
+staticcheck, thelper, paralleltest, testifylint, revive and goimports.
+This one rule replaces uber.md tool-lint (owner ruling, bs-f3o.2
+comment "Owner rulings from go-decisions (2026-11-17)", S-4). It is a
+guard candidate, not part of tool-finish. Reuse golangci-lint's
+linters where they exist, and write our own linters so they could
+later go into golangci-lint.
 Source: T `d68d80a` `SKILL.md:396`; TF `SKILL.md:196`, eval 11; CX
-`SKILL.md:84`; PL `SKILL.md:90`; SF `SKILL.md:246`; read 2026-11-16.
-↩ rows [49](#row-49), [64](#row-64), [114](#row-114), [144](#row-144), [200](#row-200)
+`SKILL.md:84`; PL `SKILL.md:90`; SF `SKILL.md:246`; read 2026-11-16;
+Uber Go Style Guide "Linting" and "Lint Runners" (:4083-4103),
+`1d60a91aa5e8`, read 2026-11-16.
+↩ rows [49](#row-49), [64](#row-64), [114](#row-114), [144](#row-144), [200](#row-200); uber.md rows [115](uber.md#row-115), [116](uber.md#row-116)
 
 <a id="rule-tool-stdversion"></a>**tool-stdversion.** On Go 1.27, `go test` runs the `stdversion`
 vet check. A failure is fixed by raising the `go` directive or by not
@@ -833,6 +840,22 @@ Source: CX `d68d80a` `SKILL.md:37`,
 `go-context/SKILL.md:194-196`; read 2026-11-16.
 ↩ rows [100](#row-100), [101](#row-101), [110](#row-110), [248](#row-248)
 
+<a id="rule-ctx-principal"></a>**ctx-principal.** Auth middleware puts the
+authenticated principal in the request ctx (ctx-keys). The handler
+reads it and passes it down as input (Unit Testing step 3.2). Code
+below the handler may read it from ctx only for a finer-grained check
+than the middleware made, so it doesn't redo the authentication.
+This is the one data value ctx carries beyond ctx-scope's list: ctx
+carries data almost never, not never.
+Source: CX `d68d80a` `references/values-tracing.md:38`, eval 9.4; ES
+`e25b517` `go-context/SKILL.md:190-191`; CU `91f0c2e`
+`go-context/SKILL.md:83`; read 2026-11-16; owner ruling, bs-f3o.2
+comment "Owner rulings, round 2 (2026-11-17)", S-1.
+Differs: the sources put the user or tenant in ctx for any code to
+read; here the handler passes it down, and deeper reads are for
+finer-grained checks only.
+↩ rows [103](#row-103), [247](#row-247)
+
 <a id="rule-ctx-detach"></a>**ctx-detach.** Work that must outlive the request gets
 `context.WithoutCancel(ctx)`, which keeps ctx's values such as the
 logger and trace ID (ctx-scope), plus a timeout of its own.
@@ -890,12 +913,18 @@ Source: ES `e25b517` `go-context/SKILL.md:213-219`; read 2026-11-16.
 ↩ row [251](#row-251)
 
 <a id="rule-layout-cmd"></a>**layout-cmd.** Each binary's `main` package lives in `cmd/<name>/`,
-none at the module root and no `src/` directory. `main` parses flags
+and no `src/` directory. `main` parses flags
 and configuration, builds the collaborators (coord-inject) and calls
-`Run`; no business logic lives in `cmd/`.
+`Run`; no business logic lives in `cmd/`. A module with one binary
+uses `cmd/<name>/` too, unless it is made a local exception with
+`main.go` at the root. When a tool is created, ask the owner whether
+it will have several binaries and whether to add the folder.
 Source: PL `d68d80a` `SKILL.md:80`,
 `references/directory-layouts.md:98-150`, evals 2, 3.1, 3.6, 11; read
-2026-11-16.
+2026-11-16; owner ruling, bs-f3o.2 comment "Owner rulings from
+go-decisions (2026-11-17)", S-7.
+Differs: PL allows no `main.go` at the root; we allow it as a local
+exception.
 ↩ rows [126](#row-126), [127](#row-127), [132](#row-132), [133](#row-133)
 
 <a id="rule-layout-internal"></a>**layout-internal.** An application's
@@ -1487,23 +1516,6 @@ instead.
 
 ↩ row [89](#row-89)
 
-### <a id="drop-103"></a>Rows 103 and 247: Authenticated user in ctx
-
-Source: CX `references/values-tracing.md:38`: "Authenticated
-user/tenant | Yes"; ES `go-context/SKILL.md:190-191`; CU
-`go-context/SKILL.md:83` lists auth info as a ctx value.
-
-In practice: Services read the user or tenant out of ctx.
-
-Dropped because: ctx-scope (bjornstack.md row 47) limits ctx to
-cancellation and per-goroutine settings the whole program needs, such
-as the logger and trace ID; the user a request acts for is input (Unit
-Testing step 3.2). CX contradicts itself
-(`references/values-tracing.md:41`), and eval 9.4 is satisfied by a
-trace ID alone. See Open for owner 1.
-
-↩ rows [103](#row-103), [247](#row-247)
-
 ### <a id="drop-104"></a>Row 104: Logger in ctx only sometimes
 
 Source: CX `references/values-tracing.md:42`: "Logger | Depends | OK
@@ -1858,18 +1870,11 @@ where external data enters.
 
 ## Open for owner
 
-Questions this table raises. Each row named stands as decided until
-the owner rules; both are listed as still open on bs-f3o.2 (comment
-2026-11-16).
+None. The owner ruled on both earlier questions on 2026-11-17
+(bs-f3o.2 comments "Owner rulings from go-decisions" and "Owner
+rulings, round 2"):
 
-1. **Authenticated user in ctx (rows 103, 247).** Dropped against
-   ctx-scope. The proposed adapt: middleware may put the authenticated
-   principal in the request ctx (ctx-keys); the handler reads it once
-   and passes it on as input (Unit Testing step 3.2); nothing below the
-   handler reads it from ctx. net/http has no other path from auth
-   middleware to the handler. Suggested: yes.
-2. **main.go at the root for a single binary (row 133).** layout-cmd
-   puts every `main` in `cmd/<name>/`, as PL does; for a single-binary
-   tool that adds structure Domain-First Packaging's SKIP WHEN warns
-   against. Suggested: root for a single binary, `cmd/<name>/` only for
-   several.
+1. **Authenticated user in ctx (rows 103, 247):** allowed, as
+   ctx-principal states.
+2. **main.go for a single binary (row 133):** `cmd/<name>/` by
+   default, as layout-cmd states.
