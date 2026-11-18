@@ -1,0 +1,8 @@
+{
+  "name": "bjornstack",
+  "description": "Engineering judgment as code: the bjornstack tenets and strategies, and a fork of workflow's story-definition skill.",
+  "version": "0.1.0",
+  "author": {
+    "name": "gaqzi"
+  }
+}

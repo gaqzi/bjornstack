@@ -155,7 +155,20 @@ guards are language-specific.
 
 ## Installation
 
-Installation tooling is planned. For now, copy what you need.
+Install the Claude Code plugin from this repo:
+
+```bash
+claude plugin marketplace add gaqzi/bjornstack
+claude plugin install bjornstack@bjornstack
+```
+
+The plugin carries `tenets/` and `strategies/` and one skill,
+`/bjornstack:story-definition`. The skill loads only when you name it.
+It is a fork of workflow's story-definition at commit 963e3e9 of
+skills--private; the text is unchanged apart from the plugin name and
+the line that stops it loading unless named.
+
+Other installation tooling is planned. For now, copy what you need.
 
 ```bash
 # planned:

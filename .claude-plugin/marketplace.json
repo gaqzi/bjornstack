@@ -1,0 +1,19 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "bjornstack",
+  "owner": {
+    "name": "gaqzi"
+  },
+  "plugins": [
+    {
+      "name": "bjornstack",
+      "source": "./plugin",
+      "description": "Engineering judgment as code: the bjornstack tenets and strategies, and a fork of workflow's story-definition skill.",
+      "version": "0.1.0",
+      "author": {
+        "name": "gaqzi"
+      },
+      "category": "productivity"
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "skill_name": "story-definition",
+  "notes": "Run each prompt with and without the skill, across at least two models and two effort levels. The user is unavailable in eval runs; tell the agent so and that it must follow the skill's non-interactive guidance. Then run a handoff pass: a fresh agent reads the output as an implementer and classifies every question it would ask as CODEBASE, STORY, or USER. STORY-class questions are the skill's defects. Workspace goes in the session scratchpad, not in this repo. Assertions an eval lists under script_graded are copies of its assertions that evals/grade.py checks on the saved story file; the rest are graded by a sonnet grader. skill-creator's runner ignores the field.",
+  "evals": [
+    {
+      "id": 0,
+      "name": "ledger-greenfield",
+      "prompt": "We're adding an append-only ledger to our accounting service so auditors can see every financial event, nothing ever deleted. It's a Go service with Postgres and an HTTP JSON API; nothing for the ledger exists yet. Define this feature and break it into stories I can hand to a set of coding agents to implement without them coming back to me with questions.",
+      "expected_output": "A feature definition with goal, out-of-scope, verification (entry point, observed state, stubs, feature-level happy and unhappy scenario), a thin walking skeleton as story one, slices of one rule each, a dependency summary naming what runs in parallel, and assumptions listed under their own heading.",
+      "files": [],
+      "assertions": [
+        "Story one is a walking skeleton: one request stored and acknowledged end to end, not a scaffolding or foundation story that returns 501 or stubs",
+        "The verification section names the entry point driven and the state observed",
+        "The epic contains a feature-level happy path scenario and one unhappy path chosen by blast radius",
+        "No story title bundles two behaviours that could each ship and be checked on their own",
+        "Stories without a real dependency are marked as able to run in parallel",
+        "Shared resources that parallel stories would collide on (migration numbering, error shape) are settled in the epic",
+        "Every assumption made in the user's absence is listed under a heading, with the stories it affects",
+        "Fewer than nine stories"
+      ],
+      "script_graded": [
+        "Fewer than nine stories"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "scheduled-export",
+      "prompt": "Our Django shop app already has a manual 'export orders to CSV' button on the admin orders page; the current export lives in the attached shop/admin.py, with its test in tests/test_admin.py. Customers now want a weekly scheduled export emailed to them as an attachment, with the same filters they'd use manually. We use Celery and SES. Define this and slice it into stories for agents.",
+      "expected_output": "Same shape as eval 0. The skeleton is the smallest behaviour change through the existing export path, possibly preceded by one structural story that extracts the export from the request. Time and scheduling rules have scenarios at their edges.",
+      "files": [
+        "evals/files/scheduled-export/shop/admin.py",
+        "evals/files/scheduled-export/tests/test_admin.py"
+      ],
+      "assertions": [
+        "The skeleton reuses the existing export rather than rebuilding it",
+        "The extraction of the existing export is its own story, naming the function and file it moves",
+        "That story adds no scenario and changes no observable behaviour; its acceptance is that existing tests pass unchanged",
+        "The once-per-week guard has three scenarios: a schedule that has never sent gets its first export on the next slot; a run in the same ISO week as the last send sends nothing; a run in the following week sends again",
+        "Retry handling distinguishes transient from permanent failures",
+        "No story scenario contradicts the epic's design section",
+        "Assumptions listed under their own heading",
+        "Fewer than eight stories"
+      ],
+      "script_graded": [
+        "Assumptions listed under their own heading",
+        "Fewer than eight stories"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "remember-me",
+      "prompt": "Add a 'remember me' checkbox to our login form so users stay logged in for 30 days. Express + sessions in Redis. Write this up as stories with acceptance criteria.",
+      "expected_output": "One story: stay logged in for 30 days when asked to. Scenarios enumerated from the actor's actions, log in with and without remember, log out after each; the cookie's flags are Then lines of the remembered-login scenario. Absolute versus sliding expiry surfaced as the one user decision. No story exists to find out current behaviour.",
+      "files": [],
+      "assertions": [
+        "One story",
+        "The scenarios cover logging in with remember, logging in without, and logging out after each",
+        "The thirty-day expiry is driven in tests by a named mechanism, not 'fake the clock'",
+        "Fixed versus sliding expiry is listed as an assumption or an open decision for the user",
+        "No story or task exists to find out what the system does today"
+      ],
+      "script_graded": [
+        "One story"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "contact-form-validation",
+      "prompt": "Our marketing site (Rails) needs a contact form: name, email, postal address, message, and an 'I am not a robot' checkbox. Only Swedish addresses are accepted, email must look like an email, and the checkbox must be ticked. Submissions go to our support inbox via the existing mailer. Also, if the same email submits more than three times in an hour, drop the extra ones silently. Write this up as stories with acceptance criteria.",
+      "expected_output": "Two to three stories. Validation is one rule expressed as a Scenario Outline with an Examples table; its black-box line names no row when the epic's pair already shows an invalid submission refused. The rate limit is its own story with written-out scenarios at the edge (third and fourth submission). Distinct outcomes are written out as scenarios, not forced into a table.",
+      "files": [],
+      "assertions": [
+        "Validation rules appear as an Examples table in the story, not pushed into the epic",
+        "Exactly one black-box line at the end of each story's acceptance",
+        "The validation story's black-box line names no Examples row, unless it says why the epic's happy and unhappy scenarios cannot show the validation rule",
+        "The rate limit is a separate story from validation",
+        "The rate limit has scenarios at its edge (third allowed, fourth dropped, and the window expiring)",
+        "Cases that differ in shape are written as separate scenarios, not as awkward table rows",
+        "At most three stories"
+      ],
+      "script_graded": [
+        "At most three stories",
+        "Exactly one black-box line at the end of each story's acceptance"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "refund-escalation",
+      "prompt": "Our support assistant is a Claude-driven bot inside a Node service that answers customer tickets. New rule: when a customer asks for a refund above 500 SEK, the bot must not answer the request itself. It hands the ticket to a human: the ticket's status becomes \"escalated\", the ticket gets a note holding the customer's own words, and the customer is told a person will reply. Refunds of 500 SEK or less the bot keeps handling as today. Tickets live in Postgres. We have a fake ticket store, and under evals/ a recorded-conversation harness that replays customer messages to the bot and grades the result over repeated runs. Write this up as one story with acceptance criteria that an agent can implement.",
+      "expected_output": "One story. Scenarios describe the ticket and the customer's view at the boundary (500 and above 500) in domain terms. Test mechanics (the harness, run counts, the fake store, layer tags, test names) stay out of scenarios and checklist items; one black-box line at the end of the acceptance names what runs end to end; the harness and run count are in Notes or the epic.",
+      "files": [],
+      "assertions": [
+        "Apart from the single black-box line at the end of the acceptance, nothing in the acceptance names a test layer, a run count, a harness, a fake, a fixture, or a test name",
+        "The recorded-conversation harness and the repeated-run count appear in Notes or the epic, not in a scenario",
+        "The threshold is covered at 500 SEK and just above it",
+        "The 500 SEK comparison is specified as code against the extracted amount, not left to the model's judgment",
+        "A refund request with no stated amount, and one in another currency, are listed as open decisions for the user, not silently assumed",
+        "One story"
+      ],
+      "script_graded": [
+        "Apart from the single black-box line at the end of the acceptance, nothing in the acceptance names a test layer, a run count, a harness, a fake, a fixture, or a test name",
+        "The recorded-conversation harness and the repeated-run count appear in Notes or the epic, not in a scenario",
+        "One story"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "visitor-permits",
+      "prompt": "Our city's resident-parking service is a Python/FastAPI app over Postgres. A resident holds one resident permit for one zone and can issue visitor permits for guests' cars. New rule: a resident may have at most two visitor permits active at once, and a car that already holds an active permit in that zone cannot be issued another. Issuing appends a VisitorPermitIssued event to the audit log with the permit id, the zone, the plate and the resident; a refused request appends nothing and the response says why it was refused. Zones are named like \"Söder 3\" and plates look like \"ABC123\". Also update the README's Permits section to describe the limit, and the Permit model's docstring should explain it too. We have a replay tool under tests/replays that drives the API from a recorded session and compares the audit log afterwards. Write this up as one story with acceptance criteria that an agent can implement.",
+      "expected_output": "A story (or stories) whose acceptance holds the scenarios, the README and docstring as checklist items written as observed facts, and one black-box line at the end. Concurrency and storage requirements, if written, appear under Constraints. Notes hold only reminders, pointers, and the replay tool as the verification mechanism; no note states a requirement or restates a scenario.",
+      "files": [],
+      "assertions": [
+        "Any concurrency, transaction, locking, or storage requirement appears under a Constraints heading, not under Notes and not in a scenario",
+        "The README section and the Permit docstring are checklist items in the acceptance, each written as a fact that is observed, not as notes",
+        "Every note is one sentence and is a reminder, a pointer, or the verification mechanism (the replay tool); no note states a requirement a reviewer would check or restates a scenario",
+        "No constraint states something a scenario or checklist item already proves",
+        "Exactly one black-box line at the end of each story's acceptance"
+      ],
+      "script_graded": [
+        "Any concurrency, transaction, locking, or storage requirement appears under a Constraints heading, not under Notes and not in a scenario",
+        "The README section and the Permit docstring are checklist items in the acceptance, each written as a fact that is observed, not as notes",
+        "Exactly one black-box line at the end of each story's acceptance"
+      ]
+    }
+  ]
+}
