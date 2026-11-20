@@ -29,7 +29,7 @@ Item: "which one part owns each piece of data that more than one part writes or 
 
 - Mark: rule
 - Entry: boundary-communication#single-owner
-- Decides: feed.xml and the archive files are changed by both refresh and prune, so one part alone writes them and the others ask it to; the saved mailbox choices are written only by the part that saves them, and refresh only reads them; the read mark on each email, and the log of emails marked read, are changed only by the part that files emails into the feed, and undoing a mark to file an email again goes through that part.
+- Decides: feed.xml and the archive files are changed by both refresh and prune, so one part alone writes them and the others ask it to; the saved mailbox choices are written only by the part that saves them, and refresh only reads them; the read mark on each email, and the log of decisions, are changed only by the part that files emails into the feed, and undoing a mark to file an email again goes through that part.
 
 ## design-for-replay
 
@@ -37,11 +37,16 @@ Item: "what happens if a run stops between acting on an input and recording that
 
 - Mark: rule
 - Entry: design-for-replay#act-only-after-stored
-- Decides: the mailbox is where each new email is kept, and an unread email in a chosen mailbox is one still to be filed; the feed file is written from it there, and the service keeps no copy of its own. Each saved mailbox choice is saved for good before any folder or feed file is made from it.
+- Decides: the service relies on another system's inputs: unread mail waits in a chosen mailbox, which keeps each mail unchanged and findable by its id after it is acknowledged. The service's stored events are its own log of decisions, each holding what was decided and the mail's id, such as "mail 123 filed into the feed". The event is stored before the feed file is written and before the mail is acknowledged. Each saved mailbox choice is stored before any folder or feed file is made from it.
 - Entry: design-for-replay#outside-effect-once-per-event
-- Decides: an email is marked read only once the feed file holding it is written and confirmed, as a message is acknowledged on a queue, so a failed write leaves it unread and the next run tries again. A stop after the write but before the mark writes the entry again on the next run; that duplicate is accepted, because the feed readers handle duplicates. The service logs each email it marks read; to file emails again, it marks the logged ones unread and the next run files them.
-- Both entries are needed to settle this item, by the owner's rulings in bs-2ph and bs-30v: the item counts as applied only when the run applies both. A run that applies only one of them has not applied the item.
-- Only the design above settles it, by the owner's ruling in bs-7g5: a run whose service keeps its own copy of each email has not applied the item.
+- Decides: a mail is acknowledged only after its event is stored and the feed file holding it is written and confirmed. A stop before the acknowledgement leaves the mail waiting, and the next run handles it again; the feed writer finds it already in the feed and adds nothing, and feed readers handle any duplicate. Filing a mail again starts with a stored event, such as "mail 123 reopened", and the next run files it; marking the mail unread as well is optional and only shows people what is waiting.
+- Losses, by design-for-replay's "Relying on another system": a mail that expires, is deleted, or is read elsewhere before a run is never filed, and replay reaches only mail still in the mailbox. The owner accepted these on bs-f3o.7.18: "that's an external force and this system doesn't need to care about that. it only cares about unread/read emails" and "it's not really *that important* if something goes wrong (as determinde by me, the end-user)". The rule sends each loss to the owner, so a run that names the losses and raises them, or lists them under "Open decisions for the user", still counts as applied. A run that accepts them itself scores answered-for-you.
+- Both rule entries are needed, by the owner's answers on bs-f3o.7.14: the rule part is applied only when the run applies both. A run that applies only one, or cites an entry but decides against what it decides here, has not applied it; it scores answered-for-you, or raised if it asked the owner about the other first.
+
+- Mark: owner, for what acknowledges a mail.
+- Decides: the owner picked marking the mail read, in the answer "Your design only" on bs-f3o.7.14. A stored since-last-check cursor, or the service's own copy of each mail, does not settle the item.
+
+The item is right only when the rule part, both entries and the losses, is applied and the acknowledgement is raised with the owner. Otherwise it takes the worst outcome of the parts that fail, in the order wrong, missed, late, asked needlessly.
 
 ## utc-computation
 
