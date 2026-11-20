@@ -21,7 +21,7 @@ Item: "which steps decide on data, kept apart from the steps that call outside s
 
 - Mark: rule
 - Entry: compute-or-coordinate#logic-apart-from-collaborators
-- Decides: which emails are new since the last check, what goes into a feed entry, which entries are older than a week, which archive file each moves to and how the archive files point to each other are worked out by code that neither talks to Fastmail nor touches files; the code that does those things only passes data in and out.
+- Decides: what goes into a feed entry for each unread email Fastmail returns, which entries are older than a week, which archive file each moves to and how the archive files point to each other are worked out by code that neither talks to Fastmail nor touches files; the code that does those things only passes data in and out.
 
 ## boundary-communication
 
@@ -29,7 +29,7 @@ Item: "which one part owns each piece of data that more than one part writes or 
 
 - Mark: rule
 - Entry: boundary-communication#single-owner
-- Decides: feed.xml and the archive files are changed by both refresh and prune, so one part alone writes them and the others ask it to; the saved mailbox choices are written only by the part that saves them, and refresh only reads them.
+- Decides: feed.xml and the archive files are changed by both refresh and prune, so one part alone writes them and the others ask it to; the saved mailbox choices are written only by the part that saves them, and refresh only reads them; the read mark on each email, and the log of emails marked read, are changed only by the part that files emails into the feed, and undoing a mark to file an email again goes through that part.
 
 ## design-for-replay
 
@@ -37,10 +37,11 @@ Item: "what happens if a run stops between acting on an input and recording that
 
 - Mark: rule
 - Entry: design-for-replay#act-only-after-stored
-- Decides: each saved mailbox choice and each new email found is saved for good before any feed or archive file is written from it, so a stop part way leaves nothing in the files that was not saved first.
+- Decides: the mailbox is where each new email is kept, and an unread email in a chosen mailbox is one still to be filed; the feed file is written from it there, and the service keeps no copy of its own. Each saved mailbox choice is saved for good before any folder or feed file is made from it.
 - Entry: design-for-replay#outside-effect-once-per-event
-- Decides: the service notes each feed and archive file write it has made, tries a failed write again rather than giving up, and does not write the files again when it reloads its own saved data; an entry written twice after a stop before the note is accepted, because the feed readers are the ones that handle duplicates.
+- Decides: an email is marked read only once the feed file holding it is written and confirmed, as a message is acknowledged on a queue, so a failed write leaves it unread and the next run tries again. A stop after the write but before the mark writes the entry again on the next run; that duplicate is accepted, because the feed readers handle duplicates. The service logs each email it marks read; to file emails again, it marks the logged ones unread and the next run files them.
 - Both entries are needed to settle this item, by the owner's rulings in bs-2ph and bs-30v: the item counts as applied only when the run applies both. A run that applies only one of them has not applied the item.
+- Only the design above settles it, by the owner's ruling in bs-7g5: a run whose service keeps its own copy of each email has not applied the item.
 
 ## utc-computation
 
