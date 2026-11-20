@@ -41,6 +41,8 @@ graph TD
         ToC["Tidy or Change"] <--> FYC
         EA["Earned Abstraction"]
         ROF["Recorded Old Forms"]
+        TVS["Thin Vertical Slice"] --> ToC
+        TVS --> FYC
     end
 
     BC <--> GDB
@@ -70,6 +72,7 @@ cross-references are authoritative, not this diagram.
 │                ┃                          ┃                  │
 │  DFP  ·  IP    ┃  TLS  ·  UT  ·  BBIB     ┃  GDB  ·  FYC     │
 │                ┃  OILD  ·  CT             ┃  ToC  ·  ROF     │
+│                ┃                          ┃  TVS             │
 │  SOE  ·  SIO   ┃  ITE  ·  TDB  ·  PAST    ┃                  │
 │  FI  ·  UTC    ┃  PTS  ·  WOA  ·  CTS     ┃                  │
 │                ┃                          ┃                  │
@@ -86,8 +89,9 @@ apart, and where its reasoning is written down.
 data builders, assertions.
 
 **Evolution** — how code changes safely: separating cleanup from behavior,
-progressive rollout, earned abstraction, and which old forms the code
-keeps until it moves as a whole.
+progressive rollout, earned abstraction, which old forms the code
+keeps until it moves as a whole, and how a feature is sliced so a
+useful part lands first.
 
 Two strategies straddle families:
 - **BC** defines boundary contracts (structure) but is heavily referenced by
@@ -119,3 +123,5 @@ points per family:
 - **EA** as a check — is abstraction earned or premature?
 - **ROF** when a better form arrives — record the old form the code
   keeps, and raise the migration in the periodic review.
+- **TVS** when a feature starts — decide whether it needs a slice 0
+  of groundwork, and what slice 1 delivers.

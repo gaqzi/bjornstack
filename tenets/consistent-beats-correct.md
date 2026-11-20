@@ -70,8 +70,8 @@ template. This transforms the first task from feature work into pattern-setting
 work, which requires deliberate review before the second module is built.
 Nothing in the tenet block flags this transformation, so it catches teams
 off guard — they build task 1 casually and then discover everything must be
-consistent with whatever they happened to build. The "Thin Vertical Slice"
-strategy addresses this directly.
+consistent with whatever they happened to build. The Thin Vertical Slice
+strategy keeps that first slice small enough to review.
 
 ### The wrapping exception
 
