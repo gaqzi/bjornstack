@@ -24,7 +24,7 @@ TENET: Compute or Coordinate
       coordinator has more than four, look for domain concepts hiding
       in the collaboration — two or more objects often form a cohesive
       whole that could become a single dependency.
-   2. Verify every collaborator is received fully set up, not created.
+   2. **collaborators-received-set-up.** Verify every collaborator is received fully set up, not created.
       If the coordinator constructs its own dependencies, reads
       global state, or calls package functions that do real work —
       I/O, or domain logic with branches — those are hidden

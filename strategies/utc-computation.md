@@ -1,7 +1,7 @@
 # UTC Computation
 TENET: Consistent Beats Correct
 
-1. Every computation that turns a time into a date or a time of day
+1. **utc-unless-one-zone-matters.** Every computation that turns a time into a date or a time of day
    uses UTC, unless its result is read against one person's or one
    place's clock, so that someone in another zone would need a
    different answer. Then that zone is an input of the computation,

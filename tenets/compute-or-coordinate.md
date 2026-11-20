@@ -13,12 +13,12 @@ Code either performs computation (business logic) or orchestrates collaborators 
   when the customer is a member, and saves it.
 
 VIOLATIONS:
-- Mixed computation and coordination — a function that depends on
+- **logic-apart-from-collaborators.** Mixed computation and coordination — a function that depends on
   collaborators AND contains business logic, conditional or not. Computation
   is a pure function; anything with side effects or collaborator
   dependencies is coordination. When both appear together, the logic
   can't be tested without the wiring.
-- Data transformation disguised as coordination — a coordinator that
+- **mapping-holds-no-business-rules.** Data transformation disguised as coordination — a coordinator that
   maps, filters, or reshapes data between collaborators, embedding
   business rules in what looks like wiring.
   Examples:

@@ -9,12 +9,12 @@ The organization of code communicates how the system works — a reader should u
   package seemed right.
 
 VIOLATIONS:
-- Flat structure that communicates nothing — a directory with many
+- **tree-shows-boundaries.** Flat structure that communicates nothing — a directory with many
   files where the only way to understand module boundaries is to
   read import graphs.
   Examples:
   - A `pkg/` directory with 30 files and no subdirectories.
-- Grab-bag packages — a package named for a technical role rather
+- **no-grab-bag-packages.** Grab-bag packages — a package named for a technical role rather
   than a domain concept, accumulating unrelated functions grouped
   only by not fitting elsewhere.
   Examples:

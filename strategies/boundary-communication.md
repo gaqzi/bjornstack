@@ -1,13 +1,13 @@
 # Boundary Communication
 TENET: No Shared Fate
 
-1. Find the shared data — look for data that more than one unit reads,
+1. **find-shared-data.** Find the shared data — look for data that more than one unit reads,
    writes, or changes. A database table two services query. A struct two
    packages modify. A global variable read across module boundaries. Each
    instance is a boundary that needs a clear owner. Shared constants and
    read-only configuration don't count — this is about data that at least
    one unit can change.
-2. Assign a single owner — one unit owns the data: it decides what values
+2. **single-owner.** Assign a single owner — one unit owns the data: it decides what values
    are valid, accepts changes, and is the source of truth.
    - When ownership is obvious (one unit validates and changes the data,
      others only read): assign it.

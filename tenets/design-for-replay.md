@@ -30,7 +30,7 @@ Changes take effect only and fully via stored events: accepted, never edited, sa
   there is no record of who received which text.
 
 VIOLATIONS:
-- Acting on a change before its event is stored.
+- **act-only-after-stored.** Acting on a change before its event is stored.
   Examples:
   - A handler sends the welcome email, charges a card or notifies
     another system before, or while, it saves the change; the save fails
@@ -48,11 +48,11 @@ VIOLATIONS:
 - Recording the request instead of the fact — "create user" stored
   rather than "user created", so a replay checks the request again
   against today's rules and may refuse what was accepted at the time.
-- A stored event edited, or removed other than through a tombstone — an
+- **events-unedited-tombstone-removal.** A stored event edited, or removed other than through a tombstone — an
   event edited to fix a typo, or a user's events deleted by hand with no
   record of what was removed or why, so a replay no longer sees what
   happened.
-- A reaction run the wrong number of times — it gives up on a stored
+- **outside-effect-once-per-event.** A reaction run the wrong number of times — it gives up on a stored
   event after one failure and the email is never sent, or it runs again
   whenever state is rebuilt, so replaying a week of events to fix the
   users table also resends a week of welcome emails.
