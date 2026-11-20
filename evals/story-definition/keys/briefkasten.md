@@ -1,4 +1,4 @@
-Status: draft, awaiting the owner's approval
+Status: approved by the owner, 2026-11-20
 
 # Key: briefkasten
 
