@@ -179,9 +179,10 @@ outside service:
 
 An import of many records is many requests checked together. Scrub on
 Entry's default holds: when any record is invalid, the import is
-rejected and no event is stored for any of it. When the owner has chosen
-to save the valid records, each valid record's event is stored and the
-rest are reported. Either way the events for one import are stored in
+rejected and no event is stored for any of it. When the owner, the
+person who answers for what the system does, has chosen to save the
+valid records, each valid record's event is stored and the rest are
+reported. Either way the events for one import are stored in
 one write, so a failure part way leaves none of them stored.
 
 Receiving the file is worth recording too, as a log entry such as
@@ -241,10 +242,43 @@ current state, kept by projectors, serves both. When a design starts
 to need them, say so and decide it as a design choice. Don't patch the
 simple version until it is a poor copy of them.
 
-A case where the cost is not worth it, such as a throwaway script or a
-table nothing reacts to and whose history nobody will ask about, is a
-deliberate exception under Practicality Beats Purity, written down
-where the next reader will meet it.
+### Relying on another system
+
+A system does not need its own copy of everything. Its inputs may
+wait in a system it does not own, such as a Kafka topic, an object
+store, another team's API or a mailbox, when that system keeps each
+input unchanged and findable by its id after it is acknowledged.
+Otherwise, as with a queue that deletes on acknowledgement, a webhook
+or a record edited in place, the system's own event keeps what it
+needs from the input, such as "tests started for commit abc, from
+hook 42". It keeps the whole input only where something will need it,
+such as a payment provider's result.
+
+The system's stored events are then its own log of decisions, each
+holding what was decided and the input's id, such as "invoice 123
+imported". The event is stored before the input is acknowledged, and
+deciding an input again starts with a stored event of its own.
+
+A design may also give up replay or data it would otherwise have,
+such as an input the other system may later expire or delete, or no
+events at all for a table nothing reacts to and whose history nobody
+will ask about. Take the first that fits:
+
+1. The tool keeps nothing between runs and only produces output, such
+   as a one-off report. Nothing is given up and nobody is asked. A
+   one-off script that acts, such as one sending email, is not this
+   case: it first writes out what it will do, and a separate step
+   does it, recording each item it has done.
+2. Whoever designs the system names what is lost and what it buys,
+   such as fewer parts, and the owner accepts it in their own words,
+   recorded where the next reader will meet it. It is then a design
+   choice, not an exception under Practicality Beats Purity.
+3. Otherwise the design changes to avoid the loss. Nobody else's
+   agreement stands in for the owner's.
+
+This never covers how stored events are handled: storing before
+acting, editing stored events, or how reactions run. Breaking those
+stays an exception under Practicality Beats Purity.
 
 ### Testing
 
