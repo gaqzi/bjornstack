@@ -40,7 +40,7 @@ Item: "what happens if a run stops between acting on an input and recording that
 - Decides: each saved mailbox choice and each new email found is saved for good before any feed or archive file is written from it, so a stop part way leaves nothing in the files that was not saved first.
 - Entry: design-for-replay#outside-effect-once-per-event
 - Decides: the service notes each feed and archive file write it has made, tries a failed write again rather than giving up, and does not write the files again when it reloads its own saved data; an entry written twice after a stop before the note is accepted, because the feed readers are the ones that handle duplicates.
-- Both entries apply, by the owner's ruling in bs-2ph.
+- Both entries are needed to settle this item, by the owner's rulings in bs-2ph and bs-30v: the item counts as applied only when the run applies both. A run that applies only one of them has not applied the item.
 
 ## utc-computation
 
