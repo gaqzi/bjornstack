@@ -34,6 +34,7 @@ ln -s ../tenets "$R/plugin/tenets"
 echo "manifest one" > "$R/.claude-plugin/plugin.json"
 echo "skill one" > "$R/plugin/skills/a.md"
 echo "not plugin" > "$R/README.md"
+ln -s ../strategies/s.md "$R/plugin/inside.md"
 g add -A; g commit -q -m one
 ONE="$(g rev-parse HEAD)"
 echo "skill two" > "$R/plugin/skills/a.md"
@@ -67,12 +68,14 @@ REST_BEFORE="$(rest)"
 EVALS_DIR="$EV" "$H/freeze.sh" "$(git -C "$R" rev-parse --short "$ONE")" > "$T/out" 2> "$T/err"
 check "freezing a commit by a short id exits 0" "0" "$?"
 check "the frozen copy holds exactly .claude-plugin, plugin/, strategies/ and tenets/ of that commit" \
-  ". ./.claude-plugin ./.claude-plugin/plugin.json ./plugin ./plugin/skills ./plugin/skills/a.md ./plugin/strategies ./plugin/tenets ./strategies ./strategies/s.md ./tenets ./tenets/t.md" \
+  ". ./.claude-plugin ./.claude-plugin/plugin.json ./plugin ./plugin/inside.md ./plugin/skills ./plugin/skills/a.md ./plugin/strategies ./plugin/tenets ./strategies ./strategies/s.md ./tenets ./tenets/t.md" \
   "$(cd "$EV/config/sources/bjornstack" && find . | sort | tr '\n' ' ' | sed 's/ $//')"
 check "the frozen files are the commit's text, not HEAD's" "manifest one|skill one" \
   "$(cat "$EV/config/sources/bjornstack/.claude-plugin/plugin.json" 2>&1)|$(cat "$EV/config/sources/bjornstack/plugin/skills/a.md" 2>&1)"
 check "the rule files read through the plugin's symlinks" "strategy one|tenet one" \
   "$(cat "$EV/config/sources/bjornstack/plugin/strategies/s.md" 2>&1)|$(cat "$EV/config/sources/bjornstack/plugin/tenets/t.md" 2>&1)"
+check "a file symlink resolving inside the copy reads through" "strategy one" \
+  "$(cat "$EV/config/sources/bjornstack/plugin/inside.md" 2>&1)"
 check "the old copy's stale files are gone" "no no" \
   "$([ -e "$EV/config/sources/bjornstack/plugin/stale.md" ] && echo yes || echo no) $([ -e "$EV/config/sources/bjornstack/old-only.txt" ] && echo yes || echo no)"
 check "bjornstack.commit holds the full commit id" "$ONE" "$(cat "$EV/config/sources/bjornstack.commit")"
@@ -93,5 +96,23 @@ THREE="$(g rev-parse HEAD)"
 EVALS_DIR="$EV" "$H/freeze.sh" "$THREE" > "$T/out" 2> "$T/err"
 check "a commit with a dangling symlink exits non-zero" "1" "$([ "$?" -ne 0 ] && echo 1 || echo 0)"
 check "a dangling symlink leaves bjornstack.commit as it was" "$ONE" "$(cat "$EV/config/sources/bjornstack.commit")"
+
+# A file symlink that resolves outside the copy refuses the freeze, whether
+# it points at an absolute path or climbs out relatively.
+echo outside > "$EV/config/sources/outside.md"
+LEAKS=(absolute relative)
+LEAK_TARGETS=(/etc/hosts ../../outside.md)
+for i in "${!LEAKS[@]}"; do
+  rm -f "$R/plugin/dangling"
+  ln -sf "${LEAK_TARGETS[$i]}" "$R/plugin/leak.md"
+  g add -A; g commit -q -m "leak ${LEAKS[$i]}"
+  EVALS_DIR="$EV" "$H/freeze.sh" "$ONE" > "$T/out" 2> "$T/err"
+  FROZEN_BEFORE="$(frozen)"
+  COMMIT_BEFORE="$(cat "$EV/config/sources/bjornstack.commit")"
+  EVALS_DIR="$EV" "$H/freeze.sh" "$(g rev-parse HEAD)" > "$T/out" 2> "$T/err"
+  check "a commit with a file symlink with the ${LEAKS[$i]} target leaving the copy exits non-zero" "1" "$([ "$?" -ne 0 ] && echo 1 || echo 0)"
+  check "a file symlink with the ${LEAKS[$i]} target leaves the frozen copy intact" "$FROZEN_BEFORE" "$(frozen)"
+  check "a file symlink with the ${LEAKS[$i]} target leaves bjornstack.commit as it was" "$COMMIT_BEFORE" "$(cat "$EV/config/sources/bjornstack.commit")"
+done
 
 exit "$FAILED"

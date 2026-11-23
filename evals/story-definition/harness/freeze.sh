@@ -6,9 +6,11 @@
 # Env:
 #   EVALS_DIR   the eval home (default <repo>/tmp/evals)
 # Replaces config/sources/bjornstack (.claude-plugin, plugin/, strategies/
-# and tenets/ of the commit: plugin/ links to the last two) and writes config/sources/bjornstack.commit with the full commit
-# id. Nothing else in the eval home is touched. A commit that does not
-# resolve changes nothing.
+# and tenets/ of the commit: plugin/ links to the last two) and writes
+# config/sources/bjornstack.commit with the full commit id. Nothing else in
+# the eval home is touched. A commit that does not resolve changes nothing.
+# A symlink, to a file or a directory, that is dangling or whose target lies
+# outside the copy refuses the freeze.
 set -euo pipefail
 
 USAGE="usage: freeze.sh <commit>"
@@ -28,15 +30,25 @@ trap 'rm -rf "$STAGE"' EXIT
 git -C "$REPO" archive "$FULL" .claude-plugin plugin strategies tenets | tar -x -C "$STAGE"
 
 # Every symlink in the copy must resolve inside it, or a session reading
-# through it finds nothing.
+# through it finds nothing or leaves the copy. A file link is resolved by its
+# own target (following chains), not by the directory it sits in.
 ROOT="$(cd -P "$STAGE" && pwd -P)"
-while IFS= read -r L; do
-  if [ -d "$L" ]; then
-    T="$(cd -P "$L" && pwd -P)"
+resolve() {
+  local P="$1" D
+  while [ -L "$P" ]; do
+    D="$(cd -P "$(dirname "$P")" && pwd -P)"
+    P="$(readlink "$P")"
+    case "$P" in /*) ;; *) P="$D/$P" ;; esac
+  done
+  if [ -d "$P" ]; then
+    (cd -P "$P" && pwd -P)
   else
-    [ -e "$L" ] || { echo "dangling symlink in the frozen copy: ${L#$STAGE/}" >&2; exit 1; }
-    T="$(cd -P "$(dirname "$L")" && pwd -P)"
+    echo "$(cd -P "$(dirname "$P")" && pwd -P)/$(basename "$P")"
   fi
+}
+while IFS= read -r L; do
+  [ -e "$L" ] || { echo "dangling symlink in the frozen copy: ${L#$STAGE/}" >&2; exit 1; }
+  T="$(resolve "$L")"
   case "$T/" in "$ROOT"/*) ;; *) echo "symlink leaves the frozen copy: ${L#$STAGE/} -> $T" >&2; exit 1 ;; esac
 done < <(find "$STAGE" -type l)
 
