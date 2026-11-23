@@ -38,9 +38,10 @@ TENET: Many More Much Smaller Steps
    1. It has parts someone can use apart, such as kinds, cases or
       triggers: each part is its own vertical slice, the most wanted
       first.
-   2. It is too large to review, and the user does it in steps or it
-      covers many of something: cut it along what the user does (ask,
-      wait, receive) or by how much it covers (one tenant, then all).
+   2. It is too large to review, and the user does it in several
+      actions or it covers many of something: cut it along what the
+      user does (ask, wait, receive) or by how much it covers (one
+      tenant, then all).
       Each slice still crosses every layer and stops at a point the
       user can see, like a page saying it will reload when the result
       is ready.
@@ -67,13 +68,14 @@ TENET: Many More Much Smaller Steps
      is one part and small enough to review, so it is one slice.
 4. **slice-one-useful-sooner.** When step 3 splits the feature, make
    slice 1 the first thing someone can use: the most wanted part, or
-   that part's first step. It shows use, not just wiring, and stops at
-   a point the user can see, even though it does less than was wanted.
+   the first thing the user does in that part. It shows use, not just
+   wiring, and stops at a point the user can see, even though it does
+   less than was wanted.
    It lands sooner than the whole feature would, so you see what works
-   before building the rest. When that step is cut by layer, its
+   before building the rest. When slice 1 is cut by layer, its
    layers are slice 1a, 1b and so on, the practical exception to one
    story per slice, and the last of them is the one that shows use.
-   Later slices each add the next step or part.
+   Later slices each add the next thing the user does, or the next part.
    - Good: slice 1 is usable and leaves the rest out; such as reports
      for three kinds of account where slice 1 covers one kind, or a
      report request that ends on a page saying it will reload when the
@@ -114,12 +116,12 @@ MISAPPLICATIONS:
 - A missing split. The request has parts someone could use apart, or
   one part too large to review, and slice 1 carries all of it, so
   nothing is seen working until all of it is done.
-- A cut by layer where a cut by part, step or coverage would do. Each
-  slice is one layer, and nobody can use any of it until the last
-  lands.
+- A cut by layer where a cut by part, by what the user does or by
+  coverage would do. Each slice is one layer, and nobody can use any
+  of it until the last lands.
 - A slice 1 cut so thin that nobody can use it: a part that only
-  makes sense once the next slice lands, or a step that ends where
-  the user sees nothing.
+  makes sense once the next slice lands, or a first thing the user does
+  that ends where they see nothing.
 
 SKIP WHEN: The change is not a feature someone will use, such as a
 bug fix or a structural change. Tidy or Change covers how to sequence
@@ -151,13 +153,13 @@ both.
 
 ### Vertical first, by layer last
 
-A cut by part, step or coverage keeps every slice something the user
-can see working, so each one is checked against what was wanted. A
-cut by layer gives nobody anything until its last layer lands, so it
-comes last, for a piece that cannot be made smaller any other way.
-Too large is measured by what a reviewer can read with care. Code
-that handles money, security or concurrency needs closer reading, so
-less of it fits; generated code and test data need less, so more
+A cut by part, by what the user does or by coverage keeps every slice
+something the user can see working, so each one is checked against what
+was wanted. A cut by layer gives nobody anything until its last layer
+lands, so it comes last, for a piece that cannot be made smaller any
+other way. Too large is measured by what a reviewer can read with care.
+Code that handles money, security or concurrency needs closer reading,
+so less of it fits; generated code and test data need less, so more
 fits. Code is cheap to produce in bulk, but a large change is rarely
 good, and small steps keep the work from running ahead of what has
 been checked.
@@ -195,9 +197,9 @@ work, so it can ship but gives no user anything new. Slice 1 is the
 feature's walking skeleton: the thinnest pass that proves the
 feature's path, working end to end for the business side, fleshed
 out by later slices when step 3 splits the feature. When step 3 cuts
-by step, slice 1 may be only the first step of a part, such as
-asking for a report and seeing that it is being built. With no
-slice 0, the first story is slice 1.
+by what the user does, slice 1 may be only the first thing the user
+does in a part, such as asking for a report and seeing that it is
+being built. With no slice 0, the first story is slice 1.
 
 ### Where the terms come from
 
