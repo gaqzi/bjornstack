@@ -90,7 +90,7 @@ never records "no unit tests" for logic that needs them.
 **Exit test:** someone could write the failing integration test for the
 happy path from what is on the page, and the language and harness the
 unit tests run in are named, unless the feature is all glue. That
-failing test is the definition of done, and the skeleton story owns
+failing test is the definition of done, and slice 1 owns
 making it pass or the first step toward it.
 
 ### 3. Architecture
@@ -305,58 +305,88 @@ owner deferred).
 
 ### 4. Skeleton
 
-The first story is the walking skeleton: the thinnest path through every
-layer the feature will touch, demonstrable end to end. It is
-deliberately underwhelming. A real endpoint that stores one record and
-returns it, a form that submits one field and is ignored, a scheduled
-task that sends an empty email. A flag is how a skeleton ships safely,
-not what it does: behind the flag it still crosses every layer.
+The first story is slice 0 when phase 3 planned one, and slice 1, the
+walking skeleton, otherwise. When phase 3 was skipped there is no
+slice 0, and the first story is slice 1. Each story says in its text
+which slice it is: "Slice 0", or "Slice 1, the walking skeleton".
+When the owner declined a slice 0 that phase 3 planned (see "When the
+owner decides against a thin-vertical-slice step"), no story says it
+is slice 0; the first story is slice 1, and what slice 0 would have
+wired is built in the first story that needs it.
+
+**Slice 0** (thin-vertical-slice#needs-slice-zero,
+thin-vertical-slice#slice-zero-wires-only) proves the new
+infrastructure, runtime or deploy path and nothing else. It is the
+exception to "one thing of value": it is written as a technical
+outcome, for the people who run the system, and it does no business
+work. Its scenarios show the new path working end to end in a way
+someone can see: a message the app sends is received by a worker that
+only logs it, or a new project that builds, deploys and answers a
+health check. A scenario that does a first piece of the feature's real
+job does not belong in it; that is slice 1.
+
+**Slice 1** is the feature's walking skeleton: the thinnest path
+through every layer the feature will touch, demonstrable end to end.
+It shows use, not just wiring (thin-vertical-slice#slice-one-useful-sooner):
+someone can do something with it, and it stops at a point the user can
+see, even though it does less than was wanted. Which thing it shows
+follows phase 3's cut: with parts someone can use apart, it is the
+most wanted part; with a cut by what the user does, it may be only the
+first thing the user does in that part, such as asking for a report
+and seeing a page saying it is being built. When slice 1 is cut by
+layer, its layers are slices 1a, 1b and so on, and the last of them
+shows use. A flag is how a slice ships safely, not what it does:
+behind the flag it still crosses every layer.
 
   Not a skeleton:  Service foundation, routing, auth middleware, test
                    harness; every ledger route returns 501
   Skeleton:        Record a ledger entry: POST one entry, get 201 and
                    the stored row back, through real Postgres
+  Skeleton:        A sales report takes a minute to build: ask for
+                   it and see a page saying it will reload when the
+                   report is ready
 
-The first is a horizontal layer with nothing to demonstrate. The second
-crosses every layer, and the harness gets built because this one
-scenario needs it.
+The first is a horizontal layer with nothing to demonstrate. The
+others cross every layer, someone can use them, and the harness gets
+built because this one scenario needs it.
 
-The skeleton proves the wiring, which is the one thing unit tests cannot
-prove, and it is the template later stories copy. So it carries only
-what its one scenario needs, built to the standard you want everywhere.
-Scaffolding that no scenario exercises is not thin, it is speculative;
-the second story will show which parts of the pattern need adjusting,
-and that is cheaper than guessing.
+Slice 1 proves the wiring of the feature's own path, which is the one
+thing unit tests cannot prove, and it is the template later stories
+copy. So it carries only what its one scenario needs, built to the
+standard you want everywhere. Scaffolding that no scenario exercises
+is not thin, it is speculative; the next story will show which parts
+of the pattern need adjusting, and that is cheaper than guessing.
 
 A layer is a tier the path the scenario drives crosses, such as the
 entry point, the logic and the storage, or a command, the script it
 runs and the file it writes; it is not a file the feature will ship.
-The skeleton builds the part of each layer its scenario needs. Every
+Slice 1 builds the part of each layer its scenario needs. Every
 other mechanism, file or deliverable lands with the story whose rule
 needs it, and a step the repo's conventions ask of every change is
 listed in no story.
 
-Agents put later tests wherever the skeleton put its own, so unless
-the feature is all glue, the skeleton's tests run in both layers, the
+Agents put later tests wherever slice 1 put its own, so unless
+the feature is all glue, slice 1's tests run in both layers, the
 black-box check and the unit tests. It builds whichever harness is
-missing and uses the one that exists, and it still carries only the
-empty case, such as a report with no rows, which the implementer's
-empty-input unit test exercises in the unit harness. No rule is
-ported or built in the skeleton to give the tooling something to
+missing and uses the one that exists, and it carries the first thing
+someone can use, such as one kind's report with its rows; the
+implementer's empty-input unit test covers the empty case in the unit
+harness. No rule is
+ported or built in slice 1 to give the tooling something to
 test.
 
-In an existing system where the path is already wired, the skeleton
-is the smallest new behaviour through the existing path, its
+In an existing system where the path is already wired, slice 1 is the
+first thing someone can use, through the existing path, its
 acceptance written as its end state. Don't invent a scaffolding story
 for wiring that exists. When existing code has to be extracted before
 the new path can reach it, that is a structural story that lands
-before the skeleton; it is the one case where the skeleton is not
-story one.
+before slice 1; with slice 0, it is one of two cases where slice 1 is
+not story one.
 
-**Exit test:** the skeleton story has at least one scenario that
-crosses every layer, and it could ship alone. Its rule is "the path
-works", so a second scenario showing the path refusing is fine; a
-second rule is not.
+**Exit test:** slice 0, when there is one, has a scenario that shows
+the new path working end to end and none that does business work.
+Slice 1 has at least one scenario that crosses every layer and shows
+use and stops at a point the user can see, and it could ship alone.
 
 ### 5. Slices
 
@@ -408,10 +438,14 @@ together, because a human understands "refuse deletes of ledger
 entries" as one change and not as three. The commit subject is derived
 from the story title, in code terms; commit-style owns its shape.
 
-A commit of around five hundred changed lines is the usual ceiling,
-depending on the language and how much of it is test data. Much larger
-means the rule is too big; much smaller, and not demonstrable alone,
-means it is a scenario of another story. Structural stories are their
+How large a slice may be depends on the work
+(thin-vertical-slice#one-slice-not-split), counted in changed lines:
+about 500 for ordinary application code with its tests; about half
+that for code that handles money, security or concurrency; more for
+generated code or test data; and the smallest of these when a slice
+mixes kinds. A slice over its size is cut again by phase 3's order,
+with its size reason. A much smaller one that is not demonstrable
+alone is a scenario of another story. Structural stories are their
 own commits, which is what keeps them reviewable as pure moves.
 
 Each story's one rule gives the actor a capability the system did not
