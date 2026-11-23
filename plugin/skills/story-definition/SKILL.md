@@ -59,7 +59,8 @@ as above.
 [The story](#the-story) and the handoff checklist. A single story that
 builds code is not short: phase 3, Architecture, in
 `references/session.md`, runs before it is drafted, even when nothing
-needs slicing. The other phases are for a feature that needs slicing.
+needs slicing. Work that builds no code skips phase 3, as
+"Whether the architecture phase runs" below says. The other phases are for a feature that needs slicing.
 
 ## The session
 
@@ -114,6 +115,31 @@ four lines of "not this" prevent more questions than any amount of
 
 **Exit test:** the user can say, in one sentence, what is true after the
 feature ships that is not true today.
+
+### Whether the architecture phase runs
+
+Decide this right after the Goal exit test, before any question of
+phase 2 or of the architecture phase (phase 3). Work builds code when
+it changes anything a program reads: source, configuration,
+infrastructure definitions, or text a program reads. Take the first of
+these that fits:
+
+1. Any part of the work builds code: phase 3 runs.
+2. The work plainly changes nothing a program reads, such as a guide,
+   a plan for writing, or a change to how people work: phase 3 is
+   skipped. Say so to the owner in one line, exactly:
+   "Skipping the architecture phase: this builds no code."
+   Then go on.
+3. It is unclear whether the work changes anything a program reads,
+   such as rewording text a program might send. With the owner
+   present, ask that as the next question, before any question of
+   phase 2 or 3: "Does this work change anything a program reads?"
+   Then take 1 or 2 by the answer. While the owner is away, decide it
+   yourself, list it under "Open decisions for the user" as whether
+   the work changes anything a program reads, with your call, and take
+   1 or 2 by that call, saying the skip line when the call is that the
+   work builds no code. This open decision never stops the session,
+   whatever else does: go on by your call.
 
 Now read `references/session.md` for phases 2 to 5. The rest of this
 file is the story shape, the handoff checklist, and filing, which the
@@ -599,9 +625,9 @@ follow its create checklist. The mapping is:
   stubs, the feature-level happy and unhappy scenarios) go in the
   epic's `--acceptance`. That is the evaluation protocol, which
   beads-workflow places in acceptance, not design.
-- The Architecture phase's answers, each with its source, and its open
-  decisions, under a heading "Architecture", with shared contracts,
-  the language and harness the unit tests run in
+- When the Architecture phase ran, its answers, each with its source,
+  and its open decisions, under a heading "Architecture", with shared
+  contracts, the language and harness the unit tests run in
   (or that the feature is all glue), and anything parallel agents
   would collide on go in the epic's `--design`; for a lone story with
   no epic, they go in that story's own `--design`. No list of unit

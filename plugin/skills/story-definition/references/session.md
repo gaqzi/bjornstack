@@ -106,6 +106,11 @@ detail; every answer goes in the epic's `--design`, under a heading
 go in that story's own `--design` under the same heading; "the epic's
 design" below means the design of the work filed.
 
+**Whether the phase runs** was decided after the Goal in SKILL.md
+(Whether the architecture phase runs). When it was skipped, skip this
+phase: the design records no architecture decision and no slice 0 or
+split decision, and the exit test below does not apply.
+
 Take each question in turn. What the codebase runs is a fact, read
 from the code, or from the first prompt when there is no code to read.
 Settle the question by the first of these that fits:
@@ -291,7 +296,8 @@ documented. When they gave no reason, ask for one in a single line,
 without suggesting an answer. A
 design with no such decision names no step as broken.
 
-**Exit test:** the epic's design holds an answer, with its source, or
+**Exit test:** when the phase ran, the epic's design holds an answer,
+with its source, or
 an open decision for each of the five questions and the two
 first-slice decisions, and no answer is without a source (the
 rule entry, the first prompt's words, the owner, or the session's pick,
@@ -355,7 +361,8 @@ second rule is not.
 ### 5. Slices
 
 Every later story is one slice of phase 3's cut, on top of the
-skeleton. Order them so
+skeleton; when phase 3 was skipped there is no cut, and the slices
+follow from the rules below alone. Order them so
 each is demonstrable on top of what came before, retiring the biggest
 unknown first and otherwise in the order the actor would notice.
 
