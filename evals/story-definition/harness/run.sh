@@ -73,8 +73,10 @@ The owner is away for this session"
   fi
   printf '%s\n' "$PROMPT" > "$OUT/prompt.txt"
 
-  # Read on the frozen copy (a rule's // prefix marks an absolute path);
-  # Write and Edit stay in the working directory.
+  # Read on the frozen copy (a rule's // prefix marks an absolute path).
+  # The frozen copy is added as a working directory because --restricted
+  # confines file tools to them; Write and Edit are denied there, so
+  # they stay in the working directory.
   # The token is set on each claude call only, never exported, and no
   # API key reaches the call.
   claude_tok() { env -u ANTHROPIC_API_KEY "CLAUDE_CODE_OAUTH_TOKEN=$TOKEN" claude "$@"; }
@@ -82,6 +84,8 @@ The owner is away for this session"
     claude_tok -p "$@" --restricted --plugin-dir "$FROZEN" \
       --tools "Read,Write,Edit" --permission-mode acceptEdits \
       --allowedTools "Read(/$FROZEN/**)" \
+      --add-dir "$FROZEN" \
+      --disallowedTools "Write(/$FROZEN/**),Edit(/$FROZEN/**)" \
       --output-format stream-json --verbose
   }
   # The session's last turn: the text of the final result event.

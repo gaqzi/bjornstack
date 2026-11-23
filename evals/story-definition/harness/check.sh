@@ -96,11 +96,15 @@ R="$T/evals/runs/standin"
 check "session turns in transcript.jsonl" "6" "$(wc -l < "$R/transcript.jsonl" | tr -d ' ')"
 check "stand-in turns in standin.jsonl" "3" "$(wc -l < "$R/standin.jsonl" | tr -d ' ')"
 check "first session call starts with the skill and the prompt" \
-  "-p /bjornstack:story-definition Add a CSV download button. --restricted --plugin-dir $T/evals/config/sources/bjornstack/plugin --tools Read,Write,Edit --permission-mode acceptEdits --allowedTools Read(/$T/evals/config/sources/bjornstack/plugin/**) --output-format stream-json --verbose" \
+  "-p /bjornstack:story-definition Add a CSV download button. --restricted --plugin-dir $T/evals/config/sources/bjornstack/plugin --tools Read,Write,Edit --permission-mode acceptEdits --allowedTools Read(/$T/evals/config/sources/bjornstack/plugin/**) --add-dir $T/evals/config/sources/bjornstack/plugin --disallowedTools Write(/$T/evals/config/sources/bjornstack/plugin/**),Edit(/$T/evals/config/sources/bjornstack/plugin/**) --output-format stream-json --verbose" \
   "$(grep -- '--plugin-dir' "$T/stub.log" | head -n 1)"
 check "session is resumed with the stand-in's answer" \
   "-p Calendar day, store time. --resume sid-1" \
   "$(grep -- '--plugin-dir' "$T/stub.log" | sed -n 2p | sed 's/ --restricted.*//')"
+check "resumed session calls carry --add-dir <frozen>" "1" \
+  "$(grep -- '--plugin-dir' "$T/stub.log" | sed -n 2p | grep -c -- "--add-dir $T/evals/config/sources/bjornstack/plugin ")"
+check "stand-in calls carry no --add-dir" "0" \
+  "$(grep -v -- '--plugin-dir' "$T/stub.log" | grep -c -- '--add-dir')"
 check "stand-in calls carry the stand-in file; session calls do not" "3 0" \
   "$(grep -v -- '--plugin-dir' "$T/stub.log" | grep -c "Answer as the owner of this app. Keep answers short.") $(grep -- '--plugin-dir' "$T/stub.log" | grep -c "Answer as the owner")"
 
