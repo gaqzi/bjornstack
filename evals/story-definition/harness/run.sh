@@ -11,7 +11,8 @@
 #                  as the owner, from this file's instruction, until DONE or 20
 # Output: tmp/evals/runs/<run-name>/ with transcript.jsonl, stderr.log,
 #         prompt.txt, model.txt, workdir/ and workdir-path.txt, and
-#         standin.jsonl with --stand-in.
+#         standin.jsonl with --stand-in and plugin-commit.txt (a copy of
+#         config/sources/bjornstack.commit) with --prompt.
 # Needs setup.sh first, and `claude auth login` for the arm without --prompt.
 # With --prompt, the Keychain item bjornstack-evals (from claude setup-token)
 # supplies CLAUDE_CODE_OAUTH_TOKEN to run.sh's claude calls only.
@@ -59,10 +60,13 @@ if [ -n "$PROMPT_FILE" ]; then
     echo "no token in the Keychain for service bjornstack-evals, account $ACCOUNT; run claude setup-token, then security add-generic-password -a \"$ACCOUNT\" -s bjornstack-evals -w (it prompts for the token)" >&2
     exit 1
   }
+  COMMIT_FILE="$E/config/sources/bjornstack.commit"
+  [ -r "$COMMIT_FILE" ] || { echo "no $COMMIT_FILE; run freeze.sh or setup.sh first" >&2; exit 1; }
   [ -d "$FROZEN" ] || { echo "no frozen plugin at $FROZEN; run setup.sh first" >&2; exit 1; }
   [ -r "$PROMPT_FILE" ] || { echo "cannot read $PROMPT_FILE" >&2; exit 1; }
   [ -z "$STAND_IN_FILE" ] || [ -r "$STAND_IN_FILE" ] || { echo "cannot read $STAND_IN_FILE" >&2; exit 1; }
   mkdir -p "$OUT"
+  cp "$COMMIT_FILE" "$OUT/plugin-commit.txt"
   cd "$WORK"
 
   PROMPT="/bjornstack:story-definition $(cat "$PROMPT_FILE")"

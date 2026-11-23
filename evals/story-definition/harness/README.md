@@ -55,7 +55,7 @@ It prints the run directory (`<eval home>/runs/<run-name>`) and exits with
 run.sh's status. The tab closes when run.sh ends. When run.sh fails,
 rex-run.sh prints the tab's last 20 lines first. Nothing else is saved:
 the run directory holds what the run needs.
-It runs nothing but run.sh: a first word that is not a plain run name is
+It runs only run.sh and freeze.sh: a first word that is not a plain run name is
 refused.
 
 The eval home is `~/workspace/bjornstack-evals`, or
@@ -71,6 +71,14 @@ missing. Make it once:
    run.sh reads it for its own claude calls only; the first read may raise
    a macOS access prompt (click Allow). Nothing goes in a shell config.
 
+To run new plugin text, freeze it first: `rex-run.sh --freeze <commit>`
+opens the same tab and runs `freeze.sh` on a commit of this repo. It
+replaces the frozen bjornstack copy and `config/sources/bjornstack.commit`
+and touches nothing else in the eval home; it prints the full commit id.
+A `--prompt` run then copies that file to `plugin-commit.txt` in its run
+directory, and fails when the file is missing.
+
+`check-freeze.sh` runs freeze.sh against a temp git repo.
 `check.sh` runs run.sh against a stub `claude` on PATH;
 `check-rex-run.sh` runs rex-run.sh against a stub `rex` and a stub run.sh.
 

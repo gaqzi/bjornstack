@@ -6,6 +6,10 @@
 # Usage: check-rex-run.sh
 set -uo pipefail
 
+# `git rebase --exec` exports GIT_DIR and friends; left set, `git init` in a
+# temp dir would re-init the caller's repo. Start from a clean git environment.
+unset $(git rev-parse --local-env-vars)
+
 HERE="$(cd "$(dirname "$0")" && pwd)"
 T="$(mktemp -d "${TMPDIR:-/tmp}/rex-run-check.XXXXXX")"
 T="$(cd "$T" && pwd)"   # a TMPDIR ending in / would give "//", which rex-run.sh's own path drops
@@ -17,6 +21,12 @@ EV="$T/home/workspace/bjornstack-evals"   # the default eval home under the temp
 mkdir -p "$T/bin" "$H" "$EV"
 EVP="$(cd "$EV" && pwd -P)"   # run.sh reports its physical directory
 cp "$HERE/rex-run.sh" "$H/rex-run.sh"
+# The repo holding rex-run.sh, for --freeze: one commit, one file.
+echo content > "$T/repo/file.txt"
+git -C "$T/repo" init -q
+git -C "$T/repo" add -A
+git -C "$T/repo" -c user.name=t -c user.email=t@example.com commit -q -m one
+COMMIT="$(git -C "$T/repo" rev-parse HEAD)"
 
 # Stub run.sh: records its cwd, each argument on its own line and EVALS_DIR;
 # exits $STUB_EXIT and prints a failure line when it is not 0. $STUB_MKRUN
@@ -33,6 +43,19 @@ fi
 exit "${STUB_EXIT:-0}"
 STUB
 chmod +x "$H/run.sh"
+
+# Stub freeze.sh: records its cwd, each argument on its own line and EVALS_DIR;
+# exits $STUB_EXIT and prints a failure line when it is not 0.
+cat > "$H/freeze.sh" <<'STUB'
+#!/usr/bin/env bash
+{ echo "cwd=$(pwd -P)"; printf 'arg=%s\n' "$@"; echo "evals=$EVALS_DIR"; } > "$STUB_LOG.freezesh"
+echo "freeze started"
+if [ "${STUB_EXIT:-0}" -ne 0 ]; then
+  echo "freeze failed on $1" >&2
+fi
+exit "${STUB_EXIT:-0}"
+STUB
+chmod +x "$H/freeze.sh"
 
 # Stub rex. It logs each argument in brackets, one call per line.
 # `window new` (the tab; plain `run` is not a stub case): without --shell=none it joins the words and has
@@ -86,7 +109,7 @@ chmod +x "$T/bin/rex"
 # temp dir, so the real ~/workspace is never touched. $EH, when set, is
 # BJORNSTACK_EVALS_HOME. A caller's EVALS_DIR is set to a decoy: it must not matter.
 run() {
-  : > "$T/stub.log"; rm -f "$T/stub.log.runsh" "$T/stub.log.tab" "$T/stub.log.status" "$T/stub.log.tmpwait"
+  : > "$T/stub.log"; rm -f "$T/stub.log.runsh" "$T/stub.log.freezesh" "$T/stub.log.tab" "$T/stub.log.status" "$T/stub.log.tmpwait"
   rm -rf "$T/tmpd"; mkdir "$T/tmpd"   # rex-run.sh's TMPDIR: it and the stubs write nothing here
   env -u BJORNSTACK_EVALS_HOME ${EH:+BJORNSTACK_EVALS_HOME="$EH"} \
     PATH="$T/bin:$PATH" STUB_LOG="$T/stub.log" REX_SESSION=sess-1 TMPDIR="$T/tmpd" \
@@ -239,5 +262,48 @@ for refused in "/bin/ls" "../run.sh" "--arm" "a;b" "a b" ""; do
 done
 run
 check "refuses no arguments with exit 2" "2" "$?"
+run "/bin/ls" extra
+check "a refused first word says rex-run.sh runs only run.sh and freeze.sh" "1" \
+  "$(grep -c '^refused: rex-run.sh runs only run.sh and freeze.sh' "$T/err")"
+
+# Scenario: --freeze starts the freeze, and nothing but the freeze.
+HP="$(cd "$H" && pwd -P)"
+run --freeze "$COMMIT"
+check "--freeze with a commit exits 0 and prints the full commit id" "0 $COMMIT" "$? $(cat "$T/out")"
+check "--freeze opens the bjornstack-evals tab, direct, in the harness directory, running freeze.sh with the commit id" \
+  "[window][new][bjornstack-evals][--keep-open][--json][--focus=false][--shell=none][-s][sess-1][-c][$H][--][env][EVALS_DIR=$EV][PATH=$T/bin:$PATH][HOME=$T/home][$H/freeze.sh][$COMMIT]" \
+  "$(grep '^\[window\]\[new\]' "$T/stub.log")"
+check "freeze.sh gets the full commit id as its only argument, and EVALS_DIR set to the eval home" \
+  "cwd=$HP|arg=$COMMIT|evals=$EV" "$(paste -sd'|' "$T/stub.log.freezesh")"
+check "--freeze waits, then closes the tab once" "new wait close" "$(calls)"
+
+run --freeze "$(git -C "$T/repo" rev-parse --short HEAD)"
+check "--freeze resolves a short id to the full commit id" "0 $COMMIT|arg=$COMMIT" \
+  "$? $(cat "$T/out")|$(grep '^arg=' "$T/stub.log.freezesh")"
+
+STUB_EXIT=3 run --freeze "$COMMIT"
+check "a failing freeze exits with freeze.sh's status" "3" "$?"
+check "a failing freeze prints no commit id, the tab's output and closes the tab once, after the capture" \
+  "|1|new wait capture close" \
+  "$(cat "$T/out")|$(grep -c 'freeze failed on' "$T/err")|$(calls)"
+check "a failing freeze names freeze.sh, not run.sh" "1 0" \
+  "$(grep -c '^freeze.sh exited 3' "$T/err") $(grep -c 'run.sh exited' "$T/err")"
+STUB_EXIT=1 run --freeze "$COMMIT"
+check "a freeze status of 1 says it may be rex's, naming freeze.sh" "1 1" \
+  "$? $(grep -c 'freeze.sh exited 1 (or rex could not tell' "$T/err")"
+
+# Only a commit of the repo holding rex-run.sh is frozen: anything else is refused before rex.
+refuse_freeze() { # refuse_freeze <description> <freeze args...>
+  local d="$1"; shift
+  run --freeze "$@"
+  check "--freeze $d exits 2 with the freeze usage on stderr and no rex call" "2 1 0" \
+    "$? $(grep -c -- 'usage: rex-run.sh --freeze <commit>' "$T/err") $(grep -c . "$T/stub.log")"
+}
+refuse_freeze "with no argument"
+refuse_freeze "with two arguments" "$COMMIT" "$COMMIT"
+refuse_freeze "with an unresolvable argument" deadbeefdeadbeefdeadbeefdeadbeefdeadbeef
+refuse_freeze "with an argument starting with '-'" -x
+refuse_freeze "with a tree name" "HEAD^{tree}"
+refuse_freeze "with a blob name" "HEAD:file.txt"
 
 exit "$FAILED"

@@ -3,12 +3,17 @@
 # Usage: check.sh
 set -uo pipefail
 
+# `git rebase --exec` exports GIT_DIR and friends; left set, `git init` in a
+# temp dir would re-init the caller's repo. Start from a clean git environment.
+unset $(git rev-parse --local-env-vars)
+
 HERE="$(cd "$(dirname "$0")" && pwd)"
 T="$(mktemp -d "${TMPDIR:-/tmp}/harness-check.XXXXXX")"
 trap 'rm -rf "$T"' EXIT
 FAILED=0
 
 mkdir -p "$T/bin" "$T/evals/config/sources/bjornstack/plugin" "$T/evals/specs"
+echo "0123456789abcdef0123456789abcdef01234567" > "$T/evals/config/sources/bjornstack.commit"
 echo "briefkasten spec" > "$T/evals/specs/briefkasten.md"
 echo "Add a CSV download button." > "$T/prompt.txt"
 echo "Answer as the owner of this app. Keep answers short." > "$T/standin.txt"
@@ -63,6 +68,8 @@ if [ "$kind" = session ]; then
   text="Which orders count as yesterday's?"
   [ "$n" -le "${STUB_QUESTIONS:-2}" ] || text="Here are the stories."
   [ "$n" -ne 1 ] || echo "written by the session" > session-note.txt
+  # With STUB_REWRITE_COMMIT the session replaces the commit id mid-run.
+  [ -z "${STUB_REWRITE_COMMIT:-}" ] || echo "$STUB_REWRITE_COMMIT" > "$EVALS_DIR/config/sources/bjornstack.commit"
   printf '{"type":"system","subtype":"init","model":"stub","plugins":%s}\n' "${STUB_PLUGINS:-$REAL_PLUGINS}"
   printf '{"type":"result","session_id":"sid-1","result":"%s %s"}\n' "$text" "turn$n"
 elif [ "$kind" = standin ]; then
@@ -191,6 +198,27 @@ for i in "${!REFUSED_NAMES[@]}"; do
   check "init plugins $n exits 1" "1" "$?"
   check "init plugins $n starts no stand-in call" "0" "$(grep -c '^STUB_standin' "$T/stub.log.count")"
 done
+
+# Scenario: a run records the plugin commit it loaded.
+check "a --prompt run writes plugin-commit.txt as a copy of bjornstack.commit" \
+  "0123456789abcdef0123456789abcdef01234567" "$(cat "$T/evals/runs/standin/plugin-commit.txt" 2>&1)"
+check "an owner-away --prompt run writes plugin-commit.txt too" \
+  "0123456789abcdef0123456789abcdef01234567" "$(cat "$T/evals/runs/away/plugin-commit.txt" 2>&1)"
+check "an arm run without --prompt writes no plugin-commit.txt" "no" \
+  "$([ -e "$T/evals/runs/brief/plugin-commit.txt" ] && echo yes || echo no)"
+
+# plugin-commit.txt is the id as of run start: a rewrite during the session does not reach it.
+STUB_REWRITE_COMMIT="fedcba9876543210fedcba9876543210fedcba98" run rewritten --prompt "$T/prompt.txt"
+check "plugin-commit.txt holds the id from run start when the session rewrites bjornstack.commit" \
+  "0123456789abcdef0123456789abcdef01234567" "$(cat "$T/evals/runs/rewritten/plugin-commit.txt" 2>&1)"
+echo "0123456789abcdef0123456789abcdef01234567" > "$T/evals/config/sources/bjornstack.commit"
+
+mv "$T/evals/config/sources/bjornstack.commit" "$T/commit.away"
+run nocommit --prompt "$T/prompt.txt"
+check "a --prompt run without bjornstack.commit exits non-zero" "1" "$([ "$?" -ne 0 ] && echo 1 || echo 0)"
+check "a --prompt run without bjornstack.commit names the file" "1" "$(grep -c 'bjornstack.commit' "$T/nocommit.out")"
+check "a --prompt run without bjornstack.commit starts no claude call" "0" "$(wc -l < "$T/stub.log" | tr -d ' ')"
+mv "$T/commit.away" "$T/evals/config/sources/bjornstack.commit"
 
 # Usage errors.
 run u1 --stand-in "$T/standin.txt"; check "--stand-in without --prompt exits 2" "2" "$?"
