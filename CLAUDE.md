@@ -114,3 +114,11 @@ best on a small model. Models change; the roles don't.
 ## COMMIT STYLE
 
 Load the /commit-style skill before writing any commit message. Tim Pope style: imperative mood, capitalized, 50-char subject hard limit, no trailing period, no conventional commit prefixes (feat:, fix:, etc.). Wrap body at 72 chars. Always use HEREDOC formatting.
+
+<!-- workflow:project-setup -->
+## BEADS WITH DECISIONS
+
+Start a bead with `script/context <id> --claim`; read an area's decisions before a bead exists with `script/context --area <area>`.
+Areas and their directories are in `.beads/workflow-project-areas.json`; every bead and decision carries at least one `area:<area>` label.
+After changing a decision, run `script/decisions` and include `docs/decisions.md` in that change.
+<!-- /workflow:project-setup -->

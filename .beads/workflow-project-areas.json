@@ -1,0 +1,55 @@
+{
+  "areas": {
+    "tenets": {
+      "loads": [],
+      "rules": [],
+      "dirs": [
+        "tenets/"
+      ]
+    },
+    "strategies": {
+      "loads": [
+        "tenets"
+      ],
+      "rules": [],
+      "dirs": [
+        "strategies/"
+      ]
+    },
+    "guards": {
+      "loads": [
+        "strategies"
+      ],
+      "rules": [],
+      "dirs": []
+    },
+    "language-go": {
+      "loads": [
+        "tenets"
+      ],
+      "rules": [],
+      "dirs": [
+        "languages/go/"
+      ]
+    },
+    "plugin": {
+      "loads": [
+        "tenets",
+        "strategies"
+      ],
+      "rules": [],
+      "dirs": [
+        "plugin/",
+        "evals/"
+      ]
+    },
+    "project": {
+      "loads": [],
+      "rules": [],
+      "dirs": [
+        "docs/",
+        "scripts/"
+      ]
+    }
+  }
+}

@@ -9,7 +9,9 @@
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
-    "allowUnixSockets": [".git/fsmonitor--daemon.ipc"],
+    "allowUnixSockets": [
+      ".git/fsmonitor--daemon.ipc"
+    ],
     "allowLocalBinding": true,
     "excludedCommands": [
       "bd"
@@ -36,6 +38,15 @@
           }
         ],
         "matcher": ""
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bd prime --hook-json"
+          }
+        ]
       }
     ]
   }

@@ -56,3 +56,5 @@ sync:
     git-remote: git+ssh://git@github.com/gaqzi/bjornstack.git
     remote: "git+ssh://git@github.com/gaqzi/bjornstack.git"
 dolt.shared-server: true
+dolt:
+    auto-commit: "on"

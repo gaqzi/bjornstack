@@ -1,0 +1,9 @@
+{
+  "release": "33afaab5a955d168585684d256312ad7a86badcb5e6b23a604cb05349cf6f4ea",
+  "files": {
+    "script/context": "e1d28880498a2bc97b29160d3db51e3219e1e37ce2f817279782d41bde2b250c",
+    "script/decisions": "53b7aae53d711d96c751a9bd98304e5dd32a1732339854e872e230bea68f21a5",
+    ".beads/PRIME.md#block": "f12c9111ef9b22c266630534eaa5bf5fea09ed7e32c6f1c643db36c79407ef3e",
+    "CLAUDE.md#block": "9ff1246a55fcee529d3da230523a2042c8da7c48c6e30b989fb43d5b1f9f0784"
+  }
+}

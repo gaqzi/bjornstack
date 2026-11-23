@@ -1,0 +1,682 @@
+#!/usr/bin/env python3
+"""Print decisions for script/context.
+
+`--area <area>[,<area>...]` prints the current decisions of the named areas;
+`<id>` prints the bead, then the design of its parent epic and a Dependencies
+section listing the beads it depends on, then the current decisions of its
+area labels.
+`<id> --claim` or `--claim <id>` reads bd's export first and refuses, before
+any claim, an id that no bead has exactly (a prefix, a typo) and an export that
+fails or bd that cannot be run.
+It then claims the bead (`bd update --claim`), so the printed bead is already
+in progress; a claim bd refuses ends the run with bd's own message and exit
+code.
+A bead record whose title is not a string is refused as not bead records.
+bd output that is not UTF-8 is refused.
+A failed export is refused with one line on stderr: bd's exit code and its
+stderr folded to one line.
+An area's context also lists the decisions of the areas it loads (its `loads`
+entries that the areas file lists, one level deep) and prints its rules files
+(`.claude/rules/<name>.md` for each name in its `rules`, frontmatter removed)
+after the decisions. The Decisions heading names only the areas asked for;
+loaded areas add decisions, not rules. A loads entry naming no listed area is
+dropped, and a rules file that is missing, a link, or unreadable is skipped, all
+silently, as is every rules file when the rules directory has a link anywhere
+from the repo root down to it. A rules file with more than one hard link is
+refused: the run prints nothing to stdout and exits 2. A rules file is opened
+once and checked and read through that one handle. A rules file that is not
+UTF-8 is printed with each invalid byte replaced by U+FFFD.
+In a rules file's body, and nowhere else, one leading BOM is dropped and CRLF
+is read as a line ending.
+An area label the areas file does not list gets a notice naming the valid
+areas, printed under the Decisions heading. For a bead, an unreadable areas
+file is a warning on stderr and no notices, not a refusal; `--area` still
+refuses.
+A call that cannot be read (no id, an unknown flag, a second id, `--area` with
+an id or `--claim`) prints the usage on stderr, after a line naming an unknown
+flag or a second id, and exits 2 before anything is read or claimed.
+A repo may add script/local/context.py, read when it is a regular file after
+the call is read and not at all for a refused call. It is executed into a fresh
+module, so nothing is cached or written to the repo. It may set
+CONTEXT_ALL_DECISIONS (true: print the current decisions of every area),
+CONTEXT_EPIC_DESIGN (false: leave out the epic's design) and CONTEXT_RULES_DIR
+(the directory the rules files are read from; a string or a path that is
+relative and has no ".." component, anything else truthy or any other path ends
+the call with exit 2 before anything is read or claimed), and may define
+context_after(bead_id, areas), called last after the output is written. It gets
+None as bead_id under --area, and the labelled or asked-for areas with the
+areas they load. Its return value is the exit code; None exits 0.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+import stat
+import subprocess
+import sys
+import types
+from typing import NamedTuple
+
+EXCERPT_LIMIT = 200
+AREAS_PATH = os.path.join(".beads", "workflow-project-areas.json")
+AREAS_UNREADABLE = f"script/context: cannot read {AREAS_PATH}; no decisions printed"
+AREAS_UNCHECKED = f"script/context: cannot read {AREAS_PATH}; area labels not checked"
+ONE_LINE_CONTROLS = re.compile("[\x00-\x1f\x7f-\x9f\u2028\u2029]")
+AREA_NAME = re.compile(r"[a-z0-9][a-z0-9_-]*")
+RULES_DIR = os.path.join(".claude", "rules")
+LOCAL_PATH = os.path.join("script", "local", "context.py")
+USAGE = (
+    "usage: script/context <id> [--claim]",
+    "       script/context --area <area>[,<area>...]",
+)
+
+
+class NotBeadRecords(Exception):
+    def __init__(self, line_number, line, reason=""):
+        super().__init__(line_number, line, reason)
+        self.reason = reason
+        self.line_number = line_number
+        self.excerpt = line[:EXCERPT_LIMIT]
+
+
+class NotUtf8(Exception):
+    pass
+
+
+class NotAreasFile(Exception):
+    pass
+
+
+class BadRulesDir(Exception):
+    pass
+
+
+class HardLinkedRules(Exception):
+    def __init__(self, path):
+        super().__init__(
+            f"script/context: {flat(path)} has more than one hard link; refusing to read it"
+        )
+
+
+class NotACall(Exception):
+    def __init__(self, lines):
+        super().__init__(lines)
+        self.lines = lines
+
+
+class Call(NamedTuple):
+    bead_id: str | None
+    claim: bool
+    area: str | None
+
+
+class Knobs(NamedTuple):
+    all_decisions: bool = False
+    rules_dir: str = RULES_DIR
+    epic_design: bool = True
+
+
+DEFAULT_KNOBS = Knobs()
+
+
+def parse_areas(areas_text):
+    try:
+        parsed = json.loads(areas_text)
+    except (ValueError, RecursionError) as err:
+        raise NotAreasFile(f"not JSON: {err}") from err
+    if not isinstance(parsed, dict) or not isinstance(parsed.get("areas"), dict):
+        raise NotAreasFile(
+            f'expected an object with an "areas" object, got {areas_text[:80]!r}'
+        )
+    return parsed["areas"]
+
+
+def area_keys(areas_text):
+    return sorted(parse_areas(areas_text))
+
+
+def well_formed(keys):
+    return [k for k in keys if AREA_NAME.fullmatch(k)]
+
+
+def listed_areas(areas_text):
+    return well_formed(area_keys(areas_text))
+
+
+def read_areas_text(path):
+    try:
+        with open(path, encoding="utf-8") as areas_file:
+            return areas_file.read()
+    except (OSError, UnicodeDecodeError) as err:
+        raise NotAreasFile(str(err)) from err
+
+
+def read_parsed_areas():
+    return parse_areas(read_areas_text(AREAS_PATH))
+
+
+def field_names(areas_map, names, field):
+    found = set()
+    for name in names:
+        area = areas_map.get(name)
+        entries = area.get(field) if isinstance(area, dict) else None
+        if isinstance(entries, list):
+            found.update(
+                e for e in entries if isinstance(e, str) and AREA_NAME.fullmatch(e)
+            )
+    return sorted(found)
+
+
+def with_loaded(areas_map, names):
+    loaded = [n for n in field_names(areas_map, names, "loads") if n in areas_map]
+    return sorted(set(names) | set(loaded))
+
+
+def flat(value):
+    text = value if isinstance(value, str) else json.dumps(value)
+    return ONE_LINE_CONTROLS.sub(" ", text)
+
+
+def unforged(line):
+    """Indent a line that would otherwise start like a section heading."""
+    if line.startswith("━━"):
+        return " " + line
+    return line
+
+
+def lines_of(text):
+    # Split on "\n" only: every other control character is flattened later.
+    lines = text.split("\n")
+    if lines[-1] == "":
+        lines.pop()
+    return lines
+
+
+def indented(lines):
+    """Flatten each line and indent it by two spaces."""
+    return "".join(f"  {flat(line)}\n" for line in lines)
+
+
+def rules_body(text):
+    lines = lines_of(text.removeprefix("\ufeff").replace("\r\n", "\n"))
+    if lines and lines[0] == "---" and "---" in lines[1:]:
+        lines = lines[lines.index("---", 1) + 1 :]
+    return indented(lines)
+
+
+def render_rules(name, text):
+    return f"\n━━ Rules: {name}\n\n{rules_body(text)}"
+
+
+def unsafe_rules_dir(rules_dir):
+    """True for a directory that has a link from the repo root down to it."""
+    parts = [p for p in rules_dir.split(os.sep) if p]
+    return any(
+        os.path.islink(os.path.join(*parts[:i])) for i in range(1, len(parts) + 1)
+    )
+
+
+def read_rules_file(name, rules_dir=RULES_DIR):
+    path = os.path.join(rules_dir, name + ".md")
+    if unsafe_rules_dir(rules_dir) or os.path.islink(path):
+        return None
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0))
+    except OSError:
+        # Skipped silently, as the bash script skips an unreadable rules file.
+        return None
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode):
+            os.close(fd)
+            return None
+        if info.st_nlink > 1:
+            os.close(fd)
+            raise HardLinkedRules(path)
+        rules_file = os.fdopen(fd, encoding="utf-8", errors="replace", newline="")
+    except OSError:
+        os.close(fd)
+        return None
+    try:
+        with rules_file:
+            return rules_file.read()
+    except OSError:
+        return None
+
+
+def render_rules_sections(names, rules_dir=RULES_DIR):
+    texts = [(name, read_rules_file(name, rules_dir)) for name in names]
+    return "".join(render_rules(name, text) for name, text in texts if text is not None)
+
+
+def unlisted_refusal(names, listed):
+    unlisted = [n for n in names if n not in listed]
+    return "".join(
+        f"{flat(n)} is not listed; valid areas: {', '.join(listed)}\n" for n in unlisted
+    )
+
+
+def unlisted_notices(area_names, keys):
+    if keys is None:
+        return ""
+    return "".join(
+        f"{flat('area:' + name)} is not listed; valid areas: {flat(', '.join(keys))}\n"
+        for name in area_names
+        if name not in keys
+    )
+
+
+def no_bead_message(bead_id):
+    return f"script/context: no bead {flat(bead_id)}\n"
+
+
+def parse_bulk_read(answer):
+    records = []
+    # Split on "\n" only: bd export writes U+0085 raw inside JSON strings.
+    for line_number, line in enumerate(answer.split("\n"), start=1):
+        if not line.strip():
+            continue
+        try:
+            record = json.loads(line)
+        except ValueError:
+            raise NotBeadRecords(line_number, line)
+        if not isinstance(record, dict) or not isinstance(record.get("id"), str):
+            raise NotBeadRecords(line_number, line)
+        if "title" in record and not isinstance(record["title"], str):
+            raise NotBeadRecords(line_number, line, "title is not a string: ")
+        records.append(record)
+    return records
+
+
+def answer_text(stdout):
+    # Decode the bytes ourselves: text=True would turn "\r\n" into "\n".
+    try:
+        return stdout.decode("utf-8")
+    except UnicodeDecodeError as err:
+        raise NotUtf8() from err
+
+
+def failure_line(script_name, code, stderr):
+    line = f"{script_name}: bd export failed with exit code {code}"
+    text = flat(stderr.decode("utf-8", errors="replace").strip())[:EXCERPT_LIMIT]
+    return f"{line}: {text}" if text.strip() else line
+
+
+def decisions_of(records):
+    return [r for r in records if r.get("issue_type") == "decision"]
+
+
+def area_labels(decision):
+    labels = decision.get("labels") or []
+    return [l[len("area:") :] for l in labels if l.startswith("area:")]
+
+
+def superseded_by(decision):
+    return [
+        d["depends_on_id"]
+        for d in decision.get("dependencies") or []
+        if d.get("type") == "supersedes"
+    ]
+
+
+def is_current(decision):
+    return (
+        decision.get("status") == "closed"
+        and decision.get("close_reason") == "accepted"
+        and not superseded_by(decision)
+    )
+
+
+def current_decisions(records, areas, every_area=False):
+    in_areas = [
+        d
+        for d in decisions_of(records)
+        if every_area or set(areas) & set(area_labels(d))
+    ]
+    return sorted((d for d in in_areas if is_current(d)), key=lambda d: d["id"])
+
+
+def areas_of_argument(argument):
+    return argument.split(",")
+
+
+def render_decisions(areas, decisions, notices=""):
+    rows = "".join(
+        unforged(f"{flat(d['id'])}  {flat(d['title'])}") + "\n" for d in decisions
+    )
+    listing = f"{rows}\n" if rows else ""
+    return (
+        f"━━ Decisions for: {' '.join(areas)}\n"
+        "\n"
+        f"{notices}"
+        f"{listing}"
+        "Read a decision in full, with its rationale: bd show <id>\n"
+    )
+
+
+BEAD_TEXT_FIELDS = [
+    ("description", "DESCRIPTION"),
+    ("design", "DESIGN"),
+    ("acceptance_criteria", "ACCEPTANCE CRITERIA"),
+    ("notes", "NOTES"),
+]
+
+
+def render_bead(record):
+    labels = record.get("labels") or []
+    labels_line = f"{flat('Labels: ' + ', '.join(labels))}\n" if labels else ""
+    text = "".join(
+        f"\n{heading}\n" + indented(lines_of(record[field]))
+        for field, heading in BEAD_TEXT_FIELDS
+        if record.get(field)
+    )
+    heading = f"{record['id']} [{record['status'].upper()}] {record['title']}"
+    return f"{unforged(flat(heading))}\n{labels_line}{text}"
+
+
+def bead_by_id(records, bead_id):
+    return next((r for r in records if r["id"] == bead_id), None)
+
+
+def listed_areas_of(record, listed):
+    return sorted(set(area_labels(record)) & set(listed))
+
+
+def parent_ids(record):
+    return [
+        d["depends_on_id"]
+        for d in record.get("dependencies") or []
+        if d.get("type") == "parent-child"
+    ]
+
+
+def dependency_ids(record):
+    return [
+        d["depends_on_id"]
+        for d in record.get("dependencies") or []
+        if d.get("type") != "parent-child"
+    ]
+
+
+def render_epic_section(record, records, with_design=True):
+    parents = parent_ids(record)
+    if not parents or not with_design:
+        return ""
+    epic = bead_by_id(records, parents[0])
+    if epic is None:
+        body = f"(parent {flat(parents[0])} not found among dependencies)\n"
+        return f"\n━━ Epic {flat(parents[0])}: design\n\n{body}"
+    lines = lines_of(epic.get("design") or "")
+    body = indented(lines) if lines else "  (no design)\n"
+    return f"\n━━ Epic {flat(parents[0])}: design\n\n{body}"
+
+
+def render_dependency_line(target):
+    reason = target.get("close_reason")
+    closed = f"  closed: {flat(reason)}\n" if reason else ""
+    heading = f"{target['id']} [{target['status']}] {target['title']}"
+    return f"{unforged(flat(heading))}\n{closed}"
+
+
+def render_dependency_entry(dependency_id, records):
+    target = bead_by_id(records, dependency_id)
+    if target is None:
+        row = f"{flat(dependency_id)} (not found among records)"
+        return unforged(row) + "\n"
+    return render_dependency_line(target)
+
+
+def render_dependencies_section(record, records):
+    lines = "".join(render_dependency_entry(i, records) for i in dependency_ids(record))
+    listing = lines or "(none)\n"
+    return f"\n━━ Dependencies\n\n{listing}"
+
+
+def render_context(record, records, areas, decisions, notices="", with_design=True):
+    return (
+        f"{render_bead(record)}"
+        f"{render_epic_section(record, records, with_design)}"
+        f"{render_dependencies_section(record, records)}"
+        f"\n{render_decisions(areas, decisions, notices)}"
+    )
+
+
+def read_records():
+    try:
+        done = subprocess.run(["bd", "export"], capture_output=True, check=False)
+    except OSError as err:
+        sys.exit(f"script/context: cannot run bd: {err}")
+    if done.returncode != 0:
+        sys.exit(failure_line("script/context", done.returncode, done.stderr))
+    try:
+        return parse_bulk_read(answer_text(done.stdout))
+    except NotUtf8:
+        sys.exit("script/context: bd output is not UTF-8")
+    except NotBeadRecords as err:
+        sys.exit(
+            f"script/context: bd did not return bead records: line {err.line_number}: {err.reason}{flat(err.excerpt)}"
+        )
+
+
+def read_areas():
+    try:
+        return read_parsed_areas()
+    except NotAreasFile:
+        # The story fixes the message to one line, which is why the cause is not printed.
+        sys.stderr.write(AREAS_UNREADABLE + "\n")
+        sys.exit(2)
+
+
+def deciding_areas_of_argument(argument, areas_map):
+    """The areas named by --area with the areas they load."""
+    return with_loaded(areas_map, areas_of_argument(argument))
+
+
+def print_area_decisions(argument, knobs):
+    areas = areas_of_argument(argument)
+    areas_map = read_areas()
+    listed = well_formed(sorted(areas_map))
+    refusal = unlisted_refusal(areas, listed)
+    if refusal:
+        sys.stderr.write(refusal)
+        sys.exit(2)
+    records = read_records()
+    deciding = deciding_areas_of_argument(argument, areas_map)
+    decisions = current_decisions(records, deciding, knobs.all_decisions)
+    rules = field_names(areas_map, areas, "rules")
+    sys.stdout.write(
+        render_decisions(areas, decisions)
+        + render_rules_sections(rules, knobs.rules_dir)
+    )
+    return areas_map
+
+
+def bead_areas(record, areas_map):
+    if areas_map is None:
+        return []
+    return listed_areas_of(record, well_formed(sorted(areas_map)))
+
+
+def deciding_areas(record, areas_map):
+    """The listed areas of a bead's labels with the areas they load; none when the areas file is unreadable."""
+    areas = bead_areas(record, areas_map)
+    return with_loaded(areas_map, areas) if areas_map else areas
+
+
+def bead_context(records, bead_id, areas_map, knobs=DEFAULT_KNOBS):
+    # areas_map=None: the areas file could not be read (no decisions, no notices); {}: it lists nothing.
+    record = bead_by_id(records, bead_id)
+    if record is None:
+        return None
+    keys = None if areas_map is None else sorted(areas_map)
+    areas = bead_areas(record, areas_map)
+    notices = unlisted_notices(area_labels(record), keys)
+    deciding = deciding_areas(record, areas_map)
+    decisions = current_decisions(records, deciding, knobs.all_decisions)
+    return render_context(record, records, areas, decisions, notices, knobs.epic_design)
+
+
+def parse_call(args):
+    """Read what follows script/context into a Call, or raise NotACall with the lines of a refusal."""
+    claim = False
+    bead_id = ""
+    area = None
+    rest = list(args)
+    while rest:
+        arg = rest.pop(0)
+        if arg == "--claim":
+            claim = True
+        elif arg == "--area":
+            if not rest or not rest[0]:
+                raise NotACall([])
+            area = rest.pop(0)
+        elif arg.startswith("-"):
+            raise NotACall([f"script/context: unknown flag: {flat(arg)}"])
+        else:
+            # An empty argument counts as no id until an id is held, then as a second id, as the bash does.
+            if bead_id:
+                raise NotACall(
+                    [f"script/context: more than one id: {flat(bead_id)} {flat(arg)}"]
+                )
+            bead_id = arg
+    if area is not None:
+        if bead_id or claim:
+            raise NotACall([])
+        return Call(None, False, area)
+    if not bead_id:
+        raise NotACall([])
+    return Call(bead_id, claim, None)
+
+
+def claim_command(bead_id):
+    return ["bd", "update", "--claim", "--", bead_id]
+
+
+def claim_bead(bead_id):
+    try:
+        done = subprocess.run(claim_command(bead_id), capture_output=True, check=False)
+    except OSError as err:
+        sys.exit(f"script/context: cannot run bd: {err}")
+    if done.returncode != 0:
+        sys.stderr.write(done.stderr.decode("utf-8", errors="replace"))
+        sys.exit(done.returncode)
+
+
+def read_areas_for_bead():
+    try:
+        areas_map = read_parsed_areas()
+    except NotAreasFile:
+        sys.stderr.write(AREAS_UNCHECKED + "\n")
+        return None
+    return areas_map
+
+
+def rules_text_of(records, bead_id, areas_map, knobs):
+    """Reading a bead's rules files refuses a hard-linked one. A bead with no record has no rules text."""
+    record = bead_by_id(records, bead_id)
+    if record is None:
+        return ""
+    rules = field_names(areas_map, bead_areas(record, areas_map), "rules")
+    return render_rules_sections(rules, knobs.rules_dir)
+
+
+def rules_text_before_claim(bead_id, areas_map, knobs):
+    """The checks that must pass before a bead is claimed: bd must export, its output must be bead records, and a record with exactly this id must exist; each refusal happens before any claim."""
+    records = read_records()
+    if bead_by_id(records, bead_id) is None:
+        sys.exit(no_bead_message(bead_id).rstrip("\n"))
+    return rules_text_of(records, bead_id, areas_map, knobs)
+
+
+def print_bead_context(bead_id, claim, knobs):
+    areas_map = read_areas_for_bead()
+    if claim:
+        rules_text = rules_text_before_claim(bead_id, areas_map, knobs)
+        claim_bead(bead_id)
+        records = read_records()
+    else:
+        records = read_records()
+        rules_text = rules_text_of(records, bead_id, areas_map, knobs)
+    text = bead_context(records, bead_id, areas_map, knobs)
+    if text is None:
+        sys.stderr.write(no_bead_message(bead_id))
+        sys.exit(1)
+    record = bead_by_id(records, bead_id)
+    sys.stdout.write(text + rules_text)
+    return record, areas_map
+
+
+def rules_dir_of(value):
+    """The rules directory a knob value names: a relative string or path without a ".." component, the default for a falsy value."""
+    if not value:
+        return RULES_DIR
+    if not isinstance(value, (str, os.PathLike)):
+        raise BadRulesDir(
+            f"script/context: CONTEXT_RULES_DIR is not a path: {flat(repr(value))}"
+        )
+    rules_dir = os.fspath(value)
+    if os.path.isabs(rules_dir) or ".." in rules_dir.split(os.sep):
+        raise BadRulesDir(
+            f"script/context: CONTEXT_RULES_DIR must be relative with no '..' component: {flat(repr(rules_dir))}"
+        )
+    return rules_dir
+
+
+def knobs_of(local):
+    return Knobs(
+        all_decisions=bool(getattr(local, "CONTEXT_ALL_DECISIONS", False)),
+        rules_dir=rules_dir_of(getattr(local, "CONTEXT_RULES_DIR", None)),
+        epic_design=bool(getattr(local, "CONTEXT_EPIC_DESIGN", True)),
+    )
+
+
+def exit_code_of(returned):
+    return 0 if returned is None else returned
+
+
+def load_local_module():
+    if not os.path.isfile(LOCAL_PATH):
+        return None
+    with open(LOCAL_PATH, encoding="utf-8") as local_file:
+        source = local_file.read()
+    module = types.ModuleType("context_local")
+    module.__file__ = LOCAL_PATH
+    # A module that fails to import is not handled: its exception ends the run with a traceback.
+    exec(compile(source, LOCAL_PATH, "exec", dont_inherit=True), module.__dict__)  # noqa: S102 - deliberate: runs the repo's script/local hook
+    return module
+
+
+def main(argv):
+    os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+    try:
+        call = parse_call(argv[1:])
+    except NotACall as err:
+        sys.stderr.write("".join(line + "\n" for line in (*err.lines, *USAGE)))
+        sys.exit(2)
+    local = load_local_module()
+    try:
+        knobs = knobs_of(local)
+    except BadRulesDir as err:
+        sys.stderr.write(f"{err}\n")
+        sys.exit(2)
+    try:
+        if call.area is not None:
+            areas_map = print_area_decisions(call.area, knobs)
+            areas = deciding_areas_of_argument(call.area, areas_map)
+        else:
+            record, areas_map = print_bead_context(call.bead_id, call.claim, knobs)
+            areas = deciding_areas(record, areas_map)
+    except HardLinkedRules as err:
+        sys.stderr.write(f"{err}\n")
+        sys.exit(2)
+    hook = getattr(local, "context_after", None)
+    if callable(hook):
+        code = exit_code_of(hook(call.bead_id, areas))
+        if code:
+            sys.exit(code)
+
+
+if __name__ == "__main__":
+    main(sys.argv)
