@@ -28,46 +28,76 @@ TENET: Many More Much Smaller Steps
      answers a health check.
    - Bad: since the message already reaches the worker, slice 0's
      worker also does the first part of the real job.
-3. **one-slice-not-split.** Decide whether the feature is one slice.
-   Split it only when both hold: the request has parts someone could
-   use apart, such as kinds, cases or triggers, and doing all of them
-   makes one slice too large to review on its own. Otherwise the
-   feature is one slice, slice 1: don't split it. Record the decision
-   in the feature's design, and who made it. When it splits, the
-   record names the parts someone could use apart and why doing all of
-   them is too large to review on its own.
-   - Good: one slice when the request is one part, or its parts fit
-     one reviewable slice; such as a CSV export of orders with the
-     endpoint that serves it, or a new field on a form that is stored
-     and shown back.
-   - Bad: the CSV export split into an endpoint that returns an empty
-     file and a later slice that fills it.
+3. **one-slice-not-split.** Decide how the business work is cut into
+   slices. A slice is one story that delivers one thing of value.
+   Slice 0 (step 1) and a cut by layer (case 3) are the exceptions,
+   each used only when its own condition holds. A vertical slice
+   crosses every layer the feature touches; a horizontal slice is one
+   layer. Ask of the whole feature, then again of each slice a case
+   makes, and take the first case that fits:
+   1. It has parts someone can use apart, such as kinds, cases or
+      triggers: each part is its own vertical slice, the most wanted
+      first.
+   2. It is too large to review, and the user does it in steps or it
+      covers many of something: cut it along what the user does (ask,
+      wait, receive) or by how much it covers (one tenant, then all).
+      Each slice still crosses every layer and stops at a point the
+      user can see, like a page saying it will reload when the result
+      is ready.
+   3. It is too large to review and no such cut is left: cut it by
+      layer, behind a flag. Nothing reaches the user until the last
+      of these slices lands.
+   4. Otherwise it stays one slice; for the whole feature, that is
+      slice 1.
+
+   Too large to review depends on the work: about 500 changed lines
+   for ordinary application code with its tests; about half that for
+   code that handles money, security or concurrency; more for
+   generated code or test data. When a slice mixes kinds, use the
+   smallest; judge other kinds against these. Record the cut in the
+   feature's design, and who made it. When the feature is split, mark
+   each slice as slice 0, vertical or horizontal, and for each cut
+   made because something was too large to review, say why.
+   - Good: each slice crosses every layer and ends where the user sees
+     something; such as refunds cut into full, partial and exchange,
+     with full refunds first, or a slow report cut into asking for it
+     and receiving it.
+   - Bad: the CSV export of yesterday's orders split into an endpoint
+     that returns an empty file and a later slice that fills it. It
+     is one part and small enough to review, so it is one slice.
 4. **slice-one-useful-sooner.** When step 3 splits the feature, make
-   slice 1 one of the parts someone could use apart: useful in a
-   limited sense, even though it does less than was wanted. It lands
-   sooner than the whole feature would, so you see what works before
-   building the rest. Later slices each add another part.
-   - Good: slice 1 is one usable part and leaves the others out; such
-     as reports for three kinds of account where slice 1 covers one
-     kind, or a refund flow that handles full refunds while staff
-     still handle partial refunds themselves.
+   slice 1 the first thing someone can use: the most wanted part, or
+   that part's first step. It shows use, not just wiring, and stops at
+   a point the user can see, even though it does less than was wanted.
+   It lands sooner than the whole feature would, so you see what works
+   before building the rest. When that step is cut by layer, its
+   layers are slice 1a, 1b and so on, the practical exception to one
+   story per slice, and the last of them is the one that shows use.
+   Later slices each add the next step or part.
+   - Good: slice 1 is usable and leaves the rest out; such as reports
+     for three kinds of account where slice 1 covers one kind, or a
+     report request that ends on a page saying it will reload when the
+     report is built, before anything builds it.
    - Bad: slice 1 is only the storage for the feature, and nothing
      anyone can use. This is about the slice, not the changes inside
-     it: landing the storage as its own change within a slice is still
-     a valid small step.
+     it: landing the storage as its own change within a slice, or as
+     a horizontal slice when step 3 cuts by layer, is still a valid
+     small step.
 
 OUTCOMES:
 - A slice 0 exists only for a feature whose path needs infrastructure,
   a runtime or a deploy path the codebase has never run, and it
   contains no business work.
-- The feature's design records whether it has a slice 0 and whether
-  it is split, and who made each decision. A split names its parts
-  and why all of them are too large to review on their own.
+- The feature's design records whether it has a slice 0 and how it
+  is cut, and who made each decision. A split marks each slice as
+  slice 0, vertical or horizontal, and says why each cut made because
+  something was too large to review was needed.
 - Slice 0, when there is one, shows its new path working end to end in
   a way someone can see.
 - A feature that one slice delivers lands as one slice.
 - When a feature has more than one slice, slice 1 is usable by someone
-  it was built for and lands before the rest of the feature.
+  it was built for, stops at a point they can see, and slice 1, with
+  any layers under it, lands before the rest of the feature.
 
 MISAPPLICATIONS:
 - A slice 0 in front of ordinary work. The feature follows paths the
@@ -81,12 +111,15 @@ MISAPPLICATIONS:
     that nothing passes through yet.
 - A feature that one slice delivers, split anyway. Each piece is too
   small to use, and the split only adds stories to review and land.
-- A missing split. The request has parts someone could use apart, and
-  slice 1 carries all of them although together they are too large to
-  review on its own, so nothing is seen working until all of it is
-  done.
-- A slice 1 cut so thin that nobody can use it: one layer of the
-  feature, or a part that only makes sense once the next slice lands.
+- A missing split. The request has parts someone could use apart, or
+  one part too large to review, and slice 1 carries all of it, so
+  nothing is seen working until all of it is done.
+- A cut by layer where a cut by part, step or coverage would do. Each
+  slice is one layer, and nobody can use any of it until the last
+  lands.
+- A slice 1 cut so thin that nobody can use it: a part that only
+  makes sense once the next slice lands, or a step that ends where
+  the user sees nothing.
 
 SKIP WHEN: The change is not a feature someone will use, such as a
 bug fix or a structural change. Tidy or Change covers how to sequence
@@ -110,10 +143,24 @@ and slice 1 the second, and slice 0 exists only when there is
 groundwork to do.
 
 "Too large" for slice 0 means doing business work. For slice 1 it
-means carrying parts someone could use apart when together they are
-too large to review on its own. "Too small" for slice 1 means nothing
-anyone can use. A feature can fail by being split when it should not
-be, or by not being split when it should; step 3 checks both.
+means carrying parts someone could use apart, or more than a
+reviewer can read as one change. "Too small" for slice 1 means
+nothing anyone can use. A feature can fail by being split when it
+should not be, or by not being split when it should; step 3 checks
+both.
+
+### Vertical first, by layer last
+
+A cut by part, step or coverage keeps every slice something the user
+can see working, so each one is checked against what was wanted. A
+cut by layer gives nobody anything until its last layer lands, so it
+comes last, for a piece that cannot be made smaller any other way.
+Too large is measured by what a reviewer can read with care. Code
+that handles money, security or concurrency needs closer reading, so
+less of it fits; generated code and test data need less, so more
+fits. Code is cheap to produce in bulk, but a large change is rarely
+good, and small steps keep the work from running ahead of what has
+been checked.
 
 ### Serving Many More Much Smaller Steps
 
@@ -147,8 +194,10 @@ infrastructure, a runtime or a deploy path, and does no business
 work, so it can ship but gives no user anything new. Slice 1 is the
 feature's walking skeleton: the thinnest pass that proves the
 feature's path, working end to end for the business side, fleshed
-out by later slices when step 3 splits the feature. With no slice 0,
-the first story is slice 1.
+out by later slices when step 3 splits the feature. When step 3 cuts
+by step, slice 1 may be only the first step of a part, such as
+asking for a report and seeing that it is being built. With no
+slice 0, the first story is slice 1.
 
 ### Where the terms come from
 
