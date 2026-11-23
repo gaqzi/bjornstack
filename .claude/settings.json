@@ -31,15 +31,6 @@
     ],
     "SessionStart": [
       {
-        "hooks": [
-          {
-            "command": "bd prime",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      },
-      {
         "matcher": "",
         "hooks": [
           {
