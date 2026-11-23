@@ -24,8 +24,11 @@ config, from an empty directory. The prompt is sent as
 `/bjornstack:story-definition <file text>`. No arm and no extra login are
 needed, but unattended runs need a token:
 
-- once per machine: `claude setup-token`, then export
-  `CLAUDE_CODE_OAUTH_TOKEN` (run.sh unsets `ANTHROPIC_API_KEY`)
+- once per machine: `claude setup-token`, then store its output with
+  `security add-generic-password -a "$USER" -s bjornstack-evals -w`
+  (run.sh reads it from the Keychain for its own claude calls only and
+  removes `ANTHROPIC_API_KEY` from them; the first read may raise a macOS
+  access prompt, click Allow)
 - run setup.sh first, so the frozen copy exists in `tmp/evals/config/sources/`
 
 Options:

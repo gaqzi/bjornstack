@@ -13,6 +13,8 @@
 #         prompt.txt, model.txt, workdir/ and workdir-path.txt, and
 #         standin.jsonl with --stand-in.
 # Needs setup.sh first, and `claude auth login` for the arm without --prompt.
+# With --prompt, the Keychain item bjornstack-evals (from claude setup-token)
+# supplies CLAUDE_CODE_OAUTH_TOKEN to run.sh's claude calls only.
 set -euo pipefail
 
 USAGE="usage: run.sh <run-name> [--owner-away] [--arm <arm>] [--prompt <file> [--stand-in <file>]]"
@@ -49,13 +51,17 @@ WORK="$(mktemp -d "${TMPDIR:-/tmp}/story-eval.XXXXXX")"
 if [ -n "$PROMPT_FILE" ]; then
   # Any first prompt: claude -p --restricted on the owner's normal config,
   # loading only the frozen bjornstack plugin. Unattended runs use the
-  # token from `claude setup-token`, never an API key.
+  # token from `claude setup-token`, read from the Keychain, never an API key.
   FROZEN="$E/config/sources/bjornstack/plugin"
-  [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] || { echo "CLAUDE_CODE_OAUTH_TOKEN is not set; run claude setup-token once" >&2; exit 1; }
+  ACCOUNT="${USER:-$(id -un)}"
+  TOKEN="$(security find-generic-password -a "$ACCOUNT" -s bjornstack-evals -w 2>/dev/null)" || TOKEN=""
+  [ -n "$TOKEN" ] || {
+    echo "no token in the Keychain for service bjornstack-evals, account $ACCOUNT; run claude setup-token, then security add-generic-password -a \"$ACCOUNT\" -s bjornstack-evals -w (it prompts for the token)" >&2
+    exit 1
+  }
   [ -d "$FROZEN" ] || { echo "no frozen plugin at $FROZEN; run setup.sh first" >&2; exit 1; }
   [ -r "$PROMPT_FILE" ] || { echo "cannot read $PROMPT_FILE" >&2; exit 1; }
   [ -z "$STAND_IN_FILE" ] || [ -r "$STAND_IN_FILE" ] || { echo "cannot read $STAND_IN_FILE" >&2; exit 1; }
-  unset ANTHROPIC_API_KEY
   mkdir -p "$OUT"
   cd "$WORK"
 
@@ -69,8 +75,11 @@ The owner is away for this session"
 
   # Read on the frozen copy (a rule's // prefix marks an absolute path);
   # Write and Edit stay in the working directory.
+  # The token is set on each claude call only, never exported, and no
+  # API key reaches the call.
+  claude_tok() { env -u ANTHROPIC_API_KEY "CLAUDE_CODE_OAUTH_TOKEN=$TOKEN" claude "$@"; }
   session() {
-    claude -p "$@" --restricted --plugin-dir "$FROZEN" \
+    claude_tok -p "$@" --restricted --plugin-dir "$FROZEN" \
       --tools "Read,Write,Edit" --permission-mode acceptEdits \
       --allowedTools "Read(/$FROZEN/**)" \
       --output-format stream-json --verbose
@@ -110,7 +119,7 @@ The session's last turn:
 $(last_text "$TURN")"
       # The stand-in sees only the above: no tools, its own empty directory,
       # not the session's (which holds what the session wrote).
-      (cd "$STAND_WORK" && claude -p "$ASK" --restricted --tools "" \
+      (cd "$STAND_WORK" && claude_tok -p "$ASK" --restricted --tools "" \
         --output-format stream-json --verbose) \
         > "$OUT/standin.turn" 2>> "$OUT/stderr.log"
       cat "$OUT/standin.turn" >> "$OUT/standin.jsonl"

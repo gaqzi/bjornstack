@@ -13,6 +13,20 @@ echo "briefkasten spec" > "$T/evals/specs/briefkasten.md"
 echo "Add a CSV download button." > "$T/prompt.txt"
 echo "Answer as the owner of this app. Keep answers short." > "$T/standin.txt"
 
+# Stub security: logs its arguments, one call per line, to $STUB_LOG.security
+# and prints the token. With STUB_KEYCHAIN_MISSING=1 it fails the way the real
+# one does for a missing item.
+cat > "$T/bin/security" <<'STUB'
+#!/usr/bin/env bash
+echo "$*" >> "$STUB_LOG.security"
+if [ "${STUB_KEYCHAIN_MISSING:-}" = 1 ]; then
+  echo "security: SecKeychainSearchCopyNext: The specified item could not be found in the keychain." >&2
+  exit 44
+fi
+echo "tok-from-keychain"
+STUB
+chmod +x "$T/bin/security"
+
 # Stub claude: logs its arguments, one line per call, to $STUB_LOG. A call
 # with --plugin-dir is a session turn; the session asks a question for its
 # first $STUB_QUESTIONS turns. Any other call is the stand-in, which answers
@@ -37,6 +51,8 @@ n=$((n + 1))
   echo "prompt<<"
   echo "$2"
   echo ">>"
+  echo "token=${CLAUDE_CODE_OAUTH_TOKEN:-}"
+  echo "apikey=${ANTHROPIC_API_KEY-unset}"
 } > "$STUB_LOG.$kind.$n"
 if [ "$kind" = session ]; then
   text="Which orders count as yesterday's?"
@@ -58,7 +74,7 @@ run() { # run <name> [run.sh args...]; stdout/stderr to $T/last.out
   local name="$1"; shift
   rm -f "$T"/stub.log*; : > "$T/stub.log"; : > "$T/stub.log.count"
   PATH="$T/bin:$PATH" EVALS_DIR="$T/evals" STUB_LOG="$T/stub.log" \
-    CLAUDE_CODE_OAUTH_TOKEN=tok ANTHROPIC_API_KEY="" "$HERE/run.sh" "$name" "$@" \
+    ANTHROPIC_API_KEY=from-env "$HERE/run.sh" "$name" "$@" \
     > "$T/$name.out" 2>&1
 }
 
@@ -118,6 +134,36 @@ check "briefkasten run uses the arm's CLAUDE_CONFIG_DIR" "config=$T/evals/config
   "$(sed -n 3p "$T/stub.log.other.1")"
 check "briefkasten prompt holds the spec" "/bjornstack:story-definition briefkasten spec" \
   "$(head -n 1 "$T/evals/runs/brief/prompt.txt")"
+
+# Scenario: run.sh takes the token from the Keychain only.
+tokline() { grep '^token=' "$T/stub.log.$1"; }
+secline() { cat "$T/stub.log.security" 2>/dev/null; }
+USER=evaluser run tok --prompt "$T/prompt.txt"
+check "security is called once with the service and the account" \
+  "find-generic-password -a evaluser -s bjornstack-evals -w" "$(secline)"
+check "session call gets the token from the Keychain" "token=tok-from-keychain" "$(tokline session.1)"
+check "session call has no ANTHROPIC_API_KEY" "apikey=unset" "$(grep '^apikey=' "$T/stub.log.session.1")"
+STUB_QUESTIONS=1 STUB_ANSWERS=1 run tok2 --prompt "$T/prompt.txt" --stand-in "$T/standin.txt"
+check "stand-in call gets the token from the Keychain" "token=tok-from-keychain" "$(tokline standin.1)"
+check "stand-in call has no ANTHROPIC_API_KEY" "apikey=unset" "$(grep '^apikey=' "$T/stub.log.standin.1")"
+CLAUDE_CODE_OAUTH_TOKEN=from-env run tok3 --prompt "$T/prompt.txt"
+check "a token in the caller's environment is not used" "token=tok-from-keychain" "$(tokline session.1)"
+run tok4 --owner-away
+check "an arm run does not get the token" "token=" "$(tokline other.1)"
+check "an arm run makes no security call" "" "$(secline)"
+
+rc=$(unset USER; run nouser --prompt "$T/prompt.txt"; echo $?)
+check "with USER unset run.sh exits 0" "0" "$rc"
+check "with USER unset security gets the login name" \
+  "find-generic-password -a $(id -un) -s bjornstack-evals -w" "$(secline)"
+
+namesfix() { # counts of lines naming the service, the account, setup-token, add-generic-password
+  echo "$(grep -c -F 'bjornstack-evals' "$1") $(grep -c -F "$2" "$1") $(grep -c -F 'claude setup-token' "$1") $(grep -c -F 'security add-generic-password' "$1")"
+}
+USER=evaluser STUB_KEYCHAIN_MISSING=1 run nokey --prompt "$T/prompt.txt"
+check "a missing Keychain entry exits non-zero" "1" "$([ "$?" -ne 0 ] && echo 1 || echo 0)"
+check "a missing Keychain entry names service, account and both steps" "1 1 1 1" "$(namesfix "$T/nokey.out" evaluser)"
+check "a missing Keychain entry starts no claude call" "0" "$(wc -l < "$T/stub.log" | tr -d ' ')"
 
 # Isolation: a session that loads another plugin fails the run.
 STUB_PLUGINS='["bjornstack@inline","builtin","other@market"]' run leaky --prompt "$T/prompt.txt"
