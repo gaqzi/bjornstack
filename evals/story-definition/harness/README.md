@@ -42,7 +42,34 @@ stand-in's in `standin.jsonl`. run.sh fails if the init event lists a
 plugin besides `bjornstack@inline` and builtins. Without `--prompt`,
 run.sh works as in steps 1 to 3.
 
-`check.sh` runs run.sh against a stub `claude` on PATH.
+## Starting a run from an agent session
+
+`rex-run.sh <run.sh arguments>` is the one way an agent session starts a
+run. It opens a new rex tab named `bjornstack-evals` in `$REX_SESSION` with the eval home as its
+working directory, runs the repo's `run.sh` there with exactly those
+arguments and `EVALS_DIR` set to the eval home, and waits until it ends.
+It prints the run directory (`<eval home>/runs/<run-name>`) and exits with
+run.sh's status. The tab closes when run.sh ends. When run.sh fails,
+rex-run.sh prints the tab's last 20 lines first. Nothing else is saved:
+the run directory holds what the run needs.
+It runs nothing but run.sh: a first word that is not a plain run name is
+refused.
+
+The eval home is `~/workspace/bjornstack-evals`, or
+`$BJORNSTACK_EVALS_HOME`. It holds only the runs and frozen copies.
+Nothing creates it but you; rex-run.sh stops, naming it, when it is
+missing. Make it once:
+
+1. `mkdir -p ~/workspace/bjornstack-evals`
+2. `EVALS_DIR=~/workspace/bjornstack-evals evals/story-definition/harness/setup.sh bjornstack-arm`
+   (freezes the plugin copies a `--prompt` run loads)
+3. `claude setup-token`, then store its output with
+   `security add-generic-password -a "$USER" -s bjornstack-evals -w`.
+   run.sh reads it for its own claude calls only; the first read may raise
+   a macOS access prompt (click Allow). Nothing goes in a shell config.
+
+`check.sh` runs run.sh against a stub `claude` on PATH;
+`check-rex-run.sh` runs rex-run.sh against a stub `rex` and a stub run.sh.
 
 The spec is `briefkasten-spec.md`, the Test Task from bs-9qz.
 Score runs against `../keys/briefkasten.md` and `../rubric.md`.
