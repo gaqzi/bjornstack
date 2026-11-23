@@ -53,7 +53,8 @@ if [ -n "$PROMPT_FILE" ]; then
   # Any first prompt: claude -p --restricted on the owner's normal config,
   # loading only the frozen bjornstack plugin. Unattended runs use the
   # token from `claude setup-token`, read from the Keychain, never an API key.
-  FROZEN="$E/config/sources/bjornstack/plugin"
+  COPY="$E/config/sources/bjornstack"
+  FROZEN="$COPY/plugin"
   ACCOUNT="${USER:-$(id -un)}"
   TOKEN="$(security find-generic-password -a "$ACCOUNT" -s bjornstack-evals -w 2>/dev/null)" || TOKEN=""
   [ -n "$TOKEN" ] || {
@@ -77,19 +78,20 @@ The owner is away for this session"
   fi
   printf '%s\n' "$PROMPT" > "$OUT/prompt.txt"
 
-  # Read on the frozen copy (a rule's // prefix marks an absolute path).
-  # The frozen copy is added as a working directory because --restricted
+  # Read on the whole frozen copy, not only plugin/: plugin/ links to the
+  # copy's strategies/ and tenets/ (a rule's // prefix marks an absolute
+  # path). The copy is added as a working directory because --restricted
   # confines file tools to them; Write and Edit are denied there, so
-  # they stay in the working directory.
+  # they stay in the working directory. Only plugin/ is loaded as the plugin.
   # The token is set on each claude call only, never exported, and no
   # API key reaches the call.
   claude_tok() { env -u ANTHROPIC_API_KEY "CLAUDE_CODE_OAUTH_TOKEN=$TOKEN" claude "$@"; }
   session() {
     claude_tok -p "$@" --restricted --plugin-dir "$FROZEN" \
       --tools "Read,Write,Edit" --permission-mode acceptEdits \
-      --allowedTools "Read(/$FROZEN/**)" \
-      --add-dir "$FROZEN" \
-      --disallowedTools "Write(/$FROZEN/**),Edit(/$FROZEN/**)" \
+      --allowedTools "Read(/$COPY/**)" \
+      --add-dir "$COPY" \
+      --disallowedTools "Write(/$COPY/**),Edit(/$COPY/**)" \
       --output-format stream-json --verbose
   }
   # The session's last turn: the text of the final result event.

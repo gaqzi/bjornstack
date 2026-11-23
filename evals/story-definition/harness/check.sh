@@ -12,7 +12,8 @@ T="$(mktemp -d "${TMPDIR:-/tmp}/harness-check.XXXXXX")"
 trap 'rm -rf "$T"' EXIT
 FAILED=0
 
-mkdir -p "$T/bin" "$T/evals/config/sources/bjornstack/plugin" "$T/evals/specs"
+mkdir -p "$T/bin" "$T/evals/config/sources/bjornstack/plugin" "$T/evals/config/sources/bjornstack/strategies" \
+  "$T/evals/config/sources/bjornstack/tenets" "$T/evals/specs"
 echo "0123456789abcdef0123456789abcdef01234567" > "$T/evals/config/sources/bjornstack.commit"
 echo "briefkasten spec" > "$T/evals/specs/briefkasten.md"
 echo "Add a CSV download button." > "$T/prompt.txt"
@@ -20,7 +21,14 @@ echo "Answer as the owner of this app. Keep answers short." > "$T/standin.txt"
 
 # The init event's plugins list in the shape the real CLI emits: the frozen
 # copy of the plugin plus builtins. Stubs use it unless STUB_PLUGINS is set.
-FROZEN="$T/evals/config/sources/bjornstack/plugin"
+COPY="$T/evals/config/sources/bjornstack"
+FROZEN="$COPY/plugin"
+# The frozen copy's layout: the plugin reaches the rule files through
+# symlinks to its siblings, as freeze.sh leaves them.
+echo "strategy" > "$COPY/strategies/s.md"
+echo "tenet" > "$COPY/tenets/t.md"
+ln -s ../strategies "$COPY/plugin/strategies"
+ln -s ../tenets "$COPY/plugin/tenets"
 export REAL_PLUGINS="[{\"name\":\"bjornstack\",\"path\":\"$FROZEN\",\"source\":\"bjornstack@inline\",\"version\":\"0.1.0\"},{\"name\":\"cc-plugin-agents-md\",\"path\":\"builtin\",\"source\":\"cc-plugin-agents-md@builtin\"},{\"name\":\"cc-plugin-telemetry\",\"path\":\"builtin\",\"source\":\"cc-plugin-telemetry@builtin\"}]"
 
 # Stub security: logs its arguments, one call per line, to $STUB_LOG.security
@@ -103,13 +111,35 @@ R="$T/evals/runs/standin"
 check "session turns in transcript.jsonl" "6" "$(wc -l < "$R/transcript.jsonl" | tr -d ' ')"
 check "stand-in turns in standin.jsonl" "3" "$(wc -l < "$R/standin.jsonl" | tr -d ' ')"
 check "first session call starts with the skill and the prompt" \
-  "-p /bjornstack:story-definition Add a CSV download button. --restricted --plugin-dir $T/evals/config/sources/bjornstack/plugin --tools Read,Write,Edit --permission-mode acceptEdits --allowedTools Read(/$T/evals/config/sources/bjornstack/plugin/**) --add-dir $T/evals/config/sources/bjornstack/plugin --disallowedTools Write(/$T/evals/config/sources/bjornstack/plugin/**),Edit(/$T/evals/config/sources/bjornstack/plugin/**) --output-format stream-json --verbose" \
+  "-p /bjornstack:story-definition Add a CSV download button. --restricted --plugin-dir $T/evals/config/sources/bjornstack/plugin --tools Read,Write,Edit --permission-mode acceptEdits --allowedTools Read(/$T/evals/config/sources/bjornstack/**) --add-dir $T/evals/config/sources/bjornstack --disallowedTools Write(/$T/evals/config/sources/bjornstack/**),Edit(/$T/evals/config/sources/bjornstack/**) --output-format stream-json --verbose" \
   "$(grep -- '--plugin-dir' "$T/stub.log" | head -n 1)"
 check "session is resumed with the stand-in's answer" \
   "-p Calendar day, store time. --resume sid-1" \
   "$(grep -- '--plugin-dir' "$T/stub.log" | sed -n 2p | sed 's/ --restricted.*//')"
 check "resumed session calls carry --add-dir <frozen>" "1" \
-  "$(grep -- '--plugin-dir' "$T/stub.log" | sed -n 2p | grep -c -- "--add-dir $T/evals/config/sources/bjornstack/plugin ")"
+  "$(grep -- '--plugin-dir' "$T/stub.log" | sed -n 2p | grep -c -- "--add-dir $T/evals/config/sources/bjornstack ")"
+# What a --restricted session's file tools may reach: the resolved target of
+# every symlink under plugin/ must lie under the --add-dir argument, under
+# the Read rule's path, and under the Write and Edit deny rules' paths.
+SESSION1="$(grep -- '--plugin-dir' "$T/stub.log" | head -n 1)"
+arg_add() { echo "$SESSION1" | sed -n 's/.*--add-dir \([^ ]*\).*/\1/p'; }
+# A rule's leading // marks an absolute path: strip the one / the syntax adds.
+arg_rule() { echo "$SESSION1" | sed -n "s/.*$1(\\/\\(\\/[^ )]*\\)\\/\\*\\*).*/\\1/p" | head -n 1; }
+covered() { # covered <dir>: does every symlink under plugin/ resolve under <dir>?
+  local base out="" l t
+  base="$(cd -P "$1" 2>/dev/null && pwd -P)"
+  [ -n "$base" ] || { echo "no"; return; }
+  for l in "$COPY"/plugin/*; do
+    [ -L "$l" ] || continue
+    t="$(cd -P "$l" && pwd -P)"
+    case "$t/" in "$base"/*) out="$out yes" ;; *) out="$out no" ;; esac
+  done
+  echo "${out# }"
+}
+check "the plugin's symlinks resolve under the --add-dir argument" "yes yes" "$(covered "$(arg_add)")"
+check "the plugin's symlinks resolve under the Read rule's path" "yes yes" "$(covered "$(arg_rule Read)")"
+check "the plugin's symlinks resolve under the Write deny rule's path" "yes yes" "$(covered "$(arg_rule Write)")"
+check "the plugin's symlinks resolve under the Edit deny rule's path" "yes yes" "$(covered "$(arg_rule Edit)")"
 check "stand-in calls carry no --add-dir" "0" \
   "$(grep -v -- '--plugin-dir' "$T/stub.log" | grep -c -- '--add-dir')"
 check "stand-in calls carry the stand-in file; session calls do not" "3 0" \
