@@ -55,17 +55,19 @@ goal, not merely its shape, when a story assumes a capability no
 story provides, as The story says, or when the question is a spike,
 as above.
 
-**Short path.** For a single story, a bug, or filling one acceptance
-field, skip to [The story](#the-story) and the handoff checklist. The
-four phases are for a feature that needs slicing.
+**Short path.** For a bug, or filling one acceptance field, skip to
+[The story](#the-story) and the handoff checklist. A single story that
+builds code is not short: phase 3, Architecture, in
+`references/session.md`, runs before it is drafted, even when nothing
+needs slicing. The other phases are for a feature that needs slicing.
 
 ## The session
 
-Four phases, each with a question and an exit test. Don't move on until
+Five phases, each with a question and an exit test. Don't move on until
 the exit test passes: every later phase builds on the one before, and
 the usual failure of breakdown sessions is slicing before the goal and
 the verification are pinned, then finding the slices don't add up.
-Goal is below. Verification, Skeleton, and Slices are in
+Goal is below. Verification, Architecture, Skeleton, and Slices are in
 `references/session.md`; read that file when the Goal exit test
 passes, before asking anything about verification or slicing.
 
@@ -113,7 +115,7 @@ four lines of "not this" prevent more questions than any amount of
 **Exit test:** the user can say, in one sentence, what is true after the
 feature ships that is not true today.
 
-Now read `references/session.md` for phases 2 to 4. The rest of this
+Now read `references/session.md` for phases 2 to 5. The rest of this
 file is the story shape, the handoff checklist, and filing, which the
 phases refer to.
 
@@ -221,7 +223,8 @@ face the code and belong in the commit subject.
 
 An "and" in a title is a signal to stop and ask, not a ban: could
 each half ship and be checked without the other? If both could, they
-are two rules and two stories. If one half is only seen through the
+are two rules and two stories. This sorts titles of stories you
+draft; it never splits a slice that phase 3's cut made. If one half is only seen through the
 other, or both halves name one reason from two sides, it is one
 behaviour and the "and" stays.
 
@@ -596,11 +599,14 @@ follow its create checklist. The mapping is:
   stubs, the feature-level happy and unhappy scenarios) go in the
   epic's `--acceptance`. That is the evaluation protocol, which
   beads-workflow places in acceptance, not design.
-- Shared contracts, the language and harness the unit tests run in
+- The Architecture phase's answers, each with its source, and its open
+  decisions, under a heading "Architecture", with shared contracts,
+  the language and harness the unit tests run in
   (or that the feature is all glue), and anything parallel agents
-  would collide on go in the epic's `--design`. No list of unit tests
-  goes anywhere: the implementer writes them for every rule whether
-  or not a story names them.
+  would collide on go in the epic's `--design`; for a lone story with
+  no epic, they go in that story's own `--design`. No list of unit
+  tests goes anywhere: the implementer writes them for every rule
+  whether or not a story names them.
 - Each story's sentence and out-of-scope lines go in `--description`,
   with its notes at the end of it. Its scenarios or checklist go in
   `--acceptance`, its constraints in `--design`, which beads-workflow
@@ -632,6 +638,11 @@ follow its create checklist. The mapping is:
   number with the id of the story it stands for. `bd update` replaces
   a whole field, so resend the whole field, through the heredoc above
   when it holds backticks.
+
+When the session cannot file the stories itself, it gives the stories
+and the exact commands in its message, or in the stories file. It
+never writes a script or any other file than the story and design
+output.
 
 Without beads, the same shape goes in one file the user names, epic
 section first, stories after, with the dependency summary at the end.

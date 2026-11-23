@@ -53,7 +53,7 @@ design bead pattern; this skill points back in "Filing".
 output, and the skill's job is producing stories. The user prefers
 "story" even though the term is less common now.
 
-**Four phases with exit tests: Goal, Verification, Skeleton, Slices.**
+**Five phases with exit tests: Goal, Verification, Architecture, Skeleton, Slices.**
 Each phase has one question and one exit test, because the failure mode
 of breakdown sessions is sliding into slicing before the goal and the
 verification are pinned, then discovering the slices don't add up.
@@ -376,7 +376,7 @@ parallel stories editing one function, test mechanics in scenarios.
 **The core is the short path; the long path loads on demand.**
 SKILL.md holds what every run needs: Before starting, Goal, the story
 shape, scenarios, the handoff checklist, and filing. Verification,
-Skeleton, and Slices live in `references/session.md`, read when the
+Architecture, Skeleton, and Slices live in `references/session.md`, read when the
 Goal exit test passes, and the install procedure in
 `references/install.md`. Goal stays in the core because the short
 path applies its sentence method, and the two derivations stay with
