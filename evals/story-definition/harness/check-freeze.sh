@@ -26,7 +26,11 @@ g() { git -C "$R" -c user.name=t -c user.email=t@example.com "$@"; }
 
 # Commit one: the plugin text to freeze. Commit two changes it, so a freeze
 # of commit one that read the working tree or HEAD would show.
-mkdir -p "$R/.claude-plugin" "$R/plugin/skills"
+mkdir -p "$R/.claude-plugin" "$R/plugin/skills" "$R/strategies" "$R/tenets"
+echo "strategy one" > "$R/strategies/s.md"
+echo "tenet one" > "$R/tenets/t.md"
+ln -s ../strategies "$R/plugin/strategies"
+ln -s ../tenets "$R/plugin/tenets"
 echo "manifest one" > "$R/.claude-plugin/plugin.json"
 echo "skill one" > "$R/plugin/skills/a.md"
 echo "not plugin" > "$R/README.md"
@@ -62,11 +66,13 @@ check() { # check <description> <expected> <actual>
 REST_BEFORE="$(rest)"
 EVALS_DIR="$EV" "$H/freeze.sh" "$(git -C "$R" rev-parse --short "$ONE")" > "$T/out" 2> "$T/err"
 check "freezing a commit by a short id exits 0" "0" "$?"
-check "the frozen copy holds exactly .claude-plugin and plugin/ of that commit" \
-  ". ./.claude-plugin ./.claude-plugin/plugin.json ./plugin ./plugin/skills ./plugin/skills/a.md" \
+check "the frozen copy holds exactly .claude-plugin, plugin/, strategies/ and tenets/ of that commit" \
+  ". ./.claude-plugin ./.claude-plugin/plugin.json ./plugin ./plugin/skills ./plugin/skills/a.md ./plugin/strategies ./plugin/tenets ./strategies ./strategies/s.md ./tenets ./tenets/t.md" \
   "$(cd "$EV/config/sources/bjornstack" && find . | sort | tr '\n' ' ' | sed 's/ $//')"
 check "the frozen files are the commit's text, not HEAD's" "manifest one|skill one" \
   "$(cat "$EV/config/sources/bjornstack/.claude-plugin/plugin.json" 2>&1)|$(cat "$EV/config/sources/bjornstack/plugin/skills/a.md" 2>&1)"
+check "the rule files read through the plugin's symlinks" "strategy one|tenet one" \
+  "$(cat "$EV/config/sources/bjornstack/plugin/strategies/s.md" 2>&1)|$(cat "$EV/config/sources/bjornstack/plugin/tenets/t.md" 2>&1)"
 check "the old copy's stale files are gone" "no no" \
   "$([ -e "$EV/config/sources/bjornstack/plugin/stale.md" ] && echo yes || echo no) $([ -e "$EV/config/sources/bjornstack/old-only.txt" ] && echo yes || echo no)"
 check "bjornstack.commit holds the full commit id" "$ONE" "$(cat "$EV/config/sources/bjornstack.commit")"
@@ -79,5 +85,13 @@ check "an unknown commit exits non-zero" "1" "$([ "$?" -ne 0 ] && echo 1 || echo
 check "an unknown commit leaves the frozen copy intact" "$FROZEN_BEFORE" "$(frozen)"
 check "an unknown commit leaves bjornstack.commit as it was" "$ONE" "$(cat "$EV/config/sources/bjornstack.commit")"
 check "an unknown commit leaves nothing else changed" "$REST_BEFORE" "$(rest)"
+
+# A symlink that does not resolve inside the copy refuses the freeze.
+ln -s ../nowhere "$R/plugin/dangling"
+g add -A; g commit -q -m three
+THREE="$(g rev-parse HEAD)"
+EVALS_DIR="$EV" "$H/freeze.sh" "$THREE" > "$T/out" 2> "$T/err"
+check "a commit with a dangling symlink exits non-zero" "1" "$([ "$?" -ne 0 ] && echo 1 || echo 0)"
+check "a dangling symlink leaves bjornstack.commit as it was" "$ONE" "$(cat "$EV/config/sources/bjornstack.commit")"
 
 exit "$FAILED"

@@ -5,8 +5,8 @@
 # Usage: freeze.sh <commit>
 # Env:
 #   EVALS_DIR   the eval home (default <repo>/tmp/evals)
-# Replaces config/sources/bjornstack (.claude-plugin and plugin/ of the
-# commit) and writes config/sources/bjornstack.commit with the full commit
+# Replaces config/sources/bjornstack (.claude-plugin, plugin/, strategies/
+# and tenets/ of the commit: plugin/ links to the last two) and writes config/sources/bjornstack.commit with the full commit
 # id. Nothing else in the eval home is touched. A commit that does not
 # resolve changes nothing.
 set -euo pipefail
@@ -25,7 +25,20 @@ FULL="$(git -C "$REPO" rev-parse --verify --quiet "$1^{commit}")" \
 mkdir -p "$SRC"
 STAGE="$(mktemp -d "$SRC/.bjornstack.new.XXXXXX")"
 trap 'rm -rf "$STAGE"' EXIT
-git -C "$REPO" archive "$FULL" .claude-plugin plugin | tar -x -C "$STAGE"
+git -C "$REPO" archive "$FULL" .claude-plugin plugin strategies tenets | tar -x -C "$STAGE"
+
+# Every symlink in the copy must resolve inside it, or a session reading
+# through it finds nothing.
+ROOT="$(cd -P "$STAGE" && pwd -P)"
+while IFS= read -r L; do
+  if [ -d "$L" ]; then
+    T="$(cd -P "$L" && pwd -P)"
+  else
+    [ -e "$L" ] || { echo "dangling symlink in the frozen copy: ${L#$STAGE/}" >&2; exit 1; }
+    T="$(cd -P "$(dirname "$L")" && pwd -P)"
+  fi
+  case "$T/" in "$ROOT"/*) ;; *) echo "symlink leaves the frozen copy: ${L#$STAGE/} -> $T" >&2; exit 1 ;; esac
+done < <(find "$STAGE" -type l)
 
 rm -rf "$SRC/bjornstack"
 mv "$STAGE" "$SRC/bjornstack"

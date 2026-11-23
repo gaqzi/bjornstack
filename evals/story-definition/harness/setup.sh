@@ -28,7 +28,7 @@ SRC="$E/config/sources"
 # Frozen plugin copies (shared by arms; refreshed on each setup).
 rm -rf "$SRC/bjornstack" "$SRC/gaqzi--private"
 mkdir -p "$SRC/bjornstack" "$SRC/gaqzi--private" "$CFG" "$E/specs" "$E/runs"
-git -C "$REPO" archive "$COMMIT" .claude-plugin plugin | tar -x -C "$SRC/bjornstack"
+git -C "$REPO" archive "$COMMIT" .claude-plugin plugin strategies tenets | tar -x -C "$SRC/bjornstack"
 cp -R "$WORKFLOW_SRC/.claude-plugin" "$WORKFLOW_SRC/workflow" "$SRC/gaqzi--private/"
 git -C "$REPO" rev-parse "$COMMIT" > "$SRC/bjornstack.commit"
 
