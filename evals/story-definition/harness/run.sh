@@ -91,10 +91,15 @@ The owner is away for this session"
   session "$PROMPT" > "$TURN" 2>> "$OUT/stderr.log"
   cat "$TURN" > "$OUT/transcript.jsonl"
 
-  # Only builtins and the frozen plugin may be loaded.
-  if ! jq -e 'select(.type=="system" and .subtype=="init")
-      | [.plugins[] | (if type=="object" then (.name // .id // tostring) else tostring end)
-         | select(test("^(bjornstack@inline|builtins?)$") | not)] | length == 0' \
+  # Only builtins and the frozen plugin may be loaded. An entry is an object
+  # that is either the frozen bjornstack@inline plugin (by source and path) or
+  # a builtin (path "builtin", source ending "@builtin").
+  if ! jq -e --arg frozen "$FROZEN" 'select(.type=="system" and .subtype=="init")
+      | [.plugins[]
+         | select((type=="object"
+             and ((.source == "bjornstack@inline" and .path == $frozen)
+               or (.path == "builtin" and ((.source // "") | type=="string" and endswith("@builtin"))))) | not)]
+        | length == 0' \
       "$OUT/transcript.jsonl" > /dev/null; then
     echo "init event lists a plugin besides bjornstack@inline and builtins" >&2
     exit 1

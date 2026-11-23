@@ -13,6 +13,11 @@ echo "briefkasten spec" > "$T/evals/specs/briefkasten.md"
 echo "Add a CSV download button." > "$T/prompt.txt"
 echo "Answer as the owner of this app. Keep answers short." > "$T/standin.txt"
 
+# The init event's plugins list in the shape the real CLI emits: the frozen
+# copy of the plugin plus builtins. Stubs use it unless STUB_PLUGINS is set.
+FROZEN="$T/evals/config/sources/bjornstack/plugin"
+export REAL_PLUGINS="[{\"name\":\"bjornstack\",\"path\":\"$FROZEN\",\"source\":\"bjornstack@inline\",\"version\":\"0.1.0\"},{\"name\":\"cc-plugin-agents-md\",\"path\":\"builtin\",\"source\":\"cc-plugin-agents-md@builtin\"},{\"name\":\"cc-plugin-telemetry\",\"path\":\"builtin\",\"source\":\"cc-plugin-telemetry@builtin\"}]"
+
 # Stub security: logs its arguments, one call per line, to $STUB_LOG.security
 # and prints the token. With STUB_KEYCHAIN_MISSING=1 it fails the way the real
 # one does for a missing item.
@@ -58,7 +63,7 @@ if [ "$kind" = session ]; then
   text="Which orders count as yesterday's?"
   [ "$n" -le "${STUB_QUESTIONS:-2}" ] || text="Here are the stories."
   [ "$n" -ne 1 ] || echo "written by the session" > session-note.txt
-  printf '{"type":"system","subtype":"init","model":"stub","plugins":%s}\n' "${STUB_PLUGINS:-[\"bjornstack@inline\",\"builtin\"]}"
+  printf '{"type":"system","subtype":"init","model":"stub","plugins":%s}\n' "${STUB_PLUGINS:-$REAL_PLUGINS}"
   printf '{"type":"result","session_id":"sid-1","result":"%s %s"}\n' "$text" "turn$n"
 elif [ "$kind" = standin ]; then
   text="DONE"
@@ -165,11 +170,23 @@ check "a missing Keychain entry exits non-zero" "1" "$([ "$?" -ne 0 ] && echo 1 
 check "a missing Keychain entry names service, account and both steps" "1 1 1 1" "$(namesfix "$T/nokey.out" evaluser)"
 check "a missing Keychain entry starts no claude call" "0" "$(wc -l < "$T/stub.log" | tr -d ' ')"
 
-# Isolation: a session that loads another plugin fails the run.
-STUB_PLUGINS='["bjornstack@inline","builtin","other@market"]' run leaky --prompt "$T/prompt.txt"
-check "an extra plugin in the init event exits 1" "1" "$?"
-STUB_PLUGINS='[{"name":"other@builtin-tools"}]' run leaky2 --prompt "$T/prompt.txt"
-check "a plugin named like builtin exits 1" "1" "$?"
+# Isolation: an init plugin list with anything but the frozen copy and
+# builtins fails the run before the stand-in starts. The real shape passes
+# (every --prompt run above uses it).
+REFUSED_NAMES=(marketplace-plugin unfrozen-path builtin-source-bad-path builtin-path-bad-source old-string-shape)
+REFUSED_LISTS=(
+  "[{\"name\":\"other\",\"path\":\"/Users/x/.claude/plugins/cache/market/other\",\"source\":\"other@market\",\"version\":\"1.0.0\"}]"
+  "[{\"name\":\"bjornstack\",\"path\":\"/Users/x/elsewhere/plugin\",\"source\":\"bjornstack@inline\",\"version\":\"0.1.0\"}]"
+  "[{\"name\":\"cc-plugin-x\",\"path\":\"/Users/x/elsewhere\",\"source\":\"cc-plugin-x@builtin\"}]"
+  "[{\"name\":\"cc-plugin-x\",\"path\":\"builtin\",\"source\":\"cc-plugin-x@market\"}]"
+  "[\"bjornstack@inline\",\"builtin\"]"
+)
+for i in "${!REFUSED_NAMES[@]}"; do
+  n="${REFUSED_NAMES[$i]}"
+  STUB_PLUGINS="${REFUSED_LISTS[$i]}" run "refused-$n" --prompt "$T/prompt.txt" --stand-in "$T/standin.txt"
+  check "init plugins $n exits 1" "1" "$?"
+  check "init plugins $n starts no stand-in call" "0" "$(grep -c '^STUB_standin' "$T/stub.log.count")"
+done
 
 # Usage errors.
 run u1 --stand-in "$T/standin.txt"; check "--stand-in without --prompt exits 2" "2" "$?"
