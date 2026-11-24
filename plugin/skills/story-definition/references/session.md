@@ -349,6 +349,28 @@ The clock question names a zone only when the rule says a zone
 matters; the design says once which zone and why, from the prompt or
 the owner, never from a guess at where the owner is.
 
+The same question also calls out a time that enters with a zone a
+reader may care about, such as a photo's capture time from the
+camera. Settle it with strategies/utc-computation.md step 2 (the kept
+offset); that step has no id, so cite the file and the step and tell
+the owner so. Whether the feature keeps that offset is a business
+choice only the owner knows, so rule entries do not settle it. Take
+the first that fits:
+
+1. The first prompt states whether the offset is kept: record its
+   words.
+2. The owner is present: put it in the same message as the clock
+   question. Say the time carries its source's own offset, which a
+   reader may care about, ask whether entries keep it, and cite the
+   file and step. Record the answer as the owner's.
+3. The owner is away: list it under "Open decisions for the user" as
+   its own entry, apart from the clock entry. It holds the item, the
+   pick you would make, its reason and the stories that rest on it;
+   the design reads "open, see Open decisions for the user".
+
+When the owner hands this back, the handing-back steps above apply;
+the pick names no zone or place.
+
 **The first-slice decisions.** Then settle two decisions with
 strategies/thin-vertical-slice.md, in the same three ways:
 
