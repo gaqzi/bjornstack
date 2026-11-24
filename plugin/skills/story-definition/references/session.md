@@ -293,6 +293,49 @@ The replay question scales to the feature, as design-for-replay's
 answer at its own size, not a broker or a framework. Name what is
 recorded and where, and what a second run does.
 
+Whenever the feature touches a system it does not own, ask whether it
+changes anything there, and what marks an input as handled. When its
+inputs wait in such a system, such as a topic, an object store or
+another team's API, also take design-for-replay's "Relying on another
+system" section, which has no id. Cite
+design-for-replay#act-only-after-stored and
+design-for-replay#outside-effect-once-per-event for the decision, and
+name the section as context only; never cite the section, or the
+numbered steps in its own list, as a source. Take these in order,
+before any story is drafted:
+
+- Acknowledgement. Settle what acknowledges an input in that system,
+  that is, what marks it as handled, and whether the feature changes
+  anything there. Only the prompt's words or the owner know this; no
+  rule entry does. Ask it, with the options you see and the one you
+  would pick, unless the prompt states it. While the owner is away,
+  list it under "Open decisions for the user" and record no answer for
+  it in the design.
+- No copy. A system counts as keeping its inputs even if it may later
+  expire or delete them; that is a loss, listed under Losses, and
+  never decides this. When that system keeps each input unchanged and
+  findable by its id after it is acknowledged, the section says to
+  keep no copy. The design then records each decision with the
+  input's id and no copy of the input's content. Offer that option as
+  the recommended one; an option that copies the content is offered
+  only for something that system cannot give back, and is named as
+  such. While the owner is away it goes in the design, except that
+  when the open acknowledgement itself could delete or edit the input,
+  the no-copy answer depends on it, and the entry for the
+  acknowledgement says so. Never settle a copy in the design while the
+  losses are open.
+- Losses. Always name each of these for the owner to accept, even if
+  the owner never raised it, and ask about each one that the prompt
+  does not state:
+  - (a) an input the owner deletes or moves out of the system;
+  - (b) an input the system removes or changes on its own (expiry,
+    retention, a rule): ask whether it does;
+  - (c) an input gone before it is decided again, when a rebuild or a
+    replay fetches it by id.
+  Ask the owner to accept them in their own words; while the owner is
+  away, list them under "Open decisions for the user" as a separate
+  entry from the acknowledgement.
+
 The clock question names a zone only when the rule says a zone
 matters; the design says once which zone and why, from the prompt or
 the owner, never from a guess at where the owner is.
