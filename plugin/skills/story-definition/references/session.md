@@ -19,6 +19,29 @@ message consumer, or the database itself when the guarantee lives
 there), what state it observes to judge the result, and what is stubbed
 at the network boundary, which may be nothing.
 
+**What the actor does with each output next.** At the happy path, list
+each kind of output the feature gives its actor, one item at a time
+(a part, a record, a number, a notice), and ask what the actor does
+with it next. A need that shows only when the actor pictures using the
+output comes up here, before any story is drafted. Each part on a
+mechanic's parts list might be ordered, fitted or sent back; each of
+those is a different story.
+
+- Ask per kind of output, not per field or detail of it. Take the
+  kind at the grain the actor handles it: each item they open or
+  use, not the file, page or list that holds many. Asking only what
+  they do with the holder leaves the item unasked.
+- A kind that enters scope later in the session gets the same
+  question when it enters, before the story that gives it is drafted.
+- With the owner present, ask before the first story is drafted, in
+  the words "what does the actor do with it next?" naming the actor
+  and the output, and give your best guess as a pick. The answer is
+  the owner's call.
+- With the owner away, list it under "Open decisions for the user"
+  with a pick, and draft the stories on the pick.
+- Record the answer in the epic's verification, or the story's Notes
+  when there is no epic.
+
 **When a rule depends on the time,** decide how the tests get the
 times it depends on before any mechanism is named, with
 strategies/time-in-tests.md. Read it, then take its first step that
