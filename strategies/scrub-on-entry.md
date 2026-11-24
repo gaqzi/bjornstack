@@ -145,4 +145,5 @@ adapter accepts external types and converts them.
 - **UTC Computation**: the entry point where this strategy builds the
   domain object is also where UTC Computation converts every instant,
   the current time included, to UTC (its step 2), so the domain object
-  holds UTC from the start.
+  holds UTC from the start, plus any offset that step keeps beside an
+  instant.

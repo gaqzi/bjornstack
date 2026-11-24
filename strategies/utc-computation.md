@@ -28,7 +28,16 @@ TENET: Consistent Beats Correct
 2. Convert every instant to UTC where it enters your code: parsed
    input, values read back from storage, and the clock. Asking the
    clock for the time is reading an input. Values that step 1 keeps
-   as local time plus a zone name stay as they are. Elapsed time and
+   as local time plus a zone name stay as they are. An input can
+   carry when something happened at its source, a different instant
+   from when it reached the system; when a feature uses the source's
+   time, the design document says which of the two it keeps. When
+   a feature shows people, or a rule the design document names
+   judges, when something happened on its source's clock, keep the
+   offset that time arrived with as a value of its own beside the UTC
+   instant, and say once in the design document which times keep it
+   and why. Offsets nobody reads that way, such as those on logs from
+   servers in several regions, are dropped. Elapsed time and
    timeouts within one process are measured with a monotonic clock,
    one that setting the system time does not move, and its readings
    are not instants and are never converted. A deadline that is
@@ -38,13 +47,20 @@ TENET: Consistent Beats Correct
      result to UTC and passes that on, or `2026-03-02T01:30:00+02:00`
      from a request that becomes `2026-03-01T23:30:00Z` when it is
      parsed.
+   - Good: an offset people read the time by is kept beside the
+     instant; such as a photo's capture time from the camera stored as
+     `2026-03-02T07:00:00Z` with `+02:00`, so the album shows it was
+     taken at 09:00 where it was taken, or a chat message stamped by
+     the sender's phone, so a reader sees it was written at 03:00 on
+     the sender's clock.
    - Bad: timestamps are converted to UTC when written to storage, but
      the current time is passed on in the machine's zone.
 3. Inside each computation, convert every value into the
    computation's zone before turning it into a date or a time of day:
-   UTC, the zone step 1 made an input, or for a value kept local, the
-   zone stored with it. Never rely on the zone a value happens to
-   carry.
+   UTC, the zone step 1 made an input, for a value kept local the
+   zone stored with it, or for a rule step 2 names, the offset kept
+   with that value, at that value's own instant only. Never rely on
+   the zone a value happens to carry.
    - Good: the computation converts into its own zone itself; such as
      a week-grouping function that converts each entry and the current
      time to UTC, then works out their weeks, or "is the shop open
@@ -52,8 +68,10 @@ TENET: Consistent Beats Correct
    - Bad: the week-grouping function trusts its callers to have
      converted, so the one caller that forgets mixes two zones.
 4. Show local time only to people, converted as the last step before
-   output, into the viewer's zone passed in. Output that programs read
-   is UTC with the offset written out, or local time with its zone
+   output, into the viewer's zone passed in, or into the offset step 2
+   kept for a time shown on its source's clock. Output that programs
+   read is UTC with the offset written out, the instant written in
+   the offset step 2 kept, or local time with its zone
    name for values step 1 keeps local.
    - Good: only people see local time without its zone; such as a page
      that shows each entry in the reader's zone while the file behind
@@ -90,13 +108,18 @@ TENET: Consistent Beats Correct
 OUTCOMES:
 - Every computation that turns a time into a date or a time of day
   uses UTC, or a zone it takes as an input with the reason written
-  down once.
+  down once, or, for a rule the design document names, a value's
+  kept offset at its own instant.
 - Every instant is UTC from the point it enters the code, the current
   time included, unless step 1 keeps it local with its zone name.
+  An offset kept beside an instant is a value of its own, kept only
+  where the design document says people read the time by it or a
+  named rule judges it.
   Durations within one process come from a monotonic clock.
 - Changing the zone the inputs carry, or the zone the machine is set
   to, changes no stored value and no computed result, apart from
-  values step 1 keeps local and output for people.
+  values step 1 keeps local, offsets step 2 keeps and the results a
+  named rule reads in them, and output for people.
 - Local time without its zone name appears only in output for people.
 - Every computation that turns a time into a date or a time of day
   has tests on both sides of its zone, and every path that reads the
@@ -115,6 +138,12 @@ MISAPPLICATIONS:
   - A future appointment set by local clock time stored only as UTC.
     If the zone's rules change before the appointment, the stored
     instant no longer matches the time the person chose.
+- Dropping an offset people read the time by, such as a photo's
+  capture time stored as UTC alone, so the album shows a time the
+  camera's clock never read.
+- Using a kept offset as a zone, such as adding a day to a time in its
+  kept offset to get "the same time tomorrow", which is an hour off
+  across a daylight saving change.
 - A calendar date with no time, such as a birthday or an invoice date,
   turned into midnight UTC. Shown west of UTC it becomes the day
   before. A date with no time is not an instant and stays a date.
@@ -158,10 +187,11 @@ needs no written reason, because it is the default. Any other reason
 to deviate falls under Consistent Beats Correct and is stated once,
 in the design document, in the same way.
 
-Step 1 comes first because converting at entry throws away the
-sender's offset, which can be the only sign of whose day they meant.
-Decide whose calendar a computation follows before deciding what to
-keep.
+Step 1 comes first because whose calendar a computation follows
+decides what step 2 must keep at entry: a local time and its zone's
+name, or UTC alone, plus an offset when a feature shows or judges the
+source's clock. Converting first throws that away before anyone has
+asked.
 
 ### Instants and calendars
 
@@ -205,6 +235,21 @@ zone rules; if those rules change, the meeting moves. That is why step
 step 2 leaves them alone. For a repeating time, each occurrence is
 converted to UTC when it is needed, using the zone's rules for that
 date.
+
+An offset that arrives with an instant is different. It is not a
+zone: it says nothing about daylight saving or about any other date.
+It records what the clock at the source read at that one moment, and
+that can be the point. When a letter was posted can matter more than
+when it reached us, and a reader may need the time the sender saw.
+The time something happened at its source and the time it reached
+the system are two instants; keep the one the feature needs, or both.
+Step 2 keeps such an offset beside the UTC instant. Code never uses a
+kept offset for any instant but its own: no calendar arithmetic, no
+other dates. Where a rule counts the date at the source, such as a
+deadline judged by the postmark, the design document names that
+rule, and the date is read in the kept offset at that instant. That
+is safe because daylight saving only changes the offset of other
+instants.
 
 ### Edge cases
 
@@ -273,3 +318,6 @@ Some that protocol authors must plan for:
   in other zones (TDB step 6); step 5 says which moments those edge
   cases need when the type reaches a computation turning times into
   dates.
+- **Time in Tests**: it says how a test gets its times, from data or
+  from a controlled clock; steps 5 and 6 here say which moments and
+  machine zones those times need.
