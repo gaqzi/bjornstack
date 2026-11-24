@@ -17,7 +17,34 @@ deferred, but the entry point and the observation cannot.
 Name the entry point the test drives (HTTP endpoint, CLI command, page,
 message consumer, or the database itself when the guarantee lives
 there), what state it observes to judge the result, and what is stubbed
-at the network boundary, which may be nothing. A feature boundary is
+at the network boundary, which may be nothing.
+
+**When a rule depends on the time,** decide how the tests get the
+times it depends on before any mechanism is named, with
+strategies/time-in-tests.md. Read it, then take its first step that
+fits. Stubbing the clock is not a default and the
+product carries no test-only time setting the owner did not choose.
+
+- With the owner present, ask before the first story is drafted, one
+  question, even when the file's first fit seems clear. Give the
+  options the file allows for this rule, always including test data
+  dated long before any run date and a time the tests control, and
+  mark the one you would pick with the file's reason, citing
+  strategies/time-in-tests.md. Do not say or imply that the tests
+  cannot work without a time setting.
+- With the owner away, settle it by the file's first fit and cite it,
+  or list it under "Open decisions for the user" when what the test
+  must show about time is not clear from the prompt.
+- No flag, variable or setting that replaces the clock appears in a
+  story, the design or the verification unless the entry naming the
+  approach says it. Record the answer in the epic's verification, or
+  the story's Notes when there is no epic.
+- A scenario that pins the current time is proven where "now" is passed
+  in, in a unit test. It is not a story's black-box line unless a
+  controlled clock was the chosen approach; the black-box line uses
+  data dated far from every boundary.
+
+A feature boundary is
 where a consumer-visible capability enters the system: two endpoints
 serving one capability share a boundary, and so do every method and
 action on it. One capability has a second boundary only when it is

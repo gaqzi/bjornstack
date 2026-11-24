@@ -593,7 +593,9 @@ Per story:
 - If the verification needs a mechanism (a controllable clock, expiring
   a key, a captured outbound message), does the epic, or the story's
   Notes when there is no epic, say which one? "Fake the clock" is not
-  an instruction when the expiry lives in Redis.
+  an instruction when the expiry lives in Redis. When a rule depends
+  on the time, is the approach to time decided first, citing
+  strategies/time-in-tests.md, before a clock mechanism is named?
 - Does the verification ask for an eval, a model run against a prompt
   or skill an agent loads? Does it name the scenario or checklist item
   the eval proves, one whose behaviour no script check could catch?
