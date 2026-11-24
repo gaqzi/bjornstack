@@ -21,6 +21,9 @@ EV="$T/home/workspace/bjornstack-evals"   # the default eval home under the temp
 mkdir -p "$T/bin" "$H" "$EV"
 EVP="$(cd "$EV" && pwd -P)"   # run.sh reports its physical directory
 cp "$HERE/rex-run.sh" "$H/rex-run.sh"
+# replay.jq sits beside rex-run.sh, which reads it for the owner-message check.
+# It does not exist until --replay does; the copy is skipped, not faked, until then.
+[ ! -e "$HERE/replay.jq" ] || cp "$HERE/replay.jq" "$H/replay.jq"
 # The repo holding rex-run.sh, for --freeze: one commit, one file.
 echo content > "$T/repo/file.txt"
 git -C "$T/repo" init -q
@@ -56,6 +59,20 @@ fi
 exit "${STUB_EXIT:-0}"
 STUB
 chmod +x "$H/freeze.sh"
+
+# Stub replay.sh: records each argument on its own line, EVALS_DIR and
+# REX_SESSION; exits $STUB_EXIT and prints a failure line when it is not 0.
+cat > "$H/replay.sh" <<'STUB'
+#!/usr/bin/env bash
+{ printf 'arg=%s\n' "$@"; echo "evals=$EVALS_DIR"; echo "session=${REX_SESSION-unset}"; } > "$STUB_LOG.replaysh"
+echo "replay $1 started"
+if [ "${STUB_EXIT:-0}" -ne 0 ]; then
+  for i in $(seq 1 30); do echo "line $i"; done
+  echo "replay failed on $1" >&2
+fi
+exit "${STUB_EXIT:-0}"
+STUB
+chmod +x "$H/replay.sh"
 
 # Stub rex. It logs each argument in brackets, one call per line.
 # `window new` (the tab; plain `run` is not a stub case): without --shell=none it joins the words and has
@@ -109,7 +126,7 @@ chmod +x "$T/bin/rex"
 # temp dir, so the real ~/workspace is never touched. $EH, when set, is
 # BJORNSTACK_EVALS_HOME. A caller's EVALS_DIR is set to a decoy: it must not matter.
 run() {
-  : > "$T/stub.log"; rm -f "$T/stub.log.runsh" "$T/stub.log.freezesh" "$T/stub.log.tab" "$T/stub.log.status" "$T/stub.log.tmpwait"
+  : > "$T/stub.log"; rm -f "$T/stub.log.runsh" "$T/stub.log.freezesh" "$T/stub.log.replaysh" "$T/stub.log.tab" "$T/stub.log.status" "$T/stub.log.tmpwait"
   rm -rf "$T/tmpd"; mkdir "$T/tmpd"   # rex-run.sh's TMPDIR: it and the stubs write nothing here
   env -u BJORNSTACK_EVALS_HOME ${EH:+BJORNSTACK_EVALS_HOME="$EH"} \
     PATH="$T/bin:$PATH" STUB_LOG="$T/stub.log" REX_SESSION=sess-1 TMPDIR="$T/tmpd" \
@@ -263,8 +280,10 @@ done
 run
 check "refuses no arguments with exit 2" "2" "$?"
 run "/bin/ls" extra
-check "a refused first word says rex-run.sh runs only run.sh and freeze.sh" "1" \
-  "$(grep -c '^refused: rex-run.sh runs only run.sh and freeze.sh' "$T/err")"
+check "a refused first word says rex-run.sh runs only run.sh, freeze.sh and replay.sh" "1" \
+  "$(grep -c '^refused: rex-run.sh runs only run.sh, freeze.sh and replay.sh' "$T/err")"
+check "the header comment of rex-run.sh names run.sh, freeze.sh and replay.sh" "yes" \
+  "$(sed -n 2,3p "$HERE/rex-run.sh" | grep -q 'run.sh, freeze.sh and replay.sh' && echo yes || echo no)"
 
 # Scenario: --freeze starts the freeze, and nothing but the freeze.
 HP="$(cd "$H" && pwd -P)"
@@ -305,5 +324,149 @@ refuse_freeze "with an unresolvable argument" deadbeefdeadbeefdeadbeefdeadbeefde
 refuse_freeze "with an argument starting with '-'" -x
 refuse_freeze "with a tree name" "HEAD^{tree}"
 refuse_freeze "with a blob name" "HEAD:file.txt"
+
+# Scenario: --replay starts a supervised replay of a recorded transcript in a tab.
+# Fixtures: the first user record, an isMeta caveat, an assistant record, a
+# turn end, the owner's answer, and the /exit records (which are not owner messages).
+# Records chain by parentUuid as in a real transcript; only records on the chain
+# from the last record to the root count, so an abandoned sibling does not.
+mkdir -p "$T/fx"
+FIRST='{"type":"user","uuid":"u1","parentUuid":null,"message":{"role":"user","content":"<command-message>x:y</command-message>\n<command-name>/x:y</command-name>\n<command-args>spec</command-args>"}}'
+CAVEAT='{"type":"user","uuid":"u2","parentUuid":"u1","isMeta":true,"message":{"role":"user","content":"<local-command-caveat>Caveat: ignore</local-command-caveat>"}}'
+ASSISTANT='{"type":"assistant","uuid":"a1","parentUuid":"u2","message":{"role":"assistant","content":[{"type":"text","text":"question?"}]}}'
+TURN='{"type":"system","uuid":"s1","parentUuid":"a1","subtype":"turn_duration","durationMs":5}'
+ANSWER='{"type":"user","uuid":"u3","parentUuid":"s1","message":{"role":"user","content":"answer"}}'
+EXITREC='{"type":"user","uuid":"u4","parentUuid":"u3","message":{"role":"user","content":"<command-name>/exit</command-name>\n<command-message>exit</command-message>\n<command-args></command-args>"}}'
+printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$ANSWER" "$EXITREC" > "$T/fx/good.jsonl"
+printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$EXITREC" > "$T/fx/no-owner.jsonl"
+# The only owner message is an abandoned sibling: the chain from the last record runs past it.
+DRAFT='{"type":"user","uuid":"d1","parentUuid":"s1","message":{"role":"user","content":"an abandoned draft"}}'
+EXIT_AFTER_TURN="${EXITREC/\"parentUuid\":\"u3\"/\"parentUuid\":\"s1\"}"
+printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$DRAFT" "$EXIT_AFTER_TURN" > "$T/fx/abandoned-owner.jsonl"
+# Compacted: a compact_boundary has parentUuid null and the record before the
+# compaction as logicalParentUuid; an isCompactSummary user record (string
+# content) follows it.
+BOUNDARY='{"type":"system","subtype":"compact_boundary","uuid":"cb1","parentUuid":null,"logicalParentUuid":"LOGICAL"}'
+SUMMARYREC='{"type":"user","isCompactSummary":true,"uuid":"cs1","parentUuid":"cb1","message":{"role":"user","content":"This session is being continued. Summary of what was said."}}'
+AFTER_ASSISTANT='{"type":"assistant","uuid":"a2","parentUuid":"cs1","message":{"role":"assistant","content":[{"type":"text","text":"next question?"}]}}'
+AFTER_EXIT='{"type":"user","uuid":"u9","parentUuid":"a2","message":{"role":"user","content":"<command-name>/exit</command-name>\n<command-message>exit</command-message>\n<command-args></command-args>"}}'
+# The only owner message sits before the boundary.
+printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$ANSWER" "${BOUNDARY/LOGICAL/u3}" "$SUMMARYREC" "$AFTER_ASSISTANT" "$AFTER_EXIT" > "$T/fx/compacted.jsonl"
+# The only string user record after the boundary is the summary.
+printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "${BOUNDARY/LOGICAL/s1}" "$SUMMARYREC" "$AFTER_ASSISTANT" "$AFTER_EXIT" > "$T/fx/compacted-summary-only.jsonl"
+GOOD="$T/fx/good.jsonl"
+REPLAY_USAGE="usage: rex-run.sh --replay <run-name> <transcript>"
+# abspath <path>: the physical form of an absolute path, or the path itself when it is relative.
+abspath() { case "$1" in /*) echo "$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")" ;; *) echo "$1" ;; esac; }
+
+run --replay rp1 "$GOOD"
+check "--replay with a good transcript exits 0 and prints the run directory under runs/" "0 $EV/runs/rp1" "$? $(cat "$T/out")"
+check "--replay opens a run.sh-like tab running replay.sh with the run name and the transcript, REX_SESSION in its env" \
+  "[window][new][bjornstack-evals][--keep-open][--json][--focus=false][--shell=none][-s][sess-1][-c][$EV][--][env][EVALS_DIR=$EV][PATH=$T/bin:$PATH][HOME=$T/home][REX_SESSION=sess-1][$H/replay.sh][rp1][$GOOD]" \
+  "$(grep '^\[window\]\[new\]' "$T/stub.log")"
+check "--replay waits on the new block in REX_SESSION, without a time limit" \
+  "[wait][-s][sess-1][blk-7]" "$(grep '^\[wait\]' "$T/stub.log")"
+check "replay.sh gets the run name and the transcript, EVALS_DIR and REX_SESSION" \
+  "arg=rp1|arg=$GOOD|evals=$EV|session=sess-1" "$(paste -sd'|' "$T/stub.log.replaysh")"
+check "--replay waits, then closes the tab once" "new wait close" "$(calls)"
+check "a successful --replay prints no tab output" "" "$(cat "$T/err")"
+
+(cd "$T/fx" && run --replay rp2 good.jsonl)
+check "--replay turns a relative transcript path into an absolute one" "$(abspath "$GOOD")" \
+  "$(abspath "$(sed -n 's/^arg=//;2p' "$T/stub.log.replaysh")")"
+
+run --replay rpc "$T/fx/compacted.jsonl"
+check "--replay accepts a compacted transcript whose only owner message sits before the boundary" "0 $EV/runs/rpc" "$? $(cat "$T/out")"
+
+STUB_EXIT=3 run --replay rp3 "$GOOD"
+check "a failing replay exits with replay.sh's status" "3" "$?"
+check "a failing replay prints no run directory" "" "$(cat "$T/out")"
+check "a failing replay prints the tab's last 20 lines, then the status message naming replay.sh" \
+  "line 12 line 13 line 14 line 15 line 16 line 17 line 18 line 19 line 20 line 21 line 22 line 23 line 24 line 25 line 26 line 27 line 28 line 29 line 30 replay failed on rp3 replay.sh exited 3" \
+  "$(grep -v '^replay rp3 started' "$T/err" | tr '\n' ' ' | sed 's/ $//')"
+check "a failing replay closes the tab once, after the capture" "new wait capture close" "$(calls)"
+
+# Refusals: exit 2, the replay usage line and the refusal's own problem text on stderr, and no rex call.
+refuse_replay() { # refuse_replay <description> <problem text> <--replay args...>
+  local d="$1" problem="$2"; shift 2
+  run --replay "$@"
+  check "--replay $d exits 2 with the replay usage and '$problem' on stderr and no rex call" "2 1 1 0" \
+    "$? $(grep -c -F -- "$REPLAY_USAGE" "$T/err") $(grep -c -F -- "$problem" "$T/err") $(grep -c . "$T/stub.log")"
+}
+refuse_replay "with no arguments" "--replay takes a run name and a transcript"
+refuse_replay "with a run name and no transcript" "--replay takes a run name and a transcript" rp4
+refuse_replay "with a transcript that does not exist" "is not a readable file" rp4 "$T/fx/missing.jsonl"
+refuse_replay "with a transcript that is a directory" "is not a readable file" rp4 "$T/fx"
+refuse_replay "with a transcript holding no owner message" "holds no owner message" rp4 "$T/fx/no-owner.jsonl"
+refuse_replay "with a transcript whose only owner message is an abandoned sibling" "holds no owner message" rp4 "$T/fx/abandoned-owner.jsonl"
+for bad in "" "-x" "a/b" "a b" "a;b"; do
+  refuse_replay "with the run name '$bad'" "run name '$bad' is not a plain name" "$bad" "$GOOD"
+done
+mkdir -p "$EV/runs/taken1"
+refuse_replay "with a compacted transcript whose only string user record after the boundary is the summary" "holds no owner message" rp4 "$T/fx/compacted-summary-only.jsonl"
+refuse_replay "with a run name that exists under runs/" "run name 'taken1' already exists" taken1 "$GOOD"
+mkdir -p "$EV/live/taken2"
+refuse_replay "with a run name that exists under live/" "run name 'taken2' already exists" taken2 "$GOOD"
+rmdir "$EV/runs/taken1" "$EV/live/taken2"
+run --replay rp4 "$T/fx/no-owner.jsonl"
+check "a refusal for a transcript with no owner message says so" "1" "$(grep -c 'owner message' "$T/err")"
+
+EH="$T/nowhere" run --replay rp5 "$GOOD"
+check "--replay with a missing eval home exits 1, names it and makes no rex call" "1 1 0" \
+  "$? $(grep -c -F "$T/nowhere" "$T/err") $(grep -c . "$T/stub.log")"
+
+# The README says what --replay is and is not.
+README="$HERE/README.md"
+check "the README documents --replay" "yes" "$(grep -q -e '--replay' "$README" && echo yes || echo no)"
+check "the README says --replay is a supervised replay for fix rounds" "yes" \
+  "$(grep -i 'supervised replay' "$README" | grep -qi 'fix round' && echo yes || echo no)"
+check "the README says --replay is not a live run" "yes" "$(grep -qi 'not a live run' "$README" && echo yes || echo no)"
+check "the README says the owner's final check before the epic is done is a live run" "yes" \
+  "$(grep -i 'final check' "$README" | grep -qi 'live run' && echo yes || echo no)"
+
+check "the README says where the plugin sits in a replay: .bjornstack in the session's working directory" "yes" \
+  "$(grep -q -e '\.bjornstack' "$README" && echo yes || echo no)"
+check "the README says the recorded live run used --add-dir" "yes" \
+  "$(grep -i 'live run' "$README" | grep -q -e '--add-dir' && echo yes || echo no)"
+check "the README says the replay uses the plugin copy in live/<run-name>/.bjornstack instead" "yes" \
+  "$(grep -i 'instead' "$README" | grep -q -e 'live/<run-name>/\.bjornstack' && echo yes || echo no)"
+check "the README does not mention replay-notes.txt" "no" "$(grep -q -e 'replay-notes.txt' "$README" && echo yes || echo no)"
+
+# The README states the owner-message rule and the rewind rule.
+for term in isMeta local-command queued_command isCompactSummary; do
+  check "the README's owner-message rule names $term" "yes" "$(grep -q -e "$term" "$README" && echo yes || echo no)"
+done
+check "the README says a rewound branch is skipped, following the parent chain" "yes" \
+  "$(grep -q -e 'parentUuid' -e 'parent chain' "$README" && echo yes || echo no)"
+check "the README's chain rule names logicalParentUuid for a compaction boundary" "yes" \
+  "$(grep -q -e 'logicalParentUuid' "$README" && echo yes || echo no)"
+
+# The README states the matching rule, the pre-fill, the display on a pull-in
+# and the letter labels.
+check "the README says a segment matches only if, read against the turn alone, it means what it meant against its recorded turn" "yes" \
+  "$(grep -qi 'read against the turn alone' "$README" && echo yes || echo no)"
+check "the README says a yes or praise matches only the same proposal" "yes" \
+  "$(grep -i 'praise' "$README" | grep -qi 'same proposal' && echo yes || echo no)"
+check "the README says a turn some questions of which are covered is pre-filled" "yes" "$(grep -qi 'pre-fill' "$README" && echo yes || echo no)"
+check "the README says the pre-fill holds an empty marker for each uncovered question" "yes" "$(grep -qi 'empty marker' "$README" && echo yes || echo no)"
+check "the README says the pre-fill is not sent: no enter" "yes" "$(grep -i 'pre-fill' "$README" | grep -qi 'no enter' && echo yes || echo no)"
+check "the README says the pre-fill's labels follow the turn's numbers or letters" "yes" \
+  "$(grep -i 'pre-fill' "$README" | grep -qi 'numbers or letters' && echo yes || echo no)"
+check "the README says the pre-fill is unlabelled paragraphs when the labelling is mixed or absent" "yes" \
+  "$(grep -qi 'unlabelled paragraphs' "$README" && echo yes || echo no)"
+check "the README says pre-filled segments are not counted as replayed and the owner's message is recorded as the owner's" "yes" \
+  "$(grep -qi 'not counted as replayed' "$README" && echo yes || echo no)"
+check "the README says a pull-in shows the recorded turn it answered for each matched and refused segment" "yes" \
+  "$(grep -qi 'recorded turn it answered' "$README" && grep -qi 'refused near-match' "$README" && echo yes || echo no)"
+check "the README says the display goes to the driver tab only" "yes" "$(grep -qi 'driver tab' "$README" && echo yes || echo no)"
+check "the README names the refused field of the matcher's answer" "yes" "$(grep -qF '"refused"' "$README" && echo yes || echo no)"
+check "the README says only a numeric label is a label and a word or letter before a colon stays in the text" "yes" \
+  "$(grep -qi 'only a numeric label' "$README" && grep -qi 'a word or letter before a colon' "$README" && echo yes || echo no)"
+check "the README says a pre-filled segment is marked used" "yes" \
+  "$(grep -i 'pre-fill' "$README" | grep -qiE 'marked used|(are|become) used' && echo yes || echo no)"
+check "the README no longer says pre-filled segments stay unused" "no" \
+  "$(grep -i 'pre-fill' "$README" | grep -qi 'stay unused' && echo yes || echo no)"
+check "the README no longer says a bad label on a fully covered turn pulls the owner in without a pre-fill" "no" \
+  "$(grep -qi 'or with a bad label, pull the owner in' "$README" && echo yes || echo no)"
 
 exit "$FAILED"
