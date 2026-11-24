@@ -49,6 +49,12 @@ Item: "which steps decide on data, kept apart from the steps that call outside s
 
 Item: "which one part owns each piece of data that more than one part writes or reads?" (boundary-communication#single-owner)
 
+A part is a package or component the design names. Running commands
+one at a time, or in one process, does not make an owner. The design
+names the part that alone writes each piece of data, and says the
+others call it. When the design names no part, it has not recorded who
+owns the data, and single-owner fails.
+
 - Check: the design lists the data that more than one part writes or reads, where at least one part can change it, or states that there is none, and names who decided it. (boundary-communication#find-shared-data)
 - Check: for each piece of data on that list, the design records which part or parts own it, and names who decided it. (boundary-communication#single-owner)
 
