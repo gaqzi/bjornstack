@@ -262,11 +262,20 @@ it never stands for the owner's place.
 
 | Question | Rule entries |
 |----------|--------------|
-| Which business capabilities does the system own, each named by a noun? | domain-first-packaging#identify-domains, domain-first-packaging#name-for-domain, domain-first-packaging#no-sibling-domain-imports (how the capabilities refer to one another), structure-is-intent#tree-shows-boundaries |
+| Which business capabilities does the system own, each named by a noun? | domain-first-packaging#identify-domains, domain-first-packaging#name-for-domain, domain-first-packaging#no-sibling-domain-imports (how the capabilities refer to one another), structure-is-intent#tree-shows-boundaries, and for the name of what a package exports, domain-first-packaging step 4 (export names extend the package name; it has no id, so cite the file and step) |
 | Which steps decide on data, kept apart from the steps that call outside systems? | compute-or-coordinate#logic-apart-from-collaborators, testing__unit#collaborators-received-set-up |
 | Which one part owns each piece of data that more than one part writes or reads? | boundary-communication#find-shared-data, boundary-communication#single-owner (tenet: no-shared-fate) |
 | What happens if a run stops between acting on an input and recording that it did? | design-for-replay#act-only-after-stored, design-for-replay#outside-effect-once-per-event |
 | Which clock and zone decides the date a time falls on? | utc-computation#utc-unless-one-zone-matters |
+
+When you propose the name of what a capability's package exports, such
+as the type that holds its main thing, apply domain-first-packaging
+step 4 before you show it. Write the qualified name, package then
+export, and check that the export repeats no word of the package name:
+the export adds what is new. When a word repeats, pick another export
+name first. Cite `strategies/domain-first-packaging.md` step 4 beside
+the name, and tell the owner that step has no id. It does not choose
+the package name; that stays with the rows above.
 
 Read each entry in the rule file before citing it; the table says where
 to look, not what the file says. When no id decides an item, cite the
