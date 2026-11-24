@@ -25,6 +25,7 @@ graph TD
         PTS <--> WOA
         PTS <--> ITE
         PAST["Public API Surface Testing"] <--> BBIB
+        TIT["Time in Tests"]
     end
 
     subgraph structure [Structure]
@@ -59,6 +60,9 @@ graph TD
     SOE <--> UTC
     UTC <--> TDB
     UT <--> DFP
+    TIT <--> UTC
+    TIT <--> TDB
+    TIT --> UT
 ```
 
 ## Strategy families
@@ -75,7 +79,7 @@ cross-references are authoritative, not this diagram.
 │                ┃                          ┃  TVS             │
 │  SOE  ·  SIO   ┃  ITE  ·  TDB  ·  PAST    ┃                  │
 │  FI  ·  UTC    ┃  PTS  ·  WOA  ·  CTS     ┃                  │
-│                ┃                          ┃                  │
+│                ┃  TIT                     ┃                  │
 │           BC ··╂··························╂·· EA             │
 │                ┃                          ┃                  │
 └────────────────┸──────────────────────────┸──────────────────┘
@@ -86,7 +90,7 @@ validation, which time zone computations use, how failures are told
 apart, and where its reasoning is written down.
 
 **Testing** — how code is verified: test layer selection, case structure,
-data builders, assertions.
+data builders, assertions, how a test gets its times.
 
 **Evolution** — how code changes safely: separating cleanup from behavior,
 progressive rollout, earned abstraction, which old forms the code
@@ -115,6 +119,7 @@ points per family:
 - **OILD** sequences the work — coordinator first, then computation, then integration.
 - **UT**, **BBIB**, or **CT** follow from the classification.
 - **ITE** + **TDB** for test infrastructure; **PTS** + **WOA** for test structure.
+- **TIT** when a test depends on the time — data first, a controlled clock only when time passing is the subject.
 
 **Evolution work** (how to ship change safely):
 - Start with **ToC** — separate tidying from behavior change.

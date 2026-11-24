@@ -248,3 +248,6 @@ concept, not a reason for a shared base class.
   they need when the type reaches a computation that turns times into
   dates: one on each side of the computation's zone, falling on
   different dates in the two.
+- **Time in Tests**: a test whose subject is age sets the time on the
+  builder itself, far from every boundary the outcome depends on (its
+  step 3), rather than relying on the builder's default.
