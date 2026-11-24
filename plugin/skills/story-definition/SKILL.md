@@ -113,6 +113,15 @@ assumptions, and an unstated boundary is where they wander. Three or
 four lines of "not this" prevent more questions than any amount of
 "this".
 
+An out-of-scope line must not settle a question the architecture
+phase asks (phase 3), such as whether the system changes anything in
+a system it does not own, or what marks an input as handled. Such a
+question waits for phase 3, where it is answered from the prompt or a
+rule, asked of the owner, or listed under "Open decisions for the
+user". Do not propose a line that says the system does not do it, and
+do not offer one as "strike or keep". Lines that settle no such
+question are written and offered as before.
+
 **Exit test:** the user can say, in one sentence, what is true after the
 feature ships that is not true today.
 
