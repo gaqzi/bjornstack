@@ -143,6 +143,7 @@ is a list of steps, and the design names none.
     last-check marker and email-id matching instead.
   - Shared files: every command writes the feed files and the state
     file, serialised in one process, where the rule asks for one owner.
+    - BA: serialised could mean it was handled by one owner, who called both places. this is how I understood the publisher package to work, to be responsible for driving both changes, even if they were both small modules themselves that were collaborated upon in one place.
   - Crash ordering: the design orders writes with care (archive before
     feed, marker after feed) yet ties none of it to a rule, so the
     replay item still scores wrong.
