@@ -137,6 +137,9 @@ that a black-box check covers. The epic names the language and
 harness the unit tests run in, or says the feature is all glue; it
 never records "no unit tests" for logic that needs them.
 
+With the owner present, ask them to approve the happy path draft as a
+numbered question before the exit test is met.
+
 **Exit test:** someone could write the failing integration test for the
 happy path from what is on the page, and the language and harness the
 unit tests run in are named, unless the feature is all glue. That
@@ -236,9 +239,10 @@ While the owner is present, an item no source settles is asked before
 the first story is drafted, one question at a time. Ask the questions
 of this phase even when the owner has just answered the Goal
 questions. Before drafting, show the owner in one message every answer
-settled from a rule or the prompt, each with its source, so they can
-correct it; this includes a planned slice 0. Then ask the rest, one
-question at a time. Do not draft while any item is unasked.
+settled from a rule or the prompt as a numbered call, each with its
+source, so they can correct it by its number; this includes a planned
+slice 0. Then ask the rest as numbered questions, one at a time. Do not
+draft while any item is unasked or unanswered.
 
 An instruction at the Goal, such as "leave the code facts open" or
 "draft the stories without it", does not defer these items. Each is
@@ -250,7 +254,8 @@ When a present owner hands an item back, take these in order:
 
 1. Settle it from the rule entry that decides it, and cite the entry.
 2. Otherwise state your own pick with its reason, tell the owner in
-   one line, and record it as "the session's pick, owner deferred".
+   one line as a numbered call, and record it as "the session's pick,
+   owner deferred".
 
 Never leave the item open, and go on drafting. The owner is still
 present: one deferral does not switch you to the away way of working.
@@ -404,15 +409,15 @@ the first that fits:
 
 1. The first prompt states whether the offset is kept: record its
    words.
-2. The owner is present: ask it as its own question, in the clock
-   question's message when there is one, and otherwise on its own when
-   UTC settled the clock. Ask it whenever the input brings a time with
-   its source's own offset, alongside or before any choice of which
-   time an entry carries, never after. Say the offset is one a reader
-   may care about, ask whether entries keep it, and cite the file and
-   step. An approved list of fields, a field you proposed, or the
-   owner's choice to carry another time does not answer it, unless the
-   owner says so. Record the answer as the owner's.
+2. The owner is present: ask it as its own question, with the first ask
+   or call that names which time an entry carries, in whichever phase
+   that is, and before any choice of which time an entry carries,
+   never after. Ask it whenever the input brings a time with its
+   source's own offset. Say the offset is one a reader may care about,
+   ask whether entries keep it, and cite the file and step. An approved
+   list of fields, a field you proposed, or the owner's choice to carry
+   another time does not answer it, unless the owner says so. Record
+   the answer as the owner's.
 3. The owner is away: list it under "Open decisions for the user" as
    its own entry, apart from the clock question, which has no entry
    when UTC settles it. It holds the item, the

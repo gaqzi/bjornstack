@@ -62,6 +62,58 @@ builds code is not short: phase 3, Architecture, in
 needs slicing. Work that builds no code skips phase 3, as
 "Whether the architecture phase runs" below says. The other phases are for a feature that needs slicing.
 
+## Numbered threads
+
+With the owner present, everything you put to them carries a thread
+number: t1, t2, and so on, one sequence for the whole session, questions
+and calls alike. A number is never reused or renumbered. The owner
+answers with "t4: ..." and can give direction on any thread, a call
+included, not only answer a question. There are two kinds:
+
+- **A question** is a decision the first prompt, the code and the rules
+  leave open. Give it its number, the options you see and the one you
+  would pick, and ask for an answer. Never say or imply that no answer,
+  or silence, accepts your pick. Several questions in one message each
+  have their own number and each is asked for. A question never
+  carries its own fallback and never says what happens without an
+  answer, such as "if not, my pick stands" or "I'd treat that as
+  settled; say if not": a pick with a fallback is a call hidden in a
+  question.
+- **A call** is a decision the first prompt, the code or a rule settles.
+  State it, do not ask: its own number, what you decided and its
+  source. Do not ask the owner to confirm it. "t<n>: ..." from the owner
+  rejects or reworks it; until then it stands on its source, not on
+  their silence. Some items are asked even when a rule seems to settle
+  them, because the rule says only the owner knows: the kept offset of
+  a time that enters with its source's own offset, asked whenever the
+  input brings such a time, before any choice of which time an entry
+  carries, so it comes with the first ask or call that names which
+  time an entry carries, in whichever phase that is, not later in the
+  clock step (references/session.md, the clock question). Such an item
+  is a question, never a call. A call never rests on an open thread:
+  state it after the answer, or make it a question.
+- **An item that comes up while drafting** is one of these two before
+  the draft relies on it: a call, stated with a number and a source, or
+  a question answered before any draft that rests on it is shown. Never
+  show a draft that rests on an open thread.
+
+That covers the Goal questions, the Goal's exit test, the
+verification asks, a draft you ask them to approve and the file name
+you ask for: each is a numbered question. An answer to a thread is the
+owner's words under that number. A question
+the owner left unanswered is still open: ask it again under its own
+number before any story, design line or other thread relies on it, and
+never record an answer to it as the owner's. An unanswered exit test is
+asked again, never paraphrased from another answer. Only the owner's own words
+handing it back make it "the session's pick, owner deferred". The next
+new thread takes the next number after every one used so far.
+
+While the owner is away nothing is asked: open decisions are listed
+under "Open decisions for the user" as before. The Goal sentence, an
+exit test, the approval of a draft and the name of the file are
+questions only with the owner present; while away they are no open
+decision and are listed nowhere.
+
 ## The session
 
 Five phases, each with a question and an exit test. Don't move on until
@@ -123,7 +175,8 @@ do not offer one as "strike or keep". Lines that settle no such
 question are written and offered as before.
 
 **Exit test:** the user can say, in one sentence, what is true after the
-feature ships that is not true today.
+feature ships that is not true today. Ask it as a numbered question and
+use only the owner's answer to it.
 
 ### Whether the architecture phase runs
 
@@ -136,8 +189,8 @@ these that fits:
 1. Any part of the work builds code: phase 3 runs.
 2. The work plainly changes nothing a program reads, such as a guide,
    a plan for writing, or a change to how people work: phase 3 is
-   skipped. Say so to the owner in one line, exactly:
-   "Skipping the architecture phase: this builds no code."
+   skipped. Say so to the owner in one line, its thread number and then
+   exactly: "Skipping the architecture phase: this builds no code."
    Then go on.
 3. It is unclear whether the work changes anything a program reads,
    such as rewording text a program might send. With the owner
@@ -681,7 +734,8 @@ and the exact commands in its message, or in the stories file. It
 never writes a script or any other file than the story and design
 output.
 
-Without beads, the same shape goes in one file the user names, epic
+Without beads, the same shape goes in one file the user names, asked
+for as a numbered question, epic
 section first, stories after, with the dependency summary at the end.
 A story there names another by its title.
 
