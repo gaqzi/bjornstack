@@ -1,0 +1,1 @@
+Our club's treasurer needs a small command to run after dropping the bank's export file in a folder: it records each payment line against a member and prints who still owes dues. A payment line must never be recorded twice.

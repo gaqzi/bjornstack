@@ -342,14 +342,15 @@ as the type that holds its main thing, apply domain-first-packaging
 step 4 before you show it. Write the qualified name, package then
 export, and check that the export repeats no word of the package name:
 the export adds what is new. When a word repeats, pick another export
-name first. Cite `strategies/domain-first-packaging.md` step 4 beside
-the name, and tell the owner that step has no id. It does not choose
-the package name; that stays with the rows above.
+name first. Cite `strategies/domain-first-packaging.md`, step 4 as the
+source, and note in the design, on its own line, that the step has
+no id. It does not choose the package name; that stays with the
+rows above.
 
 Read each entry in the rule file before citing it; the table says where
 to look, not what the file says. When no id decides an item, cite the
-rule file and its section, and tell the owner that the rule has no id
-there. Add no id of your own. The files, by path from the plugin
+rule file and its section as the source, and note in the design, on
+its own line, that the rule has no id there. Add no id of your own. The files, by path from the plugin
 root, each with its id marked as `**<id>.**`:
 
 - `strategies/domain-first-packaging.md`
@@ -376,7 +377,9 @@ no owner answer changes: the event is stored before anything acts on
 it. Say it in the design with
 design-for-replay#act-only-after-stored cited, as an order: store the
 event, then write, then acknowledge the input. Name each step the run
-takes after the store (each file written, and the acknowledgement).
+takes after the store (each file written), as one call per step. The
+acknowledgement is a step in the order only once its question is
+answered; until then it is not stated.
 Once the acknowledgement is settled, or listed open, the design names
 it as the step after the store, and says the stored event comes before
 it. Design-for-replay's loss exceptions never cover storing
@@ -476,8 +479,38 @@ the first that fits:
 When the owner hands this back, the handing-back steps above apply;
 the pick names no zone or place.
 
+**Technical choices the design points to.** Besides the five
+questions, technical choices come up as the design takes shape: how
+something is written, answered, named, stored or ordered. Take each
+when the session reaches it, in any phase, before a draft relies on
+it. These asks win over the list below, and are asked, never
+stated as calls: the kept offset, the time-in-tests question,
+acknowledgement, losses, the no-copy options, and the language
+alternative. For any other choice, take the first that fits:
+
+1. The prompt, the code, a rule entry or a settled part of the design
+   points to an answer, even though another would also work: state it
+   as a call in the form SKILL.md gives, one sentence, nothing else on
+   the line. A call is never confirmed and never asked: do not ask
+   the owner to confirm, reword or check it. The runner-up is named
+   only when nearly as good. A second choice is its own call when it
+   has its own source.
+2. Only where neither the design nor a rule points to an answer, and
+   most of all when it changes what the owner sees or can do: ask it
+   as a numbered question with the options and your pick, as in
+   "Numbered threads" in SKILL.md. While the owner is away, list it
+   under "Open decisions for the user".
+
+Several calls that come up together are one message, each on its own
+line with its own number. Each call goes in the design, under the
+heading of the phase it belongs to, with its source and its runner-up
+when it has one. A "this rule has no id" remark, a size, a mark or any other detail
+goes on its own line in the design, never on the call line. While the owner is away no call is
+numbered and none is an open decision: each is in the design with its
+source, and an item with no source is listed as open instead.
+
 **The first-slice decisions.** Then settle two decisions with
-strategies/thin-vertical-slice.md, in the same three ways:
+strategies/thin-vertical-slice.md, in the order of the questions above (the first prompt or the code, a rule entry, then the owner):
 
 - `thin-vertical-slice#needs-slice-zero`: does the path need
   infrastructure, a runtime or a deploy path the codebase has never
@@ -498,7 +531,9 @@ strategies/thin-vertical-slice.md, in the same three ways:
      layer, behind a flag.
   4. Otherwise it stays one slice.
 
-Record in the design whether there is a slice 0, how the feature is
+Each of these is stated as a call on one line without sizes or marks;
+the size reasons and slice marks go on their own line in the design,
+never in the call. Record in the design whether there is a slice 0, how the feature is
 cut, who made each decision (the rule entry as `<file>#<id>`, the
 first prompt's words, the owner, or the session's pick, owner
 deferred), and, when the feature is split,

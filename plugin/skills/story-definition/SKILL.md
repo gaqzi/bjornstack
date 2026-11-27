@@ -79,19 +79,36 @@ included, not only answer a question. There are two kinds:
   answer, such as "if not, my pick stands" or "I'd treat that as
   settled; say if not": a pick with a fallback is a call hidden in a
   question.
-- **A call** is a decision the first prompt, the code or a rule settles.
-  State it, do not ask: its own number, what you decided and its
-  source. Do not ask the owner to confirm it. "t<n>: ..." from the owner
-  rejects or reworks it; until then it stands on its source, not on
-  their silence. Some items are asked even when a rule seems to settle
-  them, because the rule says only the owner knows: the kept offset of
-  a time that enters with its source's own offset, asked whenever the
-  input brings such a time, before any choice of which time an entry
-  carries, so it comes with the first ask or call that names which
-  time an entry carries, in whichever phase that is, not later in the
-  clock step (references/session.md, the clock question). Such an item
-  is a question, never a call. A call never rests on an open thread:
-  state it after the answer, or make it a question.
+- **A call** is a decision the prompt, the code or a rule settles, and
+  a technical choice that they point to (references/session.md,
+  "Technical choices the design points to"). A domain choice is a
+  call only when the prompt, the code or a rule settles it. A thread
+  settles it only when the owner's answer there states that choice.
+  State a call, never ask it, and never ask the owner to confirm it.
+  Every call is one sentence of this form and nothing else, with no
+  second "because", no list inside a call and no sizes or counts
+  beyond the source. One call per line, with or without a list
+  marker, is fine:
+  `t<n> (call): <choice>, because <source>.`
+  With a close runner-up:
+  `t<n> (call): <choice>, because <source>; not <runner-up>: <at most six words>.`
+  The source is one of: the prompt's words in quotes, `<file>:<line>`
+  of the code, `<file>#<id>`, `<file>, <section>` for a rule entry
+  with no id, or a thread number. Your own understanding of how
+  something works is not a source. A choice with several parts is one
+  call per part. Example:
+  `t7 (call): Ties sort by id, because t5 made ids the shown key; not by name: names repeat.`
+  "t<n>: ..." from the owner rejects or reworks it; until then it
+  stands on its source, not on their silence. Some items are asked
+  even when a rule seems to settle them, because the rule says only
+  the owner knows: the kept offset of a time that enters with its
+  source's own offset, asked whenever the input brings such a time,
+  before any choice of which time an entry carries, so it comes with
+  the first ask or call that names which time an entry carries, in
+  whichever phase that is, not later in the clock step
+  (references/session.md, the clock question). Such an item is a
+  question, never a call. A call never rests on an open thread: state
+  it after the answer, or make it a question.
 - **An item that comes up while drafting** is one of these two before
   the draft relies on it: a call, stated with a number and a source, or
   a question answered before any draft that rests on it is shown. Never
@@ -201,7 +218,8 @@ these that fits:
    the work changes anything a program reads, with your call, and take
    1 or 2 by that call, saying the skip line when the call is that the
    work builds no code. This open decision never stops the session,
-   whatever else does: go on by your call.
+   whatever else does: go on by your call. It is listed only in this
+   case; in cases 1 and 2 nothing is listed.
 
 Now read `references/session.md` for phases 2 to 5. The rest of this
 file is the story shape, the handoff checklist, and filing, which the

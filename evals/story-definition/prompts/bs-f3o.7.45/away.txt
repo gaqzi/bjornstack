@@ -1,0 +1,1 @@
+Our accounts team needs a small command that runs every night, reads the new invoices that land in a shared folder, and adds each invoice's amount to the total owed to each supplier, which the team reads in a report. An invoice must never be counted twice.

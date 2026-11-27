@@ -1,0 +1,1 @@
+Our warehouse team needs a small command that runs every hour, reads the new rows of a supplier's stock file that lands in a shared folder, and adds each row's count to the stock total the team reads on a page. A row must never be counted twice.

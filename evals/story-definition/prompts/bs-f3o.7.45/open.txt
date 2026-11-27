@@ -1,0 +1,1 @@
+Our support team needs a page that lists the open tickets from our helpdesk's API, newest first. The helpdesk is sometimes down for a few minutes.
