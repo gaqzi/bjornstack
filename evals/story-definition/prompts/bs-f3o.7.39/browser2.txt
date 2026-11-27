@@ -1,0 +1,1 @@
+Our Go web app has a back-office with many pages: customers, invoices, reports and settings, all rendered by JavaScript in the browser. Add an "archive" button on the invoices page. The check that it works has to click through the real pages in a real browser, as a staff member would.

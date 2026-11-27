@@ -1,0 +1,1 @@
+Our Go project is a command line tool, `tally`, that reads a CSV of expenses from a file and prints the total per category. Add a `--month` flag that limits the totals to one month.

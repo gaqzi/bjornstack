@@ -1,0 +1,1 @@
+Our Go web app serves a back-office with many pages: customers, invoices, reports and settings. We want a check that signs in and walks through those pages in a browser, and we want to add an "archive" button on the invoices page.
