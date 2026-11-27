@@ -45,6 +45,7 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
+. "$HERE/matcher.sh"
 USAGE="usage: replay.sh <run-name> <transcript>"
 NAME="${1:?$USAGE}"
 R="${2:?$USAGE}"
@@ -164,15 +165,11 @@ complete_lines() { # the file without a last line that has no newline yet
 # "refused": [id, ...] (optional)}, ...]}.
 # It never prints the matcher's output.
 ask_matcher() {
-  local unused prompt dir out result status=0
+  local unused prompt result
   unused="$(printf '%s' "$SEGMENTS" | jq -c --argjson used "$USED" \
     '[.[] | select(.id as $i | $used | index($i) | not) | {id, label, segment, session_turn}]')"
   prompt="$(printf 'You are matching a live session to a recorded one. Below is THIS TURN, the text the session has just shown the owner, and RECORDED SEGMENTS, each a part of a recorded owner message (a line that starts with its label, or a paragraph; only a numeric label such as "4:", "4." or "4)" is kept apart in the label field, any other words stay in the segment text) with the session turn it answered.\n\nSay whether this turn asks the owner anything. If it does, list every question of this turn, in the order the turn asks them, with the label the turn gives the question (a number or a single letter; null when it has none) and the id of the one recorded segment that answers it (null when none does). List every question, a question no segment answers with segment null.\n\nA segment matches a question only when (a) its recorded session turn asked the same decision about the same design and (b), read against this turn alone, it means what it meant against its recorded turn: everything it names, accepts or rejects must be in this turn. A "yes" or praise matches only the same proposal. A segment that names, accepts or rejects something this turn does not hold does not match. A bare option letter (such as "B" or "a + b") matches only with the same options under the same letters. A segment answers at most one question.\n\nWhen a segment nearly matches a question but fails the test above, name its id in that question'"'"'s "refused" list.\n\nReply with only JSON: {"asks": true or false, "questions": [{"number": <integer, a single letter, or null>, "segment": "<segment id>" or null, "refused": ["<segment id>", ...]}, ...]} ("refused" may be left out).\n\nTHIS TURN:\n%s\n\nRECORDED SEGMENTS (JSON):\n%s' "$1" "$unused")"
-  dir="$(mktemp -d "${TMPDIR:-/tmp}/replay-matcher.XXXXXX")"
-  out="$(cd "$dir" && env -u ANTHROPIC_API_KEY claude -p "$prompt" --restricted --tools "" --output-format json --no-session-persistence < /dev/null 2> /dev/null)" || status=$?
-  rm -rf "$dir"
-  if [ "$status" != 0 ]; then echo "replay.sh: the matcher (claude -p) exited $status" >&2; return 1; fi
-  result="$(printf '%s' "$out" | jq -er 'select(type == "object" and .is_error != true and (.result | type) == "string") | .result' 2> /dev/null | sed '/^```/d')" || { echo "replay.sh: the matcher's output is not the expected JSON" >&2; return 1; }
+  result="$(run_matcher replay.sh "$prompt")" || return 1
   printf '%s' "$result" | jq -ce 'select(type == "object" and (.asks | type) == "boolean"
       and (.questions == null or ((.questions | type) == "array"
         and (.questions | all(type == "object" and (.number == null or (.number | type) == "number" or (.number | type) == "string")

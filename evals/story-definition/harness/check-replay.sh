@@ -95,6 +95,7 @@ mkdir -p "$T/bin" "$H" "$T/recorded"
 REAL_JQ="$(command -v jq)"; export REAL_JQ
 [ ! -e "$HERE/replay.sh" ] || cp "$HERE/replay.sh" "$H/replay.sh"
 [ ! -e "$HERE/replay.jq" ] || cp "$HERE/replay.jq" "$H/replay.jq"
+[ ! -e "$HERE/matcher.sh" ] || cp "$HERE/matcher.sh" "$H/matcher.sh"
 
 P1="11111111-1111-4111-8111-111111111111"
 P2="22222222-2222-4222-8222-222222222222"
