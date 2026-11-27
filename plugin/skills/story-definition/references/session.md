@@ -19,6 +19,25 @@ message consumer, or the database itself when the guarantee lives
 there), what state it observes to judge the result, and what is stubbed
 at the network boundary, which may be nothing.
 
+**The E2E tests' language.** The tests that drive the entry point are
+written in the project's main language, the one most of its code is in.
+This is not a question: take the first that fits.
+
+1. Another language has a clear advantage for how this entry point is
+   driven, such as a browser-testing tool whose suite stays easier to
+   work in once it grows large and complex. With the owner present,
+   ask one numbered question that names the main language, names
+   that one alternative with its advantage for this
+   job, and asks the owner to choose between the two. While the owner
+   is away, take the main language and list the alternative with its
+   advantage under "Open decisions for the user".
+2. Otherwise, state the main language as a call: its number, the
+   language and the reason, with the first prompt's words or the code
+   as the source. Ask nothing about the language.
+
+This is the E2E tests only. The unit tests' language is settled below,
+under "A unit layer the logic can reach".
+
 **What the actor does with each output next.** At the happy path, list
 each kind of output the feature gives its actor, one item at a time
 (a part, a record, a number, a notice), and ask what the actor does
