@@ -17,6 +17,7 @@
 # and the status message to stderr. Nothing else is saved: this script
 # writes no file of its own, and the run directory holds what the run needs.
 # If rex names no window, the tab is left open and a message says so.
+# No scan of earlier answers runs before or after a run, and nothing blocks a replay.
 # --freeze <commit> runs freeze.sh the same way instead, in the harness
 # directory, with the full id of a commit of the repo holding this script
 # (anything else is refused with exit 2 before rex is called), and prints

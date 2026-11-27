@@ -1,9 +1,10 @@
 # Definitions over a transcript read with `jq -s` (an array of records).
 # Used through `include "replay" {search: "<this directory>"};`, so that a
 # replay.jq in the caller's working directory is never found first.
-# rex-run.sh needs owner_messages; replay.sh also uses first_message_text,
-# pairs (over the recorded transcript) and session_events (over the
-# session's own transcript).
+# replay.sh uses first_message_text, first_user_content, session_events and
+# replay_log; rex-run.sh uses owner_messages. segments and pairs are not used
+# by either script: the tests read them, and corpus.jq keeps copies of the
+# shared definitions (check-corpus.sh keeps them equal).
 
 # The first user record: the first message typed into the session, not an
 # owner message.
@@ -137,7 +138,7 @@ def segments:
 
 # One line per owner message on the transcript's final chain, in order: the
 # message is "replayed" with its segment ids when its record's uuid is one of
-# the uuids in $typed ([{text, segments, uuid}], one per typed answer), else
+# the uuids in $typed ([{text, segments, from, uuid}], one per typed answer), else
 # "owner". A typed answer whose record is not on the chain is not logged.
 def replay_log($typed):
   [owner_messages[]] as $records
@@ -145,6 +146,6 @@ def replay_log($typed):
      | ($records[$k].uuid) as $u
      | ([$typed[] | select(.uuid == $u)][0]) as $t
      | if $t != null
-       then {n: ($k + 1), source: "replayed", segments: $t.segments}
+       then {n: ($k + 1), source: "replayed", segments: $t.segments, from: $t.from}
        else {n: ($k + 1), source: "owner"}
        end];

@@ -53,7 +53,8 @@ working directory, runs the repo's `run.sh` there with exactly those
 arguments and `EVALS_DIR` set to the eval home, and waits until it ends.
 It prints the run directory (`<eval home>/runs/<run-name>`) and exits with
 run.sh's status. The tab closes when run.sh ends. When run.sh fails,
-rex-run.sh prints the tab's last 20 lines first. Nothing else is saved:
+rex-run.sh prints the tab's last 20 lines first. No scan of earlier answers
+runs before or after a run, and nothing blocks a replay. Nothing else is saved:
 the run directory holds what the run needs.
 It runs only run.sh and freeze.sh: a first word that is not a plain run name is
 refused.
@@ -143,14 +144,91 @@ case) and starting a line of the turn's text.
   Pre-filled segments are not counted as replayed and are marked used: not offered to the matcher on later turns, and a later answer naming one is invalid.
   If the owner has already typed, nothing is pre-filled.
 - No question covered: the owner is pulled in and nothing is pre-filled.
+- Clash: a question's entry may carry `"clash": ["<id>", "<id>", ...]`, two or
+  more segments that each answer it but say different things. The question is
+  uncovered whatever its `segment` says: nothing of it is typed, and it is
+  pre-filled as an empty marker like any uncovered question. A clash id that is
+  unknown or used, or a clash of fewer than two ids, makes the whole answer
+  unusable (the owner is pulled in, no clash is recorded). The driver never
+  picks between clashing answers.
+- Within one run the later answer stands: in a clash list, per run only the
+  answers of the highest record order stay. If one answer is left there is no
+  clash and it is typed like any matched answer. This applies only to the
+  answers the matcher found for the current question. The superseded earlier
+  answers of that run are marked used with the later one, so the matcher is
+  offered none of them again.
+- A clash is raised when a replay needs the answer: the driver types neither
+  answer and pulls the owner in. How the pick is settled depends on the turn:
+  - A turn that asked one question: the owner's answer stands over the shown
+    answers. The first owner message after the pull-in is taken as the pick;
+    when it is on the session transcript's final chain (a rewound draft is
+    not), the driver drops every clashing answer the matcher listed (before
+    the same-run pruning) at exit, with `corpus.sh settle <run> --drop <ids>`.
+    Later replays are then offered the owner's answer, as a recorded answer
+    of this run, and none of the dropped ones. A failed settle does not change the run's exit status.
+  - A turn that asked several questions, or any other case: nothing is read
+    from the owner's answer. `corpus.sh clashes <run-dir>` lists the clashes
+    and `corpus.sh settle` records the pick after the run.
 
 Every pull-in prints to the driver tab (stdout of `replay.sh`), for each
-matched part and then each refused near-match (a known id that is not
-matched, once): `matched answer <id>:` or `refused near-match <id>:`, the
+matched part, then each refused near-match (a known id that is not
+matched, once), then each clashing answer in the matcher's order:
+`matched answer <id>:`, `refused near-match <id>:` or
+`clashing answer <id> (run <run>, record <record>):`, the
 segment verbatim, `recorded turn it answered:`, the recorded session turn
-verbatim, and an empty line. Nothing is written to a file. `replay.jsonl` has a line per owner
+verbatim, and an empty line. `replay.jsonl` has a line per owner
 message on the session's final chain: `replayed` with the segment ids typed
-when the record is one the driver typed (matched by its uuid), or `owner`.
+and `from`, a `{"run", "record"}` for each of them in the same order, when the
+record is one the driver typed (matched by its uuid), or `owner`.
+`clashes.jsonl` in the run directory holds the clashes met, one JSON line per
+clash, `{"question": <the turn's text>, "answers": [<ids>]}`, one per set of
+ids, only the ids left after the later-answer rule; the file exists only when
+a clash was met. `corpus.sh clashes <run-dir>` reads it (not a check) and lists
+the clashes to settle, each with one `settle` line per answer, less what is
+already settled.
+
+### The corpus
+
+A spec is its text: the first message of a run (the `<command-args>` of the
+slash command, else the plain message; a headless run without a user record
+falls back to the text after `/bjornstack:story-definition ` in its
+`prompt.txt`). The runs of a spec are the directories of
+`$EVALS_DIR/runs/` that hold the same spec text, plus the transcript the
+command names when it lies outside `runs/`. The corpus is every owner answer
+in those runs, as the segments above, each kept with `run` and `record` (the
+run's name and the uuid of the owner message). A copy is not an answer: a run
+with `standin.jsonl` has no owner answers, and in a run with `replay.jsonl`
+only the lines logged `owner` count, so a line logged `replayed` counts once,
+as the run it came from.
+
+`replay.sh` takes its segments from `corpus.sh segments <run-dir|transcript>`,
+the effective corpus: the corpus less every answer the owner dropped when
+settling. Run on a run directory or on a recorded transcript anywhere.
+
+No scan runs before or after a run, and nothing blocks a replay: there is no
+`corpus.sh check`, and `corpus.sh` never calls `claude`. `corpus.sh`
+subcommands are `segments`, `clashes` and `settle`; any other name (`check` included) is
+an unknown subcommand, exit 2.
+
+Settled choices live in the eval home, outside the repo and every run
+directory: `$EVALS_DIR/corpus/<sha256 of the spec text>/settled.jsonl`, one
+JSON line per settling, `{"keep": "<id>", "drop": ["<id>", ...]}` (a line may lack either key).
+`corpus.sh settle <run-dir|transcript> --keep <id> --drop <id>...` appends one
+(each id must be a segment of the spec's corpus, else exit 2).
+`corpus.sh settle <run-dir|transcript> --drop <id>...` alone appends
+`{"drop": ["<id>", ...]}` with no keep key (the driver's form). The latest settle
+line naming an id decides it: a keep after a drop brings the answer back, a drop
+after a keep removes it. A dropped id is removed from the effective corpus: the
+driver never types it. A settled drop is never typed in later replays. The owner settles after the run:
+`corpus.sh clashes <run-dir>` lists what to settle, and `corpus.sh settle` records it. An agent
+does not settle on its own, and the driver never picks between clashing
+answers.
+
+`settle` refuses `--keep A --drop A` (exit 2, nothing recorded).
+
+A run directory with `replayed-from.txt` (a replay) also counts the recorded
+transcript it names, once, in the corpus for `settle` and `segments`;
+its ids can be settled from the replay's run directory.
 
 The recorded live run used `--add-dir` for the plugin copy. The replay
 instead uses the copy in `live/<run-name>/.bjornstack`: the plugin sits inside the session's

@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# Black-box checks for rex-run.sh, with a stub rex on PATH and a stub run.sh
-# beside a copy of rex-run.sh. No real rex or claude runs. There are no
+# Black-box checks for rex-run.sh, with a stub rex on PATH and stub run.sh,
+# freeze.sh, replay.sh and a clashing corpus.sh stub beside a copy of rex-run.sh.
+# No real rex or claude runs. rex-run.sh never calls corpus.sh: the stub is
+# there only so a call shows (scenario: no corpus scan runs around an eval,
+# at the end). What corpus.sh decides is covered in check-corpus.sh. There are no
 # unit-layer cases: rex-run.sh holds no rules beyond the run-name check,
 # which is a black-box case below (refusals).
 # Usage: check-rex-run.sh
@@ -73,6 +76,17 @@ fi
 exit "${STUB_EXIT:-0}"
 STUB
 chmod +x "$H/replay.sh"
+
+# Stub corpus.sh: logs one line to $STUB_LOG (the call, EVALS_DIR and its
+# arguments); with $STUB_CORPUS_SAY it prints a clash list on stdout and a
+# note on stderr and exits 1. rex-run.sh must never call it.
+cat > "$H/corpus.sh" <<'STUB'
+#!/usr/bin/env bash
+{ line="[corpus.sh]"; for a in "$@"; do line="$line[$a]"; done; echo "$line evals=$EVALS_DIR" >> "$STUB_LOG"; }
+[ -z "${STUB_CORPUS_SAY:-}" ] || { echo "clash: answer 1 vs answer 2"; echo "corpus note" >&2; exit 1; }
+exit 0
+STUB
+chmod +x "$H/corpus.sh"
 
 # Stub rex. It logs each argument in brackets, one call per line.
 # `window new` (the tab; plain `run` is not a stub case): without --shell=none it joins the words and has
@@ -468,5 +482,61 @@ check "the README no longer says pre-filled segments stay unused" "no" \
   "$(grep -i 'pre-fill' "$README" | grep -qi 'stay unused' && echo yes || echo no)"
 check "the README no longer says a bad label on a fully covered turn pulls the owner in without a pre-fill" "no" \
   "$(grep -qi 'or with a bad label, pull the owner in' "$README" && echo yes || echo no)"
+
+# The README states how clashes are met: no scan, the later answer of a run
+# stands, and the owner settles after the run.
+check "the README says no scan runs and nothing blocks a replay" "yes" \
+  "$(grep -i 'no scan' "$README" | grep -qi 'nothing blocks a replay' && echo yes || echo no)"
+check "the README says the later answer of one run stands" "yes" \
+  "$(grep -qi 'later answer' "$README" && grep -i 'later answer' "$README" | grep -qi 'one run' && echo yes || echo no)"
+check "the README says the owner's answer stands over the shown answers" "yes" \
+  "$(tr '\n' ' ' < "$README" | tr -s ' ' | grep -qi "owner's answer stands over the shown answers" && echo yes || echo no)"
+check "the README says that rule is for a turn that asked one question" "yes" \
+  "$(grep -i 'a turn that asked one question' "$README" | grep -qi "owner's answer stands" && echo yes || echo no)"
+check "the README says the clash ids are dropped at exit with corpus.sh settle --drop" "yes" \
+  "$(grep -q -e 'corpus.sh settle <run> --drop' "$README" && echo yes || echo no)"
+check "the README leaves a several-question turn for corpus.sh settle" "yes" \
+  "$(tr '\n' ' ' < "$README" | tr -s ' ' | grep -io 'a turn that asked several questions.*' | grep -q 'corpus.sh settle' && echo yes || echo no)"
+check "the README says the owner settles after the run with corpus.sh settle" "yes" \
+  "$(grep -i 'after the run' "$README" | grep -q 'corpus.sh settle' && echo yes || echo no)"
+check "the README says corpus.sh clashes lists what to settle" "yes" \
+  "$(grep -i 'to settle' "$README" | grep -q 'corpus.sh clashes' && echo yes || echo no)"
+
+# Scenario: no corpus scan runs around an eval. The stub clashes and exits 1;
+# nothing of it may show, and nothing is refused.
+corpus_calls() { grep -c '^\[corpus\.sh\]' "$T/stub.log"; }
+
+STUB_CORPUS_SAY=1 run --replay nc1 "$GOOD"
+STATUS=$?
+check "a replay starts although a clashing corpus.sh is present: the tab opens, waits and closes, the run directory is printed, exit 0" \
+  "0 $EV/runs/nc1 new wait close" "$STATUS $(cat "$T/out") $(calls | sed 's/ capture//')"
+check "a replay calls no corpus.sh: the stub log holds no corpus.sh line" "0" "$(corpus_calls)"
+check "a replay's stderr carries nothing from corpus.sh" "" "$(grep -e 'clash' -e 'corpus' "$T/err")"
+
+STUB_CORPUS_SAY=1 run nc2
+STATUS=$?
+check "a run calls no corpus.sh, exits 0 and prints the run directory only" "0 0 $EV/runs/nc2" "$STATUS $(corpus_calls) $(cat "$T/out")"
+check "a run's stderr carries nothing from corpus.sh" "" "$(grep -e 'clash' -e 'corpus' "$T/err")"
+
+STUB_CORPUS_SAY=1 run nc3 --prompt "$T/my prompt.txt" --owner-away
+check "an owner-away run calls no corpus.sh" "0" "$(corpus_calls)"
+STUB_CORPUS_SAY=1 run nc3b --prompt "$T/my prompt.txt" --owner-away
+check "an owner-away run's stdout is the run directory and its stderr holds nothing from corpus.sh" "$EV/runs/nc3b|" \
+  "$(cat "$T/out")|$(grep -e 'clash' -e 'corpus' "$T/err")"
+
+STUB_EXIT=3 STUB_CORPUS_SAY=1 run nc4
+STATUS=$?
+check "a failed run keeps run.sh's exit status, prints no run directory and calls no corpus.sh" "3 [] 0" \
+  "$STATUS [$(cat "$T/out")] $(corpus_calls)"
+check "a failed run's stderr carries nothing from corpus.sh" "" "$(grep -e 'clash' -e 'corpus' "$T/err")"
+
+STUB_EXIT=3 STUB_CORPUS_SAY=1 run --replay nc5 "$GOOD"
+check "a failed replay calls no corpus.sh and its stderr carries nothing from it" "0 " "$(corpus_calls) $(grep -e 'clash' -e 'corpus' "$T/err")"
+
+STUB_CORPUS_SAY=1 run --freeze "$COMMIT"
+check "--freeze calls no corpus.sh" "0" "$(corpus_calls)"
+
+check "the header comment of rex-run.sh does not mention the corpus" "0" \
+  "$(sed -n '/^set -euo/q;p' "$HERE/rex-run.sh" | grep -ci 'corpus')"
 
 exit "$FAILED"

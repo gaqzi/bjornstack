@@ -11,7 +11,9 @@
 # between lines, so the TUI takes it as typed, not pasted), then at each turn
 # end asks a claude -p matcher whether the turn asks the owner anything and which
 # unused recorded segment (a numerically labelled line,
-# or a paragraph of an owner message of R) answers each question. The matcher
+# or a paragraph of an owner message) answers each question. The segments are
+# those of corpus.sh segments: every answer the owner gave any run of R's spec,
+# less the ones the owner settled away, each kept with its run and record. The matcher
 # matches a segment to a question only if, read against the turn alone, it
 # means what it meant against its recorded turn (a yes or praise matches only
 # the same proposal), and may name refused near-matches in "refused". When
@@ -25,9 +27,16 @@
 # segments are marked used. Questions all covered but labelled mixed or badly
 # are pre-filled the same way, as unlabelled paragraphs. When no question is
 # covered, or an answer is unusable (unknown, used or repeated id), the owner is pulled in with
-# nothing pre-filled. Every pull-in prints to this tab, for each matched part
-# and each refused near-match, the segment and the recorded turn it answered;
-# nothing is written to a file. A turn that asks nothing ends the run with
+# nothing pre-filled. The matcher may also give a question a "clash" list: two
+# or more segments that each answer it but disagree. That question is uncovered,
+# nothing of it is typed, the pull-in shows each clashing answer with its run
+# and record, and the clash is written to clashes.jsonl for the owner to settle
+# after the run (the driver never picks between clashing answers). Before that,
+# within a clash list only the answers of the highest record order of each run
+# stay (the later answer of a run stands); when one answer is left there is no
+# clash and it is typed like any matched answer. An unknown id skips this. Every pull-in prints to this tab, for each matched part
+# and each refused near-match and each clashing answer, the segment and the
+# recorded turn it answered. A turn that asks nothing ends the run with
 # /exit. When the owner types in the session tab after a turn ends and before
 # the driver types, the driver types nothing for that turn and decides on the
 # next turn.
@@ -37,7 +46,10 @@
 # Write/Edit denied on that copy.
 # Output: $EVALS_DIR/runs/<run-name>/ with transcript.jsonl, plugin-commit.txt,
 #         replay.jsonl (one line per owner message on the session's final
-#         chain: n, source, and the segment ids typed when replayed),
+#         chain: n, source, and when replayed the segment ids typed and, for
+#         each, the run and record it came from),
+#         clashes.jsonl (only when a clash was met: {question: the turn's
+#         text, answers: [segment ids]} per clash),
 #         replayed-from.txt and workdir/ (the working directory without
 #         .bjornstack). The session's working directory is
 #         $EVALS_DIR/live/<run-name>, which keeps .bjornstack. Nothing else
@@ -72,7 +84,8 @@ FIRST_TEXT="$(jq_r -j "$INC first_message_text" "$R"; printf x)"
 FIRST_TEXT="${FIRST_TEXT%x}"
 FIRST_CONTENT="$(jq_r -j "$INC first_user_content" "$R"; printf x)"
 FIRST_CONTENT="${FIRST_CONTENT%x}"
-SEGMENTS="$(jq_r -c "$INC segments" "$R")"
+# Every answer the owner gave any run of R's spec, less the settled drops.
+SEGMENTS="$(bash "$HERE/corpus.sh" segments "$R")" || { echo "replay.sh: the corpus of $R's spec could not be read" >&2; exit 1; }
 
 mkdir -p "$E/live" "$E/runs"
 mkdir "$LIVE" "$RUN"
@@ -82,7 +95,10 @@ cp -R "$COPY/." "$LIVE/.bjornstack/"
 printf '%s\n' "$R" > "$RUN/replayed-from.txt"
 : > "$RUN/replay.jsonl"
 TF=
-TYPED='[]'   # [{text, segments, uuid}]: what the driver typed as answers, in order (uuid: its record in the session, set when it appears)
+TYPED='[]'   # [{text, segments, from, uuid}]: what the driver typed as answers, in order (from: [{run, record}] per segment; uuid: its record in the session, set when it appears)
+CLASHES='[]'   # [{question, answers}]: the clashes met, one per set of answer ids
+SETTLES='[]'   # [{ids, uuid}]: clashes on a one-question turn to settle at exit by dropping ids; uuid: the owner's first record after the pull-in, null until it appears
+SETTLE_PENDING=0
 
 UUID="$(uuidgen | tr A-Z a-z)"
 CREATED="$(rex window new bjornstack-evals-session --keep-open --json --focus=false --shell=none -s "$S" -c "$LIVE" -- \
@@ -108,13 +124,40 @@ write_replay_log() {
   return 0
 }
 
-# On any exit: write replay.jsonl, close the session tab and stop the
+# clashes.jsonl: the clashes met during the replay, only when one was met.
+write_clashes() {
+  [ -d "$RUN" ] || return 0
+  if [ "$(printf '%s' "$CLASHES" | jq 'length')" -gt 0 ]; then
+    printf '%s' "$CLASHES" | jq -c '.[]' > "$RUN/clashes.jsonl" || true
+  fi
+  return 0
+}
+
+# settle_picks: for each clash settled by the owner's answer whose record is on
+# the session transcript's final chain, drop the clash's answers
+# (corpus.sh settle --drop). A failure is not reported as the run's.
+settle_picks() {
+  local on ids id idlist
+  [ -n "$TF" ] && [ -r "$TF" ] || return 0
+  on="$(complete_lines "$TF" | jq -sc "$INC [owner_messages | .[].uuid]" 2> /dev/null)" || return 0
+  while IFS= read -r ids; do
+    [ -n "$ids" ] || continue
+    idlist=()
+    while IFS= read -r id; do idlist+=("$id"); done < <(printf '%s' "$ids" | jq -r '.[]')
+    EVALS_DIR="$E" bash "$HERE/corpus.sh" settle "$R" --drop "${idlist[@]}" > /dev/null 2>&1 || true
+  done < <(printf '%s' "$SETTLES" | jq -c --argjson on "$on" '.[] | select(.uuid as $u | $u != null and ($on | index($u)) != null) | .ids')
+  return 0
+}
+
+# On any exit: write replay.jsonl and clashes.jsonl, close the session tab and stop the
 # background wait, keeping the exit status. Never fails, so it cannot change
 # the status under set -e.
 cleanup() {
   local status=$?
   trap - EXIT
   write_replay_log || true
+  write_clashes || true
+  settle_picks || true
   rex window close -s "$S" "$WINDOW" > /dev/null 2>&1 || true
   kill "$WAITER" 2> /dev/null || true
   exit "$status"
@@ -162,19 +205,20 @@ complete_lines() { # the file without a last line that has no newline yet
 # a non-zero status when the matcher fails, after printing the reason to
 # stderr: claude -p exited non-zero, or its output is not the JSON asked for:
 # {"asks": bool, "questions": [{"number": int|letter|null, "segment": id|null,
-# "refused": [id, ...] (optional)}, ...]}.
+# "refused": [id, ...] and "clash": [id, id, ...] (both optional)}, ...]}.
 # It never prints the matcher's output.
 ask_matcher() {
   local unused prompt result
   unused="$(printf '%s' "$SEGMENTS" | jq -c --argjson used "$USED" \
-    '[.[] | select(.id as $i | $used | index($i) | not) | {id, label, segment, session_turn}]')"
-  prompt="$(printf 'You are matching a live session to a recorded one. Below is THIS TURN, the text the session has just shown the owner, and RECORDED SEGMENTS, each a part of a recorded owner message (a line that starts with its label, or a paragraph; only a numeric label such as "4:", "4." or "4)" is kept apart in the label field, any other words stay in the segment text) with the session turn it answered.\n\nSay whether this turn asks the owner anything. If it does, list every question of this turn, in the order the turn asks them, with the label the turn gives the question (a number or a single letter; null when it has none) and the id of the one recorded segment that answers it (null when none does). List every question, a question no segment answers with segment null.\n\nA segment matches a question only when (a) its recorded session turn asked the same decision about the same design and (b), read against this turn alone, it means what it meant against its recorded turn: everything it names, accepts or rejects must be in this turn. A "yes" or praise matches only the same proposal. A segment that names, accepts or rejects something this turn does not hold does not match. A bare option letter (such as "B" or "a + b") matches only with the same options under the same letters. A segment answers at most one question.\n\nWhen a segment nearly matches a question but fails the test above, name its id in that question'"'"'s "refused" list.\n\nReply with only JSON: {"asks": true or false, "questions": [{"number": <integer, a single letter, or null>, "segment": "<segment id>" or null, "refused": ["<segment id>", ...]}, ...]} ("refused" may be left out).\n\nTHIS TURN:\n%s\n\nRECORDED SEGMENTS (JSON):\n%s' "$1" "$unused")"
+    '[.[] | select(.id as $i | $used | index($i) | not) | {id, label, segment, session_turn, run, order}]')"
+  prompt="$(printf 'You are matching a live session to a recorded one. Below is THIS TURN, the text the session has just shown the owner, and RECORDED SEGMENTS, each a part of a recorded owner message (a line that starts with its label, or a paragraph; only a numeric label such as "4:", "4." or "4)" is kept apart in the label field, any other words stay in the segment text) with the session turn it answered.\n\nSay whether this turn asks the owner anything. If it does, list every question of this turn, in the order the turn asks them, with the label the turn gives the question (a number or a single letter; null when it has none) and the id of the one recorded segment that answers it (null when none does). List every question, a question no segment answers with segment null.\n\nA segment matches a question only when (a) its recorded session turn asked the same decision about the same design and (b), read against this turn alone, it means what it meant against its recorded turn: everything it names, accepts or rejects must be in this turn. A "yes" or praise matches only the same proposal. A segment that names, accepts or rejects something this turn does not hold does not match. A bare option letter (such as "B" or "a + b") matches only with the same options under the same letters. A segment answers at most one question.\n\nWhen a segment nearly matches a question but fails the test above, name its id in that question'"'"'s "refused" list.\n\nWhen two or more segments each answer a question under the test above but say different things, so that they cannot both stand, the question is a clash: give segment null and list their ids in that question'"'"'s "clash" list. Each segment carries its run and its order (the place of its owner message in that run). List every answer of the same run that answers a question in "clash" too, so that the driver can let the later one of a run stand.\n\nReply with only JSON: {"asks": true or false, "questions": [{"number": <integer, a single letter, or null>, "segment": "<segment id>" or null, "refused": ["<segment id>", ...], "clash": ["<segment id>", "<segment id>", ...]}, ...]} ("refused" and "clash" may be left out).\n\nTHIS TURN:\n%s\n\nRECORDED SEGMENTS (JSON):\n%s' "$1" "$unused")"
   result="$(run_matcher replay.sh "$prompt")" || return 1
   printf '%s' "$result" | jq -ce 'select(type == "object" and (.asks | type) == "boolean"
       and (.questions == null or ((.questions | type) == "array"
         and (.questions | all(type == "object" and (.number == null or (.number | type) == "number" or (.number | type) == "string")
                               and (.segment == null or (.segment | type) == "string")
-                              and (.refused == null or ((.refused | type) == "array" and (.refused | all(type == "string")))))))))' 2> /dev/null || { echo "replay.sh: the matcher's output is not the expected JSON" >&2; return 1; }
+                              and (.refused == null or ((.refused | type) == "array" and (.refused | all(type == "string"))))
+                              and (.clash == null or ((.clash | type) == "array" and (.clash | all(type == "string")))))))))' 2> /dev/null || { echo "replay.sh: the matcher's output is not the expected JSON" >&2; return 1; }
 }
 
 USED='[]'
@@ -230,11 +274,24 @@ answer_plan() {
     def dedup: reduce .[] as $x ([]; if index($x) != null then . else . + [$x] end);
     . as $segs
     | [.[].id] as $known
-    | ($ans.questions // []) as $qs
+    | def later_only($ids):
+        if ($ids | all(. as $id | any($segs[]; .id == $id))) then
+          [$ids[] as $id | ($segs[] | select(.id == $id)) as $s | {id: $id, run: $s.run, order: $s.order}] as $c
+          | [$c[] | . as $x | select($x.order == ([$c[] | select(.run == $x.run) | .order] | max)) | .id]
+        else $ids end;
+      ($ans.questions // [] | map(if .clash != null then .clash as $all | later_only($all) as $left
+          | if ($left | length) == 1 then .segment = $left[0] | .superseded = ($all - $left) | .clash = null
+            else .clash = $left | .unpruned = $all end
+          else . end)) as $asked
+    | ($asked | map(if .clash != null then .segment = null else . end)) as $qs
+    | [$asked[] | select(.clash != null) | .clash] as $clashes
+    | [$asked[] | (.superseded // [])[]] as $superseded
     | ($qs | length) as $n
     | [$qs[].segment | select(. != null)] as $got
-    | ($got | all(. as $s | ($known | index($s)) != null and ($used | index($s)) == null)
-       and ($got | unique | length) == ($got | length)) as $idsok
+    | (($got + ($clashes | add // [])) | all(. as $s | ($known | index($s)) != null and ($used | index($s)) == null)
+       and ($got | unique | length) == ($got | length)
+       and ($clashes | all(length >= 2))) as $idsok
+    | (if $n == 1 and ($clashes | length) == 1 and $idsok then $asked[0].unpruned else [] end) as $settle
     | ($turn | split("\n")) as $lines
     | [$lines[] | capture("^[ *>(-]*(?<d>[0-9]+)[.:)]")? | .d | tonumber | tostring] as $in_numbers
     | [$lines[] | capture("^[ *>(-]*(?<d>[A-Za-z])[.:)]( |$)")? | .d | ascii_downcase] as $in_letters
@@ -250,19 +307,40 @@ answer_plan() {
     | def part($word; $id):
         ($segs[] | select(.id == $id)) as $s
         | "\($word) \($id):\n\($s.segment)\nrecorded turn it answered:\n\($s.session_turn)\n\n";
-      ([$matched[] | part("matched answer"; .)] + [$refused[] | part("refused near-match"; .)] | join("")) as $display
+      def clashing($id):
+        ($segs[] | select(.id == $id)) as $s
+        | "clashing answer \($id) (run \($s.run), record \($s.record)):\n\($s.segment)\nrecorded turn it answered:\n\($s.session_turn)\n\n";
+      ([$matched[] | part("matched answer"; .)] + [$refused[] | part("refused near-match"; .)]
+       + (if $idsok then [$clashes[][] | clashing(.)] else [] end) | join("")) as $display
     | def lines($withmarkers):
         [$qs | to_entries[]
          | (if $labelled then $labs[.key].v elif $n == 1 then "" else (.key + 1 | tostring) end) as $l
          | select(.value.segment != null or $withmarkers)
          | {label: $l, id: .value.segment}];
-      if $n == 0 or ($got | length) == 0 or ($idsok | not) then {kind: "pull", display: $display}
+      if $n == 0 or ($got | length) == 0 or ($idsok | not) then {kind: "pull", display: $display, clashes: (if $idsok then $clashes else [] end), settle: $settle, superseded: $superseded}
       elif ($got | length) == $n and ($labelled or $unlabelled)
-      then {kind: "full", lines: lines(false), ids: $got, display: $display}
+      then {kind: "full", lines: lines(false), ids: $got, display: $display, clashes: [], settle: [], superseded: $superseded}
       else
-        {kind: "partial", display: $display, ids: $got,
+        {kind: "partial", display: $display, ids: $got, clashes: $clashes, settle: $settle, superseded: $superseded,
             lines: (if $labelled then lines(true) else [lines(false)[] | .label = ""] end)}
       end'
+}
+
+# record_clashes <plan> <turn text>: adds the plan's clashes, each as the turn
+# text and its answer ids, unless one with the same set of ids is there.
+record_clashes() {
+  CLASHES="$(printf '%s' "$1" | jq -c --argjson have "$CLASHES" --arg turn "$2" \
+    'reduce (.clashes // [])[] as $ids ($have; if any(.[]; (.answers | sort) == ($ids | sort)) then . else . + [{question: $turn, answers: $ids}] end)')"
+}
+
+# remember_settle <plan>: a clash on a one-question turn is settled by the
+# owner's answer; the owner's first record after the pull-in fixes which.
+remember_settle() {
+  local ids
+  ids="$(printf '%s' "$1" | jq -c '.settle // []')"
+  [ "$ids" != '[]' ] || return 0
+  SETTLES="$(printf '%s' "$SETTLES" | jq -c --argjson ids "$ids" '. + [{ids: $ids, uuid: null}]')"
+  SETTLE_PENDING=1
 }
 
 # decide <turn text>: type the chosen segments as one message when every
@@ -300,23 +378,30 @@ decide() {
     full)
       if [ -z "$message" ]; then pull_owner_in; return; fi
       if owner_acted; then return; fi
-      ids="$(printf '%s' "$plan" | jq -c '.ids')"
+      ids="$(printf '%s' "$plan" | jq -c '.ids + .superseded')"
       USED="$(printf '%s' "$USED" | jq -c --argjson s "$ids" '. + $s')"
-      TYPED="$(printf '%s' "$TYPED" | jq -c --arg t "$message" --argjson s "$ids" '. + [{text: $t, segments: $s}]')"
+      ids="$(printf '%s' "$plan" | jq -c '.ids')"
+      TYPED="$(printf '%s' "$TYPED" | jq -c --arg t "$message" --argjson s "$ids" --argjson all "$SEGMENTS" \
+        '. + [{text: $t, segments: $s, from: [$s[] as $i | $all[] | select(.id == $i) | {run, record}]}]')"
       EXPECT="$message"
       EXPECTING=1
       type_text "$message"
       ;;
     partial)
       if owner_acted; then return; fi
-      ids="$(printf '%s' "$plan" | jq -c '.ids')"
+      ids="$(printf '%s' "$plan" | jq -c '.ids + .superseded')"
       USED="$(printf '%s' "$USED" | jq -c --argjson s "$ids" '. + $s')"
+      ids="$(printf '%s' "$plan" | jq -c '.ids')"
       [ -z "$message" ] || type_lines "$message"
       printf '%s' "$plan" | jq -j '.display'
+      record_clashes "$plan" "$1"
+      remember_settle "$plan"
       pull_owner_in
       ;;
     *)
       printf '%s' "$plan" | jq -j '.display'
+      record_clashes "$plan" "$1"
+      remember_settle "$plan"
       pull_owner_in
       ;;
   esac
@@ -347,6 +432,10 @@ handle_event() {
       else
         if [ "$WAITING" = 1 ]; then
           WAITING=0
+          if [ "$SETTLE_PENDING" = 1 ]; then
+            SETTLE_PENDING=0
+            SETTLES="$(printf '%s' "$SETTLES" | jq -c --arg u "$(printf '%s' "$1" | jq -r '.uuid')" '.[-1].uuid = $u')"
+          fi
           rex window rename -s "$S" "$WINDOW" bjornstack-evals-session > /dev/null
         fi
       fi

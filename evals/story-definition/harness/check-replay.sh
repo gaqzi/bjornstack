@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Black-box checks for replay.sh, the driver of rex-run.sh --replay, with a
-# stub rex and a stub claude on PATH. replay.sh and replay.jq are copied
-# beside each other into a temp harness directory and run directly, as
+# stub rex and a stub claude on PATH. replay.sh, replay.jq, matcher.sh,
+# corpus.sh and corpus.jq are copied beside each other into a temp harness directory and run directly, as
 # rex-run.sh runs them. No real rex or claude runs.
 #
 # Why only black-box cases: replay.sh is glue between a transcript file, rex
@@ -17,6 +17,19 @@
 # matcher's prompt and replay.jsonl, so they are checked here. The jq definitions of an owner message, a segment and a session
 # event are exercised through the runs below; rex-run.sh's refusals are in
 # check-rex-run.sh.
+#
+# The corpus: the segments the matcher is offered are those of corpus.sh
+# (every answer the owner gave any run of R's spec, less the ones the owner
+# settled away), not only R's. The cases that use it put other runs of R's
+# spec (same first message) under $EV/runs, built with recorded_start and its
+# companions, a replay's replay.jsonl beside them, and a settled.jsonl in
+# $EV/corpus/<sha256 of the spec>/. A clash the matcher reports for a question
+# ("clash": [ids] in its answer) is handled by the driver as the owner's call:
+# nothing is typed, and clashes.jsonl in the run directory records it. When
+# the turn asked one question and the owner's own line lands on the session's
+# final chain, replay.sh settles the clash at exit (corpus.sh settle --drop
+# with every id the matcher listed), so a later replay offers the owner's line
+# and never the dropped answers. The corpus itself is covered in check-corpus.sh.
 #
 # The session is interactive, so the stubs model it:
 #  - stub rex: `window new` for the session tab starts the stub session in
@@ -96,6 +109,8 @@ REAL_JQ="$(command -v jq)"; export REAL_JQ
 [ ! -e "$HERE/replay.sh" ] || cp "$HERE/replay.sh" "$H/replay.sh"
 [ ! -e "$HERE/replay.jq" ] || cp "$HERE/replay.jq" "$H/replay.jq"
 [ ! -e "$HERE/matcher.sh" ] || cp "$HERE/matcher.sh" "$H/matcher.sh"
+[ ! -e "$HERE/corpus.sh" ] || cp "$HERE/corpus.sh" "$H/corpus.sh"
+[ ! -e "$HERE/corpus.jq" ] || cp "$HERE/corpus.jq" "$H/corpus.jq"
 
 P1="11111111-1111-4111-8111-111111111111"
 P2="22222222-2222-4222-8222-222222222222"
@@ -551,11 +566,11 @@ row() { # row <turn substring> <stdout> <exit status>
   local p; p="$(printf %02d $(( $(ls "$SIDE/answers" | grep -c '\.match$') + 1 )))"
   printf '%s' "$1" > "$SIDE/answers/$p.match"; printf '%s\n' "$2" > "$SIDE/answers/$p.out"; echo "$3" > "$SIDE/answers/$p.exit"
 }
-answer() { # answer <turn substring> <asks: true|false> [<number or letter>=<segment id>[=<refused id>,<refused id>] ...]: one entry per question of the turn, in order; null for no label or no segment
+answer() { # answer <turn substring> <asks: true|false> [<number or letter>=<segment id>[=<refused id>,<refused id>[=<clash id>,<clash id>]] ...]: one entry per question of the turn, in order; null for no label or no segment; a fourth part gives the question's "clash" ids
   local match="$1" asks="$2" questions
   shift 2
   questions="$(for entry in "$@"; do
-    jq -nc --arg e "$entry" '($e | split("=")) as $x | {number: (if $x[0] == "null" then null else ($x[0] as $s | try ($s | tonumber) catch $s) end), segment: (if $x[1] == "null" then null else $x[1] end)} + (if ($x[2] // "") != "" then {refused: ($x[2] | split(","))} else {} end)'
+    jq -nc --arg e "$entry" '($e | split("=")) as $x | {number: (if $x[0] == "null" then null else ($x[0] as $s | try ($s | tonumber) catch $s) end), segment: (if $x[1] == "null" then null else $x[1] end)} + (if ($x[2] // "") != "" then {refused: ($x[2] | split(","))} else {} end) + (if ($x[3] // "") != "" then {clash: ($x[3] | split(","))} else {} end)'
   done | jq -sc .)"
   answer_result "$match" "{\"asks\": $asks, \"questions\": $questions}"
 }
@@ -571,7 +586,7 @@ owner() { . "$SIDE/lib.sh"; printf '%s' "$1" > "$SIDE/owner.msg"; submit "$SIDE/
 start() {
   ( cd "$EV" && exec env ANTHROPIC_API_KEY=sk-test STUB_SIDE="$SIDE" EVALS_DIR="$EV" REX_SESSION=sess-1 TMPDIR="$T/tmpd" \
     HOME="$T/home" PATH="$PATHX" REPLAY_POLL_SECONDS=0.1 REPLAY_STARTUP_SECONDS=0 REPLAY_FIRST_TIMEOUT="${FIRST_TIMEOUT:-5}" \
-    "$H/replay.sh" "$1" "${RSRC:-$R}" ) > "$T/out" 2> "$T/err" &
+    "${HX:-$H}/replay.sh" "$1" "${RSRC:-$R}" ) > "$T/out" 2> "$T/err" &
   DRV=$!
 }
 # finish: wait for the driver to end (20 s at most), STATUS is its exit status.
@@ -693,8 +708,8 @@ second line <ol><li>a</li></ol></command-args>" \
   "$(jq -rs '[.[] | select(.type=="user")][0].message.content' "$EV/runs/r1/transcript.jsonl")"
 check "the session's user records for the answers equal R's owner messages byte for byte" \
   "[$P1_JSON,$P2_TYPED_JSON]" "$(owner_messages_in_session "$EV/runs/r1/transcript.jsonl")"
-check "replay.jsonl holds one line per replayed message, in order, with only n, source and recorded" \
-  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$P1S\"]}|{\"n\":2,\"source\":\"replayed\",\"segments\":[\"$P2S0\",\"$P2S1\"]}" \
+check "replay.jsonl holds one line per replayed message, in order, with n, source, the segments and where each came from" \
+  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$P1S\"],\"from\":[{\"run\":\"R\",\"record\":\"$P1\"}]}|{\"n\":2,\"source\":\"replayed\",\"segments\":[\"$P2S0\",\"$P2S1\"],\"from\":[{\"run\":\"R\",\"record\":\"$P2\"},{\"run\":\"R\",\"record\":\"$P2\"}]}" \
   "$(replay_lines "$EV/runs/r1/replay.jsonl")"
 check "the run directory holds exactly transcript.jsonl, plugin-commit.txt, replay.jsonl, replayed-from.txt and workdir" \
   "plugin-commit.txt replay.jsonl replayed-from.txt transcript.jsonl workdir" "$(run_files r1)"
@@ -715,7 +730,9 @@ check "the matcher's prompt for the first turn holds that turn's text" "$T1" "$(
 check "the first matcher prompt lists the three unused segments, each as id, session turn and segment text" \
   "[[\"$P1S\",\"$P1_TURN\",$P1_JSON],[\"$P2S0\",\"$P2_TURN\",\"50 per page\"],[\"$P2S1\",\"$P2_TURN\",\"  and hide the drafts \\n- keep the drafts hidden\"]]" \
   "$(prompt_segments 1 '[.[] | [.id, .session_turn, .segment]]')"
-check "a segment's fields in the prompt are id, label, segment and session_turn only" '["id","label","segment","session_turn"]' "$(prompt_segments 1 '.[0] | keys')"
+check "a segment's fields in the prompt are id, label, order, run, segment and session_turn only" '["id","label","order","run","segment","session_turn"]' "$(prompt_segments 1 '.[0] | keys')"
+check "each segment in the prompt carries the run it came from and its order among that run's owner messages" \
+  "[[\"$P1S\",\"R\",1],[\"$P2S0\",\"R\",2],[\"$P2S1\",\"R\",2]]" "$(prompt_segments 1 '[.[] | [.id, .run, .order]]')"
 check "the second prompt lists only the segments not yet used" "[\"$P2S0\",\"$P2S1\"]" "$(prompt_segments 2 '[.[].id]')"
 check "the third prompt lists no segment" "[]" "$(prompt_segments 3 '[.[].id]')"
 check "every matcher call is made with --no-session-persistence, so the CLI keeps no session of it" "true|true|true" "$(matcher_persistence 1 2 3)"
@@ -842,7 +859,7 @@ finish
 check "a question asked again gets nothing typed the second time" "$FIRST_JSON|$P1_JSON" "$before_typed"
 check "the repeated question pulls the owner in as an unmatched one" "$RENAME_ASK|$FOCUS|$RENAME_BACK|$CLOSE" "$(rex_calls)"
 check "the replayed answer and the owner's are recorded in order" \
-  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$P1S\"]}|{\"n\":2,\"source\":\"owner\"}" "$(replay_lines "$EV/runs/r3/replay.jsonl")"
+  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$P1S\"],\"from\":[{\"run\":\"R\",\"record\":\"$P1\"}]}|{\"n\":2,\"source\":\"owner\"}" "$(replay_lines "$EV/runs/r3/replay.jsonl")"
 check "the matcher prompts for the turns after the first list P1's segment no more" "[\"$P1S\",\"$P2S0\",\"$P2S1\"] [\"$P2S0\",\"$P2S1\"] [\"$P2S0\",\"$P2S1\"]" \
   "$(prompt_segments 1 '[.[].id]') $(prompt_segments 2 '[.[].id]') $(prompt_segments 3 '[.[].id]')"
 
@@ -873,7 +890,7 @@ until_true in_session "$P1_MSG"
 owner "actually keep the drafts"
 finish
 check "a message the owner types mid-run is recorded as the owner's, after the replayed one" \
-  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$P1S\"]}|{\"n\":2,\"source\":\"owner\"}" "$(replay_lines "$EV/runs/r6/replay.jsonl")"
+  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$P1S\"],\"from\":[{\"run\":\"R\",\"record\":\"$P1\"}]}|{\"n\":2,\"source\":\"owner\"}" "$(replay_lines "$EV/runs/r6/replay.jsonl")"
 check "the driver does not pull the owner in for it" "$CLOSE" "$(rex_calls)"
 check "the driver asks the matcher about the turn after the owner's message, with only that turn's text, and ends the run" \
   "2 $T_MID 0 $FIRST_JSON|$P1_JSON|\"/exit\"" \
@@ -898,7 +915,7 @@ finish
 check "an owner message typed during the matcher call for a turn: nothing is typed for that turn, the next turn's segments are typed, then /exit, exit 0" \
   "0 $FIRST_JSON|$P2_TYPED_JSON|\"/exit\"" "$STATUS $(typed)"
 check "the owner's message is recorded as the owner's, the replayed answer after it" \
-  "{\"n\":1,\"source\":\"owner\"}|{\"n\":2,\"source\":\"replayed\",\"segments\":[\"$P2S0\",\"$P2S1\"]}" "$(replay_lines "$EV/runs/r11/replay.jsonl")"
+  "{\"n\":1,\"source\":\"owner\"}|{\"n\":2,\"source\":\"replayed\",\"segments\":[\"$P2S0\",\"$P2S1\"],\"from\":[{\"run\":\"R\",\"record\":\"$P2\"},{\"run\":\"R\",\"record\":\"$P2\"}]}" "$(replay_lines "$EV/runs/r11/replay.jsonl")"
 check "the driver does not pull the owner in, and no failure is printed" "$CLOSE 0" "$(rex_calls) $(grep -c . "$T/err")"
 check "the dropped decision used no segment: the second matcher prompt lists P1's and P2's segments" "[\"$P1S\",\"$P2S0\",\"$P2S1\"]" "$(prompt_segments 2 '[.[].id]')"
 
@@ -994,7 +1011,7 @@ until_true in_session "$P1_MSG"
 task_notification
 finish
 check "a queued_command from a task notification is not recorded as an owner message" \
-  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$P1S\"]}" "$(replay_lines "$EV/runs/r7/replay.jsonl")"
+  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$P1S\"],\"from\":[{\"run\":\"R\",\"record\":\"$P1\"}]}" "$(replay_lines "$EV/runs/r7/replay.jsonl")"
 check "a queued_command from a task notification does not pull the owner in, and the run ends 0" \
   "$CLOSE 0" "$(rex_calls) $STATUS"
 
@@ -1019,7 +1036,7 @@ unset RSRC
 check "a run whose recorded first message is plain text exits 0 and types it, the replayed answer and /exit" \
   "0 \"$PLAIN_FIRST\"|$P1_JSON|\"/exit\"" "$STATUS $(typed)"
 check "the session's own plain first message is not recorded as an owner message" \
-  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$P1S\"]}" "$(replay_lines "$EV/runs/r9/replay.jsonl")"
+  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$P1S\"],\"from\":[{\"run\":\"R2\",\"record\":\"$P1\"}]}" "$(replay_lines "$EV/runs/r9/replay.jsonl")"
 
 # Scenario: a compacted recorded transcript. P1 before the boundary and P2
 # after it both give segments; the summary is neither a segment nor an owner message.
@@ -1050,7 +1067,7 @@ check "a turn answered by three segments of one message types them as one labell
 check "the session's user record for the answer equals the labelled joined text byte for byte" \
   "[\"1: weekly\\n\\n2: all folders\\nincluding the archive\\n\\n3: fifty items\"]" "$(owner_messages_in_session "$EV/runs/s1/transcript.jsonl")"
 check "replay.jsonl lists every typed segment in typed order" \
-  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$PM0\",\"$PM1\",\"$PM3\"]}" "$(replay_lines "$EV/runs/s1/replay.jsonl")"
+  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$PM0\",\"$PM1\",\"$PM3\"],\"from\":[{\"run\":\"R4\",\"record\":\"$PM\"},{\"run\":\"R4\",\"record\":\"$PM\"},{\"run\":\"R4\",\"record\":\"$PM\"}]}" "$(replay_lines "$EV/runs/s1/replay.jsonl")"
 check "the next matcher prompt lists only the segments not yet used" "[\"$PM2\",\"$PN0\",\"$PN1\"]" "$(prompt_segments 2 '[.[].id]')"
 check "the matcher's prompt says a bare option letter matches only with the same options under the same letters" "1" \
   "$(grep -cF 'same options under the same letters' "$SIDE/matcher/01.prompt")"
@@ -1064,7 +1081,7 @@ unset RSRC
 check "a turn answered by segments of two messages types them as one labelled message, exit 0" \
   "0 $FIRST_JSON|\"1: time for prune: nightly\\n\\n2: keep the drafts hidden\"|\"/exit\"" "$STATUS $(typed)"
 check "replay.jsonl lists the segments of both messages" \
-  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$PM2\",\"$PN0\"]}" "$(replay_lines "$EV/runs/s2/replay.jsonl")"
+  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$PM2\",\"$PN0\"],\"from\":[{\"run\":\"R4\",\"record\":\"$PM\"},{\"run\":\"R4\",\"record\":\"$PN\"}]}" "$(replay_lines "$EV/runs/s2/replay.jsonl")"
 
 # Rule: labels follow the turn's numbering. Every question numbered: the turn's
 # own numbers; otherwise 1, 2, ... in order asked; one unnumbered question is
@@ -1112,7 +1129,7 @@ check "a used segment named again gets nothing typed: only the first message and
   "$FIRST_JSON|\"weekly\"" "$before_typed"
 check "the used segment pulls the owner in" "$RENAME_ASK|$FOCUS|$RENAME_BACK|$CLOSE" "$(rex_calls)"
 check "the replayed answer and the owner's are recorded in order" \
-  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$PM0\"]}|{\"n\":2,\"source\":\"owner\"}" "$(replay_lines "$EV/runs/s3/replay.jsonl")"
+  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$PM0\"],\"from\":[{\"run\":\"R4\",\"record\":\"$PM\"}]}|{\"n\":2,\"source\":\"owner\"}" "$(replay_lines "$EV/runs/s3/replay.jsonl")"
 
 # Scenario: an answer the driver cannot use pulls the owner in for the whole
 # turn: nothing is typed and nothing is pre-filled (every question has a
@@ -1248,7 +1265,7 @@ finish
 unset RSRC
 check "the run types the first message, the replayed no and /exit, exit 0" "0 $FIRST_JSON|\"no\"|\"/exit\"" "$STATUS $(typed)"
 check "replay.jsonl logs the owner's no before the replayed no as the owner's, the replayed no as replayed, and the owner's later no as the owner's" \
-  "{\"n\":1,\"source\":\"owner\"}|{\"n\":2,\"source\":\"replayed\",\"segments\":[\"$PA0\"]}|{\"n\":3,\"source\":\"owner\"}" "$(replay_lines "$EV/runs/ru/replay.jsonl")"
+  "{\"n\":1,\"source\":\"owner\"}|{\"n\":2,\"source\":\"replayed\",\"segments\":[\"$PA0\"],\"from\":[{\"run\":\"R7\",\"record\":\"$PA\"}]}|{\"n\":3,\"source\":\"owner\"}" "$(replay_lines "$EV/runs/ru/replay.jsonl")"
 
 # Scenario: the owner's yes comes first, the replayed answer, also yes, later.
 fresh
@@ -1262,7 +1279,7 @@ finish
 unset RSRC
 check "the run types the first message, the replayed yes and /exit, exit 0" "0 $FIRST_JSON|\"yes\"|\"/exit\"" "$STATUS $(typed)"
 check "replay.jsonl logs the owner's earlier yes as the owner's and the replayed yes as replayed" \
-  "{\"n\":1,\"source\":\"owner\"}|{\"n\":2,\"source\":\"replayed\",\"segments\":[\"$PB0\"]}" "$(replay_lines "$EV/runs/rv/replay.jsonl")"
+  "{\"n\":1,\"source\":\"owner\"}|{\"n\":2,\"source\":\"replayed\",\"segments\":[\"$PB0\"],\"from\":[{\"run\":\"R7\",\"record\":\"$PB\"}]}" "$(replay_lines "$EV/runs/rv/replay.jsonl")"
 
 # Scenario: a replay.jq in the directory replay.sh runs from (the eval home) is
 # not the harness's: jq's include finds it before the -L directory. Every
@@ -1285,7 +1302,7 @@ start rj; finish
 check "a decoy replay.jq in the directory replay.sh runs from is ignored: exit 0 with the first message, the replayed answer and /exit typed" \
   "0 $FIRST_JSON|$P1_JSON|\"/exit\"" "$STATUS $(typed)"
 check "with the decoy there replay.jsonl still logs the replayed answer" \
-  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$P1S\"]}" "$(replay_lines "$EV/runs/rj/replay.jsonl")"
+  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$P1S\"],\"from\":[{\"run\":\"R\",\"record\":\"$P1\"}]}" "$(replay_lines "$EV/runs/rj/replay.jsonl")"
 
 # Scenario: the session's own rewound draft is logged once, as the final answer.
 # The owner is pulled in, types a draft, rewinds (the stub session makes the
@@ -1321,7 +1338,7 @@ finish
 check "the run types the first message, the rewound P1, then P2's segments and /exit, exit 0" \
   "0 $FIRST_JSON|$P1_JSON|$P2_TYPED_JSON|\"/exit\"" "$STATUS $(typed)"
 check "replay.jsonl logs the replacement as the owner's and the later replayed answer as replayed; the rewound replayed answer is not logged" \
-  "{\"n\":1,\"source\":\"owner\"}|{\"n\":2,\"source\":\"replayed\",\"segments\":[\"$P2S0\",\"$P2S1\"]}" "$(replay_lines "$EV/runs/rr/replay.jsonl")"
+  "{\"n\":1,\"source\":\"owner\"}|{\"n\":2,\"source\":\"replayed\",\"segments\":[\"$P2S0\",\"$P2S1\"],\"from\":[{\"run\":\"R\",\"record\":\"$P2\"},{\"run\":\"R\",\"record\":\"$P2\"}]}" "$(replay_lines "$EV/runs/rr/replay.jsonl")"
 
 # Scenario: the session records something other than the typed answer.
 fresh
@@ -1364,7 +1381,10 @@ for phrase in \
   'matches only the same proposal' \
   'segment null' \
   'a number or a single letter' \
-  '"refused"'; do
+  '"refused"' \
+  'the question is a clash' \
+  '"clash"' \
+  'same run'; do
   check "the matcher's prompt holds the phrase: $phrase" "yes" "$(grep -qF -- "$phrase" "$SIDE/matcher/01.prompt" && echo yes || echo no)"
 done
 check "when the matcher refuses the only recorded segment, nothing but the first message is typed before the owner answers" "$FIRST_JSON" "$before_typed"
@@ -1620,6 +1640,343 @@ printf 'fedcba9876543210\n' > "$EV/config/sources/bjornstack.commit"
 finish
 check "plugin-commit.txt holds the commit as it was when the run started, though bjornstack.commit changed during it" \
   "0 abc123def4567890" "$STATUS $(cat "$EV/runs/ri/plugin-commit.txt")"
+
+# The corpus. The matcher is offered the answers of every run of R's spec under
+# $EV/runs as well as R's own, and the driver's replay.jsonl says where each
+# typed segment came from. Other runs of the spec are built with the same
+# first message as R's; a run of another spec has a different one.
+C_L="cccccccc-cccc-4ccc-8ccc-cccccccccccc"; C_LS="$C_L#0"
+C_PCOPY="dddddddd-dddd-4ddd-8ddd-dddddddddddd"
+C_POWN="eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"; C_POWNS="$C_POWN#0"
+C_LA="ffffffff-ffff-4fff-8fff-ffffffffffff"; C_LAS="$C_LA#0"
+C_X="12121212-1212-4212-8212-121212121212"
+T_SKIP="Which folders should a refresh skip?"
+T_WHEN="When does a refresh run?"
+SPEC_TEXT=$'spec first line\nsecond line <ol><li>a</li></ol>'
+FILES_PLAIN="plugin-commit.txt replay.jsonl replayed-from.txt transcript.jsonl workdir"
+FILES_CLASH="clashes.jsonl plugin-commit.txt replay.jsonl replayed-from.txt transcript.jsonl workdir"
+other_run() { mkdir -p "$EV/runs/$1"; recorded_start "$EV/runs/$1/transcript.jsonl"; }   # other_run <name>: the first message of a run of R's spec; the caller adds turns and answers, then sets RF back to $R
+settled() { local d; d="$EV/corpus/$(printf '%s' "$SPEC_TEXT" | shasum -a 256 | cut -d' ' -f1)"; mkdir -p "$d"; printf '%s\n' "$1" >> "$d/settled.jsonl"; }   # settled <json line>
+# L is a live run of the spec: its owner answered "the archive" to T_SKIP.
+# P is a replay of L: its first answer is a copy of L's (logged replayed), its
+# second the owner's, "every 15 minutes", to T_WHEN.
+corpus_runs() {
+  other_run L
+  recorded_turn "$T_SKIP"; recorded_answer "$C_L" "the archive"; recorded_exit
+  other_run P
+  recorded_turn "$T_SKIP"; recorded_answer "$C_PCOPY" "the archive"
+  recorded_turn "$T_WHEN"; recorded_answer "$C_POWN" "every 15 minutes"; recorded_exit
+  RF="$R"
+  jq -nc --arg s "$C_LS" --arg r "$C_L" '{n:1,source:"replayed",segments:[$s],from:[{run:"L",record:$r}]}' > "$EV/runs/P/replay.jsonl"
+  echo '{"n":2,"source":"owner"}' >> "$EV/runs/P/replay.jsonl"
+}
+# L2 answered R's own question T1 with "all of them", where R's owner said "only the ones I ticked": the two clash.
+clashing_run() { other_run L2; recorded_turn "$P1_TURN"; recorded_answer "$C_LA" "all of them"; recorded_exit; RF="$R"; }
+
+# Scenario: a replay answers from any earlier run of the spec. The session asks
+# T_WHEN, which only P's owner answered; the matcher names that segment, the
+# driver types it, and replay.jsonl says which run and record it came from.
+# The copy P logged as replayed counts once, as L's: the matcher is offered
+# "the archive" once, with L's record id.
+fresh
+corpus_runs
+reply 1 "$T_WHEN"; reply 2 "$T_DONE"
+answer "$T_WHEN" true "null=$C_POWNS"; answer "Nothing more" false
+start ca; finish
+check "a question only another run of the spec answered gets that run's answer typed" "0 $FIRST_JSON|\"every 15 minutes\"|\"/exit\"" "$STATUS $(typed)"
+check "replay.jsonl names the run and record the typed answer came from" \
+  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$C_POWNS\"],\"from\":[{\"run\":\"P\",\"record\":\"$C_POWN\"}]}" "$(replay_lines "$EV/runs/ca/replay.jsonl")"
+check "a replay that met no clash leaves no clashes.jsonl in its run directory" "$FILES_PLAIN" "$(run_files ca)"
+check "the line P logged as replayed is offered once, as L's answer, not again as P's" "[\"$C_LS\"]" \
+  "$(prompt_segments 1 '[.[] | select(.segment == "the archive") | .id]')"
+
+# Scenario: another spec's run under runs/ changes nothing. Its answer to the
+# same question is not offered, and the replay is R's replay.
+fresh
+mkdir -p "$EV/runs/other-spec"
+RF="$EV/runs/other-spec/transcript.jsonl"; PREV=
+rec '{type:"user",uuid:"00000000-0000-4000-8000-000000000099",message:{role:"user",content:"<command-message>x:y</command-message>\n<command-name>/x:y</command-name>\n<command-args>another spec entirely</command-args>"}}'
+recorded_turn "$P1_TURN"; recorded_answer "$C_X" "everything"; recorded_exit
+RF="$R"
+reply 1 "$T1"; reply 2 "$T_DONE"
+answer "Which folders" true "null=$P1S"; answer "Nothing more" false
+start cb; finish
+check "with another spec's run in runs/ the replay types R's answer as before" "0 $FIRST_JSON|$P1_JSON|\"/exit\"" "$STATUS $(typed)"
+check "with another spec's run in runs/ the answer's source is R alone" \
+  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$P1S\"],\"from\":[{\"run\":\"R\",\"record\":\"$P1\"}]}" "$(replay_lines "$EV/runs/cb/replay.jsonl")"
+check "another spec's answer is not offered to the matcher" "[]" \
+  "$(prompt_segments 1 '[.[] | select(.segment == "everything") | .id]')"
+
+# Scenario: the owner settled a clash. The dropped answer is not among the
+# segments the matcher is offered, and it is never typed, even when the matcher
+# names it: that answer is unknown, so the owner is pulled in.
+fresh
+clashing_run
+settled "{\"keep\":\"$P1S\",\"drop\":[\"$C_LAS\"]}"
+reply 1 "$T1"; reply 2 "$T_DONE"
+answer "Which folders" true "null=$P1S"; answer "Nothing more" false
+start cc; finish
+check "a settled choice: the kept answer is typed and the dropped one never is" "0 $FIRST_JSON|$P1_JSON|\"/exit\"" "$STATUS $(typed)"
+check "a settled choice: the dropped answer is not among the segments the matcher is offered" "[]" \
+  "$(prompt_segments 1 '[.[] | select(.segment == "all of them") | .id]')"
+check "a settled choice: replay.jsonl names R as the kept answer's source" \
+  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$P1S\"],\"from\":[{\"run\":\"R\",\"record\":\"$P1\"}]}" "$(replay_lines "$EV/runs/cc/replay.jsonl")"
+
+fresh
+clashing_run
+settled "{\"keep\":\"$P1S\",\"drop\":[\"$C_LAS\"]}"
+reply 1 "$T1"; reply 2 "$T_DONE"
+answer "Which folders" true "null=$C_LAS"; answer "Nothing more" false
+start cc2
+until_true logged "[window][focus]"
+sleep 0.6
+before_typed="$(typed)"
+owner "only the ones I ticked, yes"
+finish
+check "a matcher that names a dropped answer gets it nowhere near the session: only the first message is typed before the owner answers" "$FIRST_JSON" "$before_typed"
+check "a matcher that names a dropped answer pulls the owner in, and the answer is never typed" \
+  "$RENAME_ASK|$FOCUS|$RENAME_BACK|$CLOSE 0 $FIRST_JSON|\"/exit\"" "$(rex_calls) $STATUS $(typed)"
+
+# Scenario: a clash met during the replay. The matcher says two answers
+# answer the session's question and disagree. The driver types neither, pulls
+# the owner in showing both answers with their run and record, records the
+# owner's message as the owner's, and records the clash for the owner to settle
+# after the run. A clash is recorded only when it was met.
+fresh
+clashing_run
+reply 1 "$T1"; reply 2 "$T_DONE"
+answer "Which folders" true "null=null==$P1S,$C_LAS"; answer "Nothing more" false
+start cd
+until_true logged "[window][focus]"
+sleep 0.6
+before_typed="$(typed)"; before_box="$(box)"; before_out="$(stdout_json)"
+owner "only the ones I ticked, and the archive"
+finish
+CLASH_OUT="clashing answer $P1S (run R, record $P1):"'\nonly the ones I ticked\nrecorded turn it answered:\n'"$P1_TURN"'\n\n'"clashing answer $C_LAS (run L2, record $C_LA):"'\nall of them\nrecorded turn it answered:\n'"$P1_TURN"'\n\n'
+check "a clash met during the replay: neither answer is typed, only the first message before the owner answers" "$FIRST_JSON" "$before_typed"
+check "a clash met during the replay: nothing is pre-filled" '""' "$before_box"
+check "a clash met during the replay: the driver tab shows both answers with their run and record" "\"$CLASH_OUT\"" "$before_out"
+check "a clash met during the replay: the owner is pulled in and the tab renamed back after the owner types" "$RENAME_ASK|$FOCUS|$RENAME_BACK|$CLOSE" "$(rex_calls)"
+check "a clash met during the replay: the owner's message is recorded as the owner's" '{"n":1,"source":"owner"}' "$(replay_lines "$EV/runs/cd/replay.jsonl")"
+check "a clash met during the replay: clashes.jsonl records the turn's text and both answer ids" \
+  "{\"question\":\"$T1\",\"answers\":[\"$P1S\",\"$C_LAS\"]}" "$(replay_lines "$EV/runs/cd/clashes.jsonl")"
+check "a clash met during the replay: the run directory gains clashes.jsonl and nothing else" "$FILES_CLASH" "$(run_files cd)"
+check "a clash met during the replay: the run exits 0 having typed the first message and /exit only" "0 $FIRST_JSON|\"/exit\"" "$STATUS $(typed)"
+check "an unsettled clash: both answers are offered to the matcher" "[\"$C_LAS\"]" \
+  "$(prompt_segments 1 '[.[] | select(.segment == "all of them") | .id]')"
+
+# Scenario: the matcher names a segment for a question and a clash that holds
+# the same segment. The clash wins: the segment is not typed, and the owner is
+# pulled in as for any clash.
+fresh
+clashing_run
+reply 1 "$T1"; reply 2 "$T_DONE"
+answer "Which folders" true "null=$P1S==$P1S,$C_LAS"; answer "Nothing more" false
+start cf
+until_true logged "[window][focus]"
+sleep 0.6
+before_typed="$(typed)"; before_box="$(box)"
+owner "only the ones I ticked, and the archive"
+finish
+check "a segment named together with a clash that holds it: nothing is typed or pre-filled before the owner answers" "$FIRST_JSON|\"\"" "$before_typed|$before_box"
+check "a segment named together with a clash that holds it: the owner is pulled in and the tab renamed back after the owner types" "$RENAME_ASK|$FOCUS|$RENAME_BACK|$CLOSE" "$(rex_calls)"
+check "a segment named together with a clash that holds it: the owner's message is recorded as the owner's" '{"n":1,"source":"owner"}' "$(replay_lines "$EV/runs/cf/replay.jsonl")"
+check "a segment named together with a clash that holds it: clashes.jsonl records the clash" \
+  "{\"question\":\"$T1\",\"answers\":[\"$P1S\",\"$C_LAS\"]}" "$(replay_lines "$EV/runs/cf/clashes.jsonl")"
+check "a segment named together with a clash that holds it: the run exits 0 having typed the first message and /exit only" "0 $FIRST_JSON|\"/exit\"" "$STATUS $(typed)"
+
+# Scenario: within one run the later answer stands. Run L2 answered the
+# question and later, in the same run, answered it again; the matcher lists both
+# as a clash. Per run only the answer with the highest order stays in the
+# clash: when one id is left there is no clash and that answer is typed like
+# any matched answer. When two or more are left they clash as before, listing
+# only the ids left. The order of the matcher's list does not matter.
+C_LB="abababab-abab-4bab-8bab-abababababab"; C_LBS="$C_LB#0"
+C_Y="acacacac-acac-4cac-8cac-acacacacacac"; C_YS="$C_Y#0"
+later_answer_run() { other_run L2; recorded_turn "$P1_TURN"; recorded_answer "$C_LA" "all of them"; recorded_turn "$T_WHEN"; recorded_answer "$C_LB" "mark it read again"; recorded_exit; RF="$R"; }
+other_run_answer() { other_run L3; recorded_turn "$P1_TURN"; recorded_answer "$C_Y" "just the inbox"; recorded_exit; RF="$R"; }
+
+fresh
+later_answer_run
+reply 1 "$T1"; reply 2 "$T_DONE"
+answer "Which folders" true "null=null==$C_LAS,$C_LBS"; answer "Nothing more" false
+start cg; finish
+check "two answers of one run in a clash list: the later one is typed and nothing is raised" "0 $FIRST_JSON|\"mark it read again\"|\"/exit\"" "$STATUS $(typed)"
+check "two answers of one run in a clash list: replay.jsonl names the later answer's run and record" \
+  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$C_LBS\"],\"from\":[{\"run\":\"L2\",\"record\":\"$C_LB\"}]}" "$(replay_lines "$EV/runs/cg/replay.jsonl")"
+check "two answers of one run in a clash list: the owner is not pulled in and no clashes.jsonl is written" "$FILES_PLAIN" "$(run_files cg)"
+
+fresh
+later_answer_run; other_run_answer
+reply 1 "$T1"; reply 2 "$T_DONE"
+answer "Which folders" true "null=null==$C_LAS,$C_LBS,$C_YS"; answer "Nothing more" false
+start ch
+until_true logged "[window][focus]"
+sleep 0.6
+before_typed="$(typed)"; before_box="$(box)"
+owner "only the ones I ticked, and the archive"
+finish
+check "a clash list holding the earlier and later answer of one run and one of another: nothing is typed or pre-filled before the owner answers" "$FIRST_JSON|\"\"" "$before_typed|$before_box"
+check "a clash list holding the earlier and later answer of one run and one of another: the owner is pulled in" "$RENAME_ASK|$FOCUS|$RENAME_BACK|$CLOSE" "$(rex_calls)"
+check "a clash list holding the earlier and later answer of one run and one of another: clashes.jsonl lists only the later answer and the other run's" \
+  "{\"question\":\"$T1\",\"answers\":[\"$C_LBS\",\"$C_YS\"]}" "$(replay_lines "$EV/runs/ch/clashes.jsonl")"
+
+fresh
+later_answer_run
+reply 1 "$T1"; reply 2 "$T_DONE"
+answer "Which folders" true "null=null==$C_LBS,$C_LAS"; answer "Nothing more" false
+start ci; finish
+check "the later answer of a run stands whatever the order of the matcher's list: it is typed and no clash is recorded" \
+  "0 $FIRST_JSON|\"mark it read again\"|\"/exit\" $FILES_PLAIN" "$STATUS $(typed) $(run_files ci)"
+
+# Scenario: a clash that names an id that is unknown, or one already used,
+# makes the whole answer unusable: the owner is pulled in, nothing is typed or
+# pre-filled, and no clash is recorded. One row per way.
+cx_unknown() { reply 1 "$T1"; reply 2 "$T_DONE"; answer "Which folders" true "null=null==$P1S,$UNKNOWN"
+  BEFORE="$FIRST_JSON"; }
+cx_used() { reply 1 "$T1"; reply 2 "$T2"; reply 3 "$T_DONE"; answer "Which folders" true "null=$P1S"; answer "prune run daily" true "null=null==$P1S,$C_LAS"
+  BEFORE="$FIRST_JSON|$P1_JSON"; }
+for cx_row in \
+  "cx_unknown|an id the corpus does not hold" \
+  "cx_used|an id the driver already typed"; do
+  fn="${cx_row%%|*}"; what="${cx_row#*|}"
+  fresh
+  clashing_run
+  "$fn"; answer "Nothing more" false
+  start cu
+  until_true logged "[window][focus]"
+  sleep 0.6
+  before_typed="$(typed)"; before_box="$(box)"
+  owner "weekly"
+  finish
+  check "for a clash naming $what, nothing more is typed before the owner answers" "$BEFORE" "$before_typed"
+  check "for a clash naming $what, nothing is pre-filled" '""' "$before_box"
+  check "for a clash naming $what, the owner is pulled in" "$RENAME_ASK|$FOCUS|$RENAME_BACK|$CLOSE" "$(rex_calls)"
+  check "for a clash naming $what, no clash is recorded" "$FILES_PLAIN" "$(run_files cu)"
+done
+
+# Scenario: a clash on one question of a turn whose other question is covered.
+# The covered answer is pre-filled, the clashing question gets an empty marker,
+# the owner is pulled in with both clashing answers shown, and the clash is
+# recorded. The clashing answers are not used; the pre-filled one is.
+fresh
+clashing_run
+TURN_CP=$'1. Which folders should a refresh read?\n2. How many items should a page hold?'
+reply 1 "$TURN_CP"; reply 2 "$T_DONE"
+answer "1. Which folders should a refresh read?" true "1=null==$P1S,$C_LAS" "2=$P2S0"; answer "Nothing more" false
+start ce
+until_true logged "[window][focus]"
+sleep 0.6
+before_typed="$(typed)"; before_box="$(box)"; before_out="$(stdout_json)"
+owner $'1: all folders\n\n2: 50 per page'
+finish
+check "a clash on one question of two: nothing is sent, only the first message is typed before the owner answers" "$FIRST_JSON" "$before_typed"
+check "a clash on one question of two: the input box holds the covered answer and an empty marker for the clashing question" '"1: \n\n2: 50 per page"' "$before_box"
+check "a clash on one question of two: the driver tab shows both clashing answers with run and record" "true" \
+  "$(printf '%s' "$before_out" | jq -r --arg a "clashing answer $P1S (run R, record $P1):" --arg b "clashing answer $C_LAS (run L2, record $C_LA):" '[contains($a), contains($b)] | all')"
+check "a clash on one question of two: the clash is recorded with the turn's text" \
+  "{\"question\":\"1. Which folders should a refresh read?\\n2. How many items should a page hold?\",\"answers\":[\"$P1S\",\"$C_LAS\"]}" "$(replay_lines "$EV/runs/ce/clashes.jsonl")"
+check "a clash on one question of two: the owner's message is recorded as the owner's" '{"n":1,"source":"owner"}' "$(replay_lines "$EV/runs/ce/replay.jsonl")"
+check "a clash on one question of two: the pre-filled answer is used and the clashing ones are not" "[false,true,true]" \
+  "$(prompt_segments 2 "[any(.[]; .id == \"$P2S0\"), any(.[]; .id == \"$P1S\"), any(.[]; .id == \"$C_LAS\")]")"
+
+# Scenario: a later answer of one run, typed for a question, is used: when the
+# same question comes up again the matcher is offered neither it nor the
+# earlier answer it superseded (both ids are used).
+fresh
+later_answer_run
+reply 1 "$T1"; reply 2 "$T1_AGAIN"; reply 3 "$T_DONE"
+answer "I can draft" true "null=null==$C_LAS,$C_LBS"; answer "Sorry, asking again" false
+start cs; finish
+check "a later answer typed over an earlier one of its run: the second prompt shows neither of them among the unused segments" \
+  "0 $FIRST_JSON|\"mark it read again\"|\"/exit\" [\"$P1S\",\"$P2S0\",\"$P2S1\"]" \
+  "$STATUS $(typed) $(prompt_segments 2 '[.[].id]')"
+
+# Scenario: the owner's pick settles a clash. The turn asked one question, the
+# matcher listed a clash, the owner typed a line, and it is on the session's
+# final chain: replay.sh settles at exit by dropping every id of the matcher's
+# list (before the same-run pruning), keeping no id. A later replay of the
+# spec is offered the owner's line and none of the dropped answers.
+OWN_LINE="only the ones I ticked, and the archive"
+own_id() { jq -r --arg m "$1" 'select(.type == "user" and .message.content == $m) | .uuid + "#0"' "$EV/runs/$2/transcript.jsonl"; }   # own_id <message> <run>: the segment id of the owner's line in that run
+settled_log() { find "$EV/corpus" -name settled.jsonl -exec cat {} + 2> /dev/null | jq -cS '.drop |= sort' | paste -sd'|' -; }
+pull_in_and_answer() { until_true logged "[window][focus]"; sleep 0.6; owner "$1"; }   # pull_in_and_answer <the owner's line>
+
+fresh
+clashing_run
+reply 1 "$T1"; reply 2 "$T_DONE"
+answer "Which folders" true "null=null==$P1S,$C_LAS"; answer "Nothing more" false
+start cs1
+pull_in_and_answer "$OWN_LINE"
+finish
+check "a clash on a one-question turn with the owner's line on the chain: settled.jsonl holds a drop line of both answers and no keep key" \
+  "0 {\"drop\":[\"$P1S\",\"$C_LAS\"]}" "$STATUS $(settled_log)"
+
+OWN_ID="$(own_id "$OWN_LINE" cs1)"
+mkdir -p "$T/keep"; rm -rf "$T/keep"/*
+mkdir -p "$EV/corpus"; cp -R "$EV/runs" "$T/keep/runs"; cp -R "$EV/corpus" "$T/keep/corpus"
+fresh
+cp -R "$T/keep/runs/." "$EV/runs/"; mkdir -p "$EV/corpus"; cp -R "$T/keep/corpus/." "$EV/corpus/"
+reply 1 "$T1"; reply 2 "$T_DONE"
+answer "Which folders" true "null=${OWN_ID}"; answer "Nothing more" false
+start cs2; finish
+check "a later replay of the spec types the owner's line from the earlier replay, then /exit" \
+  "0 $FIRST_JSON|\"$OWN_LINE\"|\"/exit\"" "$STATUS $(typed)"
+check "a later replay's log names the earlier replay's run and the owner's record" \
+  "{\"n\":1,\"source\":\"replayed\",\"segments\":[\"$OWN_ID\"],\"from\":[{\"run\":\"cs1\",\"record\":\"${OWN_ID%#0}\"}]}" "$(replay_lines "$EV/runs/cs2/replay.jsonl")"
+check "a later replay's matcher is offered the owner's line and neither answer the settling dropped" \
+  "[true,false,false]" \
+  "$(prompt_segments 1 "[any(.[]; .id == \"$OWN_ID\"), any(.[]; .id == \"$P1S\"), any(.[]; .id == \"$C_LAS\")]")"
+
+fresh
+later_answer_run; other_run_answer
+reply 1 "$T1"; reply 2 "$T_DONE"
+answer "Which folders" true "null=null==$C_LAS,$C_LBS,$C_YS"; answer "Nothing more" false
+start cs3
+pull_in_and_answer "$OWN_LINE"
+finish
+check "a clash that the same-run pruning shortened is settled with every id the matcher listed, the superseded earlier answer included" \
+  "0 {\"drop\":[\"$C_LBS\",\"$C_YS\",\"$C_LAS\"]}" "$STATUS $(settled_log)"
+
+fresh
+clashing_run
+TURN_CP=$'1. Which folders should a refresh read?\n2. How many items should a page hold?'
+reply 1 "$TURN_CP"; reply 2 "$T_DONE"
+answer "1. Which folders should a refresh read?" true "1=null==$P1S,$C_LAS" "2=$P2S0"; answer "Nothing more" false
+start cs4
+pull_in_and_answer $'1: all folders\n\n2: 50 per page'
+finish
+check "a clash on a turn that asked several questions settles nothing, whatever the owner types" "0 []" "$STATUS [$(settled_log)]"
+
+fresh
+clashing_run
+reply 1 "$T1"; reply 2 "$T_DONE"; reply_silent 2 1
+answer "Which folders" true "null=null==$P1S,$C_LAS"; answer "Nothing more" false
+start cs5
+until_true logged "[window][focus]"
+owner "a draft the owner then rewound"
+until_true in_session "a draft the owner then rewound"
+owner "@rewind"
+owner "$OWN_LINE"
+finish
+check "a clash whose pulled-in owner line was rewound off the final chain settles nothing" "0 []" "$STATUS [$(settled_log)]"
+
+# Scenario: a corpus that cannot be read is no empty corpus. A corpus.sh that
+# exits 1 stops the replay with exit 1 and a message naming the corpus, before
+# any tab is opened, and no run directory or live directory is made.
+HX="$T/harness-broken"; rm -rf "$HX"; mkdir -p "$HX"
+for f in replay.sh replay.jq matcher.sh corpus.jq; do [ ! -e "$H/$f" ] || cp "$H/$f" "$HX/$f"; done
+printf '#!/usr/bin/env bash\necho "corpus.sh: broken stub" >&2\nexit 1\n' > "$HX/corpus.sh"
+fresh
+reply 1 "$T1"; reply 2 "$T_DONE"
+answer "Which folders" true "null=$P1S"; answer "Nothing more" false
+start rk; finish
+unset HX
+check "a corpus that cannot be read stops the replay: exit 1 and a message naming the corpus on stderr" "1 1" "$STATUS $(grep -c '^replay.sh: .*corpus' "$T/err")"
+check "a corpus that cannot be read stops the replay before any session tab is opened" "0" "$(grep -c '^\[window\]\[new\]' "$SIDE/rex.log")"
+check "a corpus that cannot be read leaves no run directory and no live directory" "no no" \
+  "$([ -e "$EV/runs/rk" ] && echo yes || echo no) $([ -e "$EV/live/rk" ] && echo yes || echo no)"
+check "a corpus that cannot be read is not read as no answers: the matcher is never asked" "0" "$(ls "$SIDE"/matcher/*.prompt 2> /dev/null | wc -l | tr -d ' ')"
 
 # Scenario: the stubs end by themselves once their case's side directory is
 # gone, so a case that is killed halfway leaves no stub behind. Started by hand
