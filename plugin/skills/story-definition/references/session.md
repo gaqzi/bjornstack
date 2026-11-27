@@ -169,9 +169,11 @@ Settle the question by the first of these that fits:
    prompt's words, quoted.
 2. One rule entry decides this case without a judgment about the
    owner's business: record the answer with the entry as
-   `<file>#<id>`. An entry that says to present options to a human,
-   or whose answer depends on something only the owner knows, does not
-   settle it.
+   `<file>#<id>`. An entry that says to present options to a human
+   does not settle it. An entry with an exception settles the case
+   when the first prompt or the code gives none of the cases the
+   exception names; ask only the fact those leave open, never the
+   decision the entry already makes.
 3. Otherwise ask the owner, one question at a time, with the options
    you see and the one you would pick; record the answer as the
    owner's. While the owner is away, list it under "Open decisions
@@ -196,17 +198,30 @@ An answer with no source is not recorded. Take these in order:
   owner is present, do not write "open" on an item you then draft
   stories from. When part of it
   is settled and part is not, split it into two items.
-- An entry that says how to name or draw a boundary, such as
-  domain-first-packaging#identify-domains, tells you how to name a
-  capability. It does not say which capabilities exist or which one a
-  piece of the feature belongs to: only the prompt's words or the owner
-  do.
-- Where an answer names a part of the code, read that code. With none
-  to read, the part is not known: ask, or while the owner is away list
-  it as open.
+- domain-first-packaging#identify-domains settles which capabilities
+  the system owns: a capability is a business noun for what the system
+  does, and the jobs the first prompt names are its input. State each
+  capability you draw from them, with the entry cited. Ask which
+  capabilities exist only when the prompt names no job to draw them
+  from. The entry does not say which capability a piece of the
+  feature belongs to when the jobs leave that open: only the prompt's
+  words or the owner do.
+- boundary-communication#single-owner settles who owns a piece of
+  shared data: one owner, chosen among the parts the design names. When
+  one part decides what values are valid and accepts the changes and
+  the others only read, name it, with the entry cited. When the
+  entry's other cases apply (the parts enforce different rules, or
+  identical ones), follow that case and say so.
+- Where an answer names a part of the code, read that code. With no
+  code to read, a part the design has settled is known, such as a
+  capability stated under identify-domains or an owner chosen from
+  them. A part the design has not settled is not known: ask, or while
+  the owner is away list it as open.
 
 While the owner is away, every item no source settles goes under
-"Open decisions for the user", using that heading exactly. Each entry
+"Open decisions for the user", using that heading exactly. An item a
+rule entry or the prompt settles is recorded as answered with its
+source and is never listed there. Each entry
 holds the item, the pick you would make, its reason and the stories
 that rest on it, including a "none" the prompt does not state (no
 worker, queue or scheduler needed). In the design the item reads
@@ -302,6 +317,18 @@ The replay question scales to the feature, as design-for-replay's
 answer at its own size, not a broker or a framework. Name what is
 recorded and where, and what a second run does.
 
+What a run does after a stop follows design-for-replay's order, which
+no owner answer changes: the event is stored before anything acts on
+it. Say it in the design with
+design-for-replay#act-only-after-stored cited, as an order: store the
+event, then write, then acknowledge the input. Name each step the run
+takes after the store (each file written, and the acknowledgement).
+Once the acknowledgement is settled, or listed open, the design names
+it as the step after the store, and says the stored event comes before
+it. Design-for-replay's loss exceptions never cover storing
+before acting, so Losses below is never a reason to ask about this
+order.
+
 Whenever the feature touches a system it does not own, ask whether it
 changes anything there, and what marks an input as handled. When its
 inputs wait in such a system, such as a topic, an object store or
@@ -328,7 +355,13 @@ before any story is drafted:
   input's id and no copy of the input's content. Offer that option as
   the recommended one; an option that copies the content is offered
   only for something that system cannot give back, and is named as
-  such. While the owner is away it goes in the design, except that
+  such. With no copy, the event naming the input's id is stored
+  before any write the run makes, such as an output file, and before
+  the input is acknowledged (design-for-replay#act-only-after-stored).
+  The design states that a stop after that store is redone by fetching
+  the input again by its id: a second run finds the stored event and
+  fetches the input to act on that event, deciding nothing again.
+  While the owner is away it goes in the design, except that
   when the open acknowledgement itself could delete or edit the input,
   the no-copy answer depends on it, and the entry for the
   acknowledgement says so. Never settle a copy in the design while the
@@ -347,7 +380,19 @@ before any story is drafted:
 
 The clock question names a zone only when the rule says a zone
 matters; the design says once which zone and why, from the prompt or
-the owner, never from a guess at where the owner is.
+the owner, never from a guess at where the owner is. Take the first
+that fits:
+
+1. The first prompt names no result read against one person's or one
+   place's clock: the answer is UTC, recorded with
+   utc-computation#utc-unless-one-zone-matters. Do not ask the owner
+   for a zone, and with the owner away list no clock or zone entry.
+2. The prompt names a result read against one place's clock, such as
+   a deadline that falls at the end of a named business's day, and
+   gives that zone: the zone is an input, from the prompt's words.
+3. The prompt names such a result and gives no zone: ask for the zone
+   without naming one, or while the owner is away list it as open. Name
+   no place the prompt did not give.
 
 The same question also calls out a time that enters with a zone a
 reader may care about, such as a photo's capture time from the
@@ -359,12 +404,18 @@ the first that fits:
 
 1. The first prompt states whether the offset is kept: record its
    words.
-2. The owner is present: put it in the same message as the clock
-   question. Say the time carries its source's own offset, which a
-   reader may care about, ask whether entries keep it, and cite the
-   file and step. Record the answer as the owner's.
+2. The owner is present: ask it as its own question, in the clock
+   question's message when there is one, and otherwise on its own when
+   UTC settled the clock. Ask it whenever the input brings a time with
+   its source's own offset, alongside or before any choice of which
+   time an entry carries, never after. Say the offset is one a reader
+   may care about, ask whether entries keep it, and cite the file and
+   step. An approved list of fields, a field you proposed, or the
+   owner's choice to carry another time does not answer it, unless the
+   owner says so. Record the answer as the owner's.
 3. The owner is away: list it under "Open decisions for the user" as
-   its own entry, apart from the clock entry. It holds the item, the
+   its own entry, apart from the clock question, which has no entry
+   when UTC settles it. It holds the item, the
    pick you would make, its reason and the stories that rest on it;
    the design reads "open, see Open decisions for the user".
 
