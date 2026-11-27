@@ -1,0 +1,1 @@
+Our library app needs a loan: a member picks a book and borrows it for three weeks, and staff can see every loan that is still open.

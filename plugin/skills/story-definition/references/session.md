@@ -228,6 +228,36 @@ An answer with no source is not recorded. Take these in order:
   from. The entry does not say which capability a piece of the
   feature belongs to when the jobs leave that open: only the prompt's
   words or the owner do.
+- domain-first-packaging#name-for-domain names each capability for the
+  domain it owns: a business noun for what it is responsible for.
+  Choosing that noun is this skill's step, below, and the entry is what
+  the recommendation is argued from. Every capability's name gets 3 to
+  5 candidates, unless the prompt itself uses one noun for
+  the capability and every use of it points at the same thing: then
+  state it as a numbered call. If the uses point at different things
+  (a thing and its measurement, a recipe and a dish, a track and a
+  recording, a team and its member), the exception does not apply. The
+  prompt's words decide, not your reading of them. Do not argue the
+  uses away.
+  - A numbered call has its number and source and no candidates. The
+    capability keeps the prompt's noun. A repeated word under step 4 is
+    never a reason to list candidates for the capability; any change
+    goes to the export name, per the step 4 paragraph, without asking
+    the owner for the package name.
+  - Candidates: for each, say what the name stresses and where it
+    misleads. Then recommend one, citing
+    domain-first-packaging#name-for-domain, and ask the owner to pick.
+    Err on giving options and why. Dig for names beyond the first one
+    that comes to mind.
+
+  With the owner present, the candidates and the recommendation are
+  the one numbered question for that noun. While the owner is away,
+  each such noun is its own entry under "Open decisions for the user"
+  holding the candidates, what each stresses and where it misleads,
+  and the recommendation; the design reads "open, see Open decisions
+  for the user" and holds no pick. Until a capability's name is
+  answered, never write a candidate as its name. In a later call,
+  refer to it by the thread number that introduced it.
 - boundary-communication#single-owner settles who owns a piece of
   shared data: one owner, chosen among the parts the design names. When
   one part decides what values are valid and accepts the changes and
