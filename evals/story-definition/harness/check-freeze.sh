@@ -132,7 +132,7 @@ EVALS_DIR="$EV" "$H/freeze.sh" "$CLEAN" > "$T/out" 2> "$T/err"
 check "a plugin with no hooks, servers or such manifest keys exits 0" "0" "$?"
 check "a plugin with no hooks, servers or such manifest keys is frozen" "$CLEAN" "$(cat "$EV/config/sources/bjornstack.commit")"
 
-CODE_NAMES=(hooks-dir mcp-file lsp-file manifest-hooks manifest-mcpServers manifest-lspServers md-frontmatter-hooks md-nested-frontmatter-hooks md-bang-backtick md-nested-bang-backtick md-crlf-frontmatter-hooks md-quoted-hooks-key md-spaced-hooks-key md-symlinked-dir md-symlinked-file md-upper-extension)
+CODE_NAMES=(hooks-dir mcp-file lsp-file manifest-hooks manifest-mcpServers manifest-lspServers md-frontmatter-hooks md-nested-frontmatter-hooks md-bang-backtick md-nested-bang-backtick md-crlf-frontmatter-hooks md-quoted-hooks-key md-spaced-hooks-key md-symlinked-dir md-symlinked-file md-upper-extension md-hex-escape-key md-unicode-escape-key md-flow-style md-unknown-key)
 code_hooks_dir() { mkdir -p "$R/plugin/hooks"; echo '{}' > "$R/plugin/hooks/hooks.json"; }
 code_mcp_file() { echo '{"mcpServers":{}}' > "$R/plugin/.mcp.json"; }
 code_lsp_file() { echo '{}' > "$R/plugin/.lsp.json"; }
@@ -149,6 +149,10 @@ code_md_spaced_hooks_key() { printf -- '---\nname: x\nhooks :\n  PreToolUse: []\
 code_md_symlinked_dir() { mkdir -p "$R/strategies/evil"; printf -- '---\nname: x\nhooks:\n  PreToolUse: []\n---\nbody\n' > "$R/strategies/evil/SKILL.md"; ln -s ../../strategies/evil "$R/plugin/skills/linked"; }
 code_md_symlinked_file() { printf -- '---\nname: x\nhooks:\n  PreToolUse: []\n---\nbody\n' > "$R/strategies/evil.md"; mkdir -p "$R/plugin/skills/l"; ln -s ../../../strategies/evil.md "$R/plugin/skills/l/SKILL.md"; }
 code_md_upper_extension() { mkdir -p "$R/plugin/skills/u"; printf -- '---\nname: x\nhooks:\n  PreToolUse: []\n---\nbody\n' > "$R/plugin/skills/u/SKILL.MD"; }
+code_md_hex_escape_key() { printf -- '---\nname: x\n"ho\\x6fks": []\n---\nbody\n' > "$R/plugin/skills/hx.md"; }
+code_md_unicode_escape_key() { printf -- '---\nname: x\n"ho\\u006fks": []\n---\nbody\n' > "$R/plugin/skills/un.md"; }
+code_md_flow_style() { printf -- '---\n{name: s, "hooks": []}\n---\nbody\n' > "$R/plugin/skills/fl.md"; }
+code_md_unknown_key() { printf -- '---\nname: x\nmodel: y\n---\nbody\n' > "$R/plugin/skills/uk.md"; }
 for N in "${CODE_NAMES[@]}"; do
   "code_${N//-/_}"
   g add -A; g commit -q -m "code $N"

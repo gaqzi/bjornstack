@@ -14,11 +14,12 @@
 # .mcp.json or .lsp.json, or whose plugin/.claude-plugin/plugin.json has a
 # hooks, mcpServers or lspServers key: the copy would run code in a session
 # that only means to read rules. So does any *.md in the copy (any case of
-# the extension, found through symlinks) that starts with --- and has the
-# word hooks, in any form, in its frontmatter (up to the next --- line; CRLF,
-# quoted keys and spaces before the colon included), or whose text holds an
-# exclamation mark followed by a backtick (a command the session would run).
-# The refusal exits 1 and names the file.
+# the extension, found through symlinks) whose frontmatter is not plain
+# "key: value" lines with the keys name, description, argument-hint and
+# disable-model-invocation (a quoted key, a backslash, a brace or the word
+# hooks refuses it), or whose text holds an exclamation mark followed by a
+# backtick (a command the session would run). The refusal exits 1 and names
+# the file.
 set -euo pipefail
 
 USAGE="usage: freeze.sh <commit>"
@@ -61,12 +62,18 @@ fi
 
 # Every markdown file in the copy, reached through symlinks too (the links
 # were checked above), whatever the case of its extension. CRs are dropped
-# first, so CRLF text reads as LF text. A frontmatter (from a first line of
-# --- to the next --- line, or to the end) that holds the word hooks, in any
-# case and any form (quoted, spaced, nested), refuses the freeze.
+# first, so CRLF text reads as LF text. A frontmatter runs from a first line
+# of --- to the next --- line, or to the end. It is an allow-list: every line
+# is a plain "key: value" whose key is one of the keys the plugin's markdown
+# files use today (name, description, argument-hint, disable-model-invocation),
+# or a continuation (a blank line, or one that starts with a space or tab).
+# Any other key, a quoted key, a backslash, a "{" or the word hooks anywhere
+# in the frontmatter refuses the freeze: YAML has more ways to spell a key
+# than a deny-list can name.
+FM_OK='^(name|description|argument-hint|disable-model-invocation):|^[ \t]|^$'
 while IFS= read -r -d '' F; do
-  if tr -d '\r' < "$F" | LC_ALL=C awk 'NR == 1 { if (substr($0, 1, 3) == "\357\273\277") $0 = substr($0, 4); if ($0 !~ /^---[ \t]*$/) exit; next } /^---[ \t]*$/ { exit } tolower($0) ~ /hooks/ { found = 1 } END { exit !found }'; then
-    echo "${F#$STAGE/} has the word hooks in its frontmatter, which would run code in an eval session; refusing $FULL" >&2; exit 1
+  if tr -d '\r' < "$F" | LC_ALL=C awk -v ok="$FM_OK" 'NR == 1 { if (substr($0, 1, 3) == "\357\273\277") $0 = substr($0, 4); if ($0 !~ /^---[ \t]*$/) exit; next } /^---[ \t]*$/ { exit } $0 !~ ok || $0 ~ /[{\\]/ || tolower($0) ~ /hooks/ { found = 1 } END { exit !found }'; then
+    echo "${F#$STAGE/} has a frontmatter line that is not a plain key from the allowed list, or holds a backslash, a brace or the word hooks; it would run code in an eval session; refusing $FULL" >&2; exit 1
   fi
   if grep -qF '!`' "$F"; then
     echo "${F#$STAGE/} holds a command (exclamation mark, backtick), which would run code in an eval session; refusing $FULL" >&2; exit 1
