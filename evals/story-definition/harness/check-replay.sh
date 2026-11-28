@@ -1993,7 +1993,7 @@ check "a corpus that cannot be read is not read as no answers: the matcher is ne
 # Scenario: recorded text is typed into a TUI that runs commands, so text the
 # TUI would take for a command is never typed. A segment of an answer, or the
 # first text, whose first line does not start with an ASCII letter, a digit or
-# one of ( " ' * - _ . , ? ` (after control characters and spaces or tabs are
+# one of ( " ' * - _ . , ` (after control characters and spaces or tabs are
 # stripped) is not typed and the owner is pulled in, shown the text. A
 # segment's leading blank lines are trimmed before it is typed, so only a
 # first text can start with an empty line. The first text's own
@@ -2033,7 +2033,8 @@ for cmd_row in \
   "a byte order mark|"$'\xef\xbb\xbf'"plan the thing|plan the thing" \
   "a zero-width space|"$'\xe2\x80\x8b'"plan the thing|plan the thing" \
   "a no-break space|"$'\xc2\xa0'"plan the thing|plan the thing" \
-  "&|&plan the thing|&plan the thing"; do
+  "&|&plan the thing|&plan the thing" \
+  "?!|?!x plan the thing|?!x plan the thing"; do
   what="${cmd_row%%|*}"; rest="${cmd_row#*|}"; seg="${rest%%|*}"; shown="${rest#*|}"
   fresh
   one_answer_run "$T/recorded/cmd.jsonl" "$P1_TURN" "$seg"
@@ -2067,7 +2068,8 @@ for first_row in \
   "a zero-width space|"$'\xe2\x80\x8b'"plan the thing|plan the thing" \
   "a no-break space|"$'\xc2\xa0'"plan the thing|plan the thing" \
   "an empty first line|"$'\n'"plan the thing|plan the thing" \
-  "&|&plan the thing|&plan the thing"; do
+  "&|&plan the thing|&plan the thing" \
+  "?!|?!x plan the thing|?!x plan the thing"; do
   what="${first_row%%|*}"; rest="${first_row#*|}"; first="${rest%%|*}"; shown="${rest#*|}"
   fresh
   one_text_run "$T/recorded/first.jsonl" "$first"

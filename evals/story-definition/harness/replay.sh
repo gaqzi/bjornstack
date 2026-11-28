@@ -250,8 +250,9 @@ first_line() {
 # starts_command <text>: true unless the text is plain enough to type. It is
 # plain when the first character of its first line, after control characters
 # and leading spaces and tabs are stripped, is an ASCII letter, an ASCII digit
-# or one of ( " ' * - _ . , ? and a backtick. None of these starts a mode of
-# the TUI. Anything else is not typed: "!", "/", "#" and "&" start a command or
+# or one of ( " ' * - _ . , and a backtick. None of these starts a mode of
+# the TUI. "?" is left out: it may open the shortcut help, and the next
+# character would land in an empty box. Anything else is not typed: "!", "/", "#" and "&" start a command or
 # mode, and a BOM, a zero-width space, a no-break space or an empty first line
 # could hide one, so the owner types it.
 starts_command() {
@@ -259,7 +260,7 @@ starts_command() {
   line="$(first_line "$1")"
   line="${line#"${line%%[! $'\t']*}"}"
   case "$line" in
-    [A-Za-z0-9]* | '('* | '"'* | "'"* | '*'* | '-'* | '_'* | '.'* | ','* | '?'* | '`'*) return 1 ;;
+    [A-Za-z0-9]* | '('* | '"'* | "'"* | '*'* | '-'* | '_'* | '.'* | ','* | '`'*) return 1 ;;
   esac
   return 0
 }
