@@ -12,7 +12,10 @@
 #   check_under <option> <file> <allowed>
 #                                   refuse a --prompt or --stand-in file that
 #                                   does not resolve under <allowed>, a
-#                                   directory path ending in '/'
+#                                   directory path ending in '/', or has
+#                                   more than one hard link (its content
+#                                   could change through the other name)
+#   link_count <file>               the file's hard-link count (macOS or Linux)
 
 resolve_file() {
   local P="$1" D
@@ -44,11 +47,19 @@ check_arm() {
   esac
 }
 
+link_count() {
+  stat -f %l "$1" 2>/dev/null || stat -c %h "$1"
+}
+
 check_under() {
-  local RESOLVED
+  local RESOLVED LINKS
   RESOLVED="$(resolve_file "$2")"
   case "$RESOLVED" in
     "$3"*) ;;
     *) echo "$USAGE" >&2; echo "refused: $1 '$2' resolves to $RESOLVED, outside $3" >&2; exit 2 ;;
   esac
+  if [ -f "$RESOLVED" ]; then
+    LINKS="$(link_count "$RESOLVED")"
+    [ "$LINKS" -le 1 ] || { echo "$USAGE" >&2; echo "refused: $1 '$2' has $LINKS hard links" >&2; exit 2; }
+  fi
 }

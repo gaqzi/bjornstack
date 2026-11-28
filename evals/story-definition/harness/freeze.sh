@@ -12,8 +12,11 @@
 # A symlink, to a file or a directory, that is dangling or whose target lies
 # outside the copy refuses the freeze. So does a plugin/ that holds hooks/,
 # .mcp.json or .lsp.json, or whose plugin/.claude-plugin/plugin.json has a
-# hooks or mcpServers key: the copy would run code in a session that only
-# means to read rules.
+# hooks, mcpServers or lspServers key: the copy would run code in a session
+# that only means to read rules. So does any plugin/**/*.md that starts with
+# --- and has a hooks: key in its frontmatter (up to the next --- line), or
+# whose text holds an exclamation mark followed by a backtick (a command
+# the session would run). The refusal exits 1 and names the file.
 set -euo pipefail
 
 USAGE="usage: freeze.sh <commit>"
@@ -49,10 +52,19 @@ for F in hooks .mcp.json .lsp.json; do
 done
 MANIFEST="$STAGE/plugin/.claude-plugin/plugin.json"
 if [ -f "$MANIFEST" ]; then
-  BAD=$(jq -r '[("hooks", "mcpServers") as $k | select(has($k)) | $k] | join(", ")' "$MANIFEST") \
+  BAD=$(jq -r '[("hooks", "mcpServers", "lspServers") as $k | select(has($k)) | $k] | join(", ")' "$MANIFEST") \
     || { echo "plugin/.claude-plugin/plugin.json is unreadable or not a JSON object; refusing the freeze" >&2; exit 1; }
   [ -z "$BAD" ] || { echo "plugin/.claude-plugin/plugin.json has $BAD, which would run code in an eval session; refusing the freeze" >&2; exit 1; }
 fi
+
+while IFS= read -r -d '' F; do
+  if [ "$(head -n 1 "$F")" = "---" ] && awk 'NR == 1 { next } /^---[[:space:]]*$/ { exit } /^hooks:/ { found = 1 } END { exit !found }' "$F"; then
+    echo "${F#$STAGE/} has a hooks: key in its frontmatter, which would run code in an eval session; refusing $FULL" >&2; exit 1
+  fi
+  if grep -qF '!`' "$F"; then
+    echo "${F#$STAGE/} holds a command (exclamation mark, backtick), which would run code in an eval session; refusing $FULL" >&2; exit 1
+  fi
+done < <(find "$STAGE/plugin" -type f -name '*.md' -print0)
 
 rm -rf "$SRC/bjornstack"
 mv "$STAGE" "$SRC/bjornstack"

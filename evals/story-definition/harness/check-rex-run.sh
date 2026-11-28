@@ -309,6 +309,10 @@ for outside in "$T/outside.txt" "$T/repo/README.txt" "$T/repo/evals/other/p.txt"
   refuse_option "--prompt $outside" --prompt "$outside"
   refuse_option "--stand-in $outside" --prompt "$SD/my prompt.txt" --stand-in "$outside"
 done
+echo "a prompt" > "$SD/hard source.txt"
+ln "$SD/hard source.txt" "$SD/hard prompt.txt"
+refuse_option "--prompt with a hard-linked file" --prompt "$SD/hard prompt.txt"
+refuse_option "--stand-in with a hard-linked file" --prompt "$SD/my standin.txt" --stand-in "$SD/hard prompt.txt"
 run refopt --arm plain-name_1.x --prompt "$SD/my prompt.txt" --stand-in "$SD/my standin.txt"
 check "a plain --arm name and --prompt and --stand-in files under evals/story-definition/ pass to run.sh" "0 yes" \
   "$? $([ -e "$T/stub.log.runsh" ] && echo yes || echo no)"
@@ -391,7 +395,7 @@ ASSISTANT='{"type":"assistant","uuid":"a1","parentUuid":"u2","message":{"role":"
 TURN='{"type":"system","uuid":"s1","parentUuid":"a1","subtype":"turn_duration","durationMs":5}'
 ANSWER='{"type":"user","uuid":"u3","parentUuid":"s1","message":{"role":"user","content":"answer"}}'
 EXITREC='{"type":"user","uuid":"u4","parentUuid":"u3","message":{"role":"user","content":"<command-name>/exit</command-name>\n<command-message>exit</command-message>\n<command-args></command-args>"}}'
-printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$ANSWER" "$EXITREC" > "$FX/good.jsonl"
+printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$ANSWER" "$EXITREC" > "$FX/11111111-2222-4333-8444-555555555555.jsonl"
 printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$EXITREC" > "$FX/no-owner.jsonl"
 # The only owner message is an abandoned sibling: the chain from the last record runs past it.
 DRAFT='{"type":"user","uuid":"d1","parentUuid":"s1","message":{"role":"user","content":"an abandoned draft"}}'
@@ -405,10 +409,10 @@ SUMMARYREC='{"type":"user","isCompactSummary":true,"uuid":"cs1","parentUuid":"cb
 AFTER_ASSISTANT='{"type":"assistant","uuid":"a2","parentUuid":"cs1","message":{"role":"assistant","content":[{"type":"text","text":"next question?"}]}}'
 AFTER_EXIT='{"type":"user","uuid":"u9","parentUuid":"a2","message":{"role":"user","content":"<command-name>/exit</command-name>\n<command-message>exit</command-message>\n<command-args></command-args>"}}'
 # The only owner message sits before the boundary.
-printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$ANSWER" "${BOUNDARY/LOGICAL/u3}" "$SUMMARYREC" "$AFTER_ASSISTANT" "$AFTER_EXIT" > "$FX/compacted.jsonl"
+printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$ANSWER" "${BOUNDARY/LOGICAL/u3}" "$SUMMARYREC" "$AFTER_ASSISTANT" "$AFTER_EXIT" > "$FX/22222222-3333-4444-8555-666666666666.jsonl"
 # The only string user record after the boundary is the summary.
 printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "${BOUNDARY/LOGICAL/s1}" "$SUMMARYREC" "$AFTER_ASSISTANT" "$AFTER_EXIT" > "$FX/compacted-summary-only.jsonl"
-GOOD="$FX/good.jsonl"
+GOOD="$FX/11111111-2222-4333-8444-555555555555.jsonl"
 REPLAY_USAGE="usage: rex-run.sh --replay <run-name> <transcript>"
 # abspath <path>: the physical form of an absolute path, or the path itself when it is relative.
 abspath() { case "$1" in /*) echo "$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")" ;; *) echo "$1" ;; esac; }
@@ -425,11 +429,11 @@ check "replay.sh gets the run name and the transcript, EVALS_DIR and REX_SESSION
 check "--replay waits, then closes the tab once" "new wait close" "$(calls)"
 check "a successful --replay prints no tab output" "" "$(cat "$T/err")"
 
-(cd "$FX" && run --replay rp2 good.jsonl)
+(cd "$FX" && run --replay rp2 11111111-2222-4333-8444-555555555555.jsonl)
 check "--replay turns a relative transcript path into an absolute one" "$(abspath "$GOOD")" \
   "$(abspath "$(sed -n 's/^arg=//;2p' "$T/stub.log.replaysh")")"
 
-run --replay rpc "$FX/compacted.jsonl"
+run --replay rpc "$FX/22222222-3333-4444-8555-666666666666.jsonl"
 check "--replay accepts a compacted transcript whose only owner message sits before the boundary" "0 $EV/runs/rpc" "$? $(cat "$T/out")"
 
 STUB_UNSETTLED="unsettled: id-7 id-9" run --replay rpu "$GOOD"
@@ -474,14 +478,31 @@ check "a refusal for a transcript with no owner message says so" "1" "$(grep -c 
 
 # Only transcripts under <eval home>/runs/ or ~/.claude/projects/ are replayed.
 mkdir -p "$EV/runs/src-run" "$T/elsewhere" "$EV/live/src-live"
-cp "$GOOD" "$EV/runs/src-run/good.jsonl"
+cp "$GOOD" "$EV/runs/src-run/transcript.jsonl"
 cp "$GOOD" "$T/elsewhere/good.jsonl"
 cp "$GOOD" "$EV/live/src-live/good.jsonl"
 cp "$GOOD" "$T/home/.claude/elsewhere-good.jsonl"
 ln -s "$T/elsewhere" "$FX/linkdir"
-run --replay rp6 "$EV/runs/src-run/good.jsonl"
-check "--replay accepts a transcript under <eval home>/runs/" "0 $EV/runs/rp6" "$? $(cat "$T/out")"
+# Only the two exact shapes: <eval home>/runs/<name>/transcript.jsonl and
+# ~/.claude/projects/<slug>/<uuid>.jsonl, each at exactly that depth.
+mkdir -p "$EV/runs/x/workdir" "$T/home/.claude/projects/a/b"
+cp "$GOOD" "$EV/runs/x/workdir/t.jsonl"
+cp "$GOOD" "$EV/runs/x/other.jsonl"
+cp "$GOOD" "$EV/runs/transcript.jsonl"
+cp "$GOOD" "$T/home/.claude/projects/x.jsonl"
+cp "$GOOD" "$T/home/.claude/projects/a/b/c.jsonl"
+cp "$GOOD" "$FX/notauuid.jsonl"
+run --replay rp6 "$EV/runs/src-run/transcript.jsonl"
+check "--replay accepts <eval home>/runs/<name>/transcript.jsonl" "0 $EV/runs/rp6" "$? $(cat "$T/out")"
+run --replay rp8 "$GOOD"
+check "--replay accepts ~/.claude/projects/<slug>/<uuid>.jsonl" "0 $EV/runs/rp8" "$? $(cat "$T/out")"
 refuse_replay "with a transcript outside the eval home and ~/.claude/projects/" "refused:" rp7 "$T/elsewhere/good.jsonl"
+refuse_replay "with a transcript nested below runs/<name>/ (runs/x/workdir/t.jsonl)" "refused:" rp7 "$EV/runs/x/workdir/t.jsonl"
+refuse_replay "with runs/<name>/other.jsonl" "refused:" rp7 "$EV/runs/x/other.jsonl"
+refuse_replay "with runs/transcript.jsonl" "refused:" rp7 "$EV/runs/transcript.jsonl"
+refuse_replay "with projects/x.jsonl" "refused:" rp7 "$T/home/.claude/projects/x.jsonl"
+refuse_replay "with projects/a/b/c.jsonl" "refused:" rp7 "$T/home/.claude/projects/a/b/c.jsonl"
+refuse_replay "with projects/<slug>/notauuid.jsonl" "refused:" rp7 "$FX/notauuid.jsonl"
 refuse_replay "with a transcript under <eval home>/live/" "refused:" rp7 "$EV/live/src-live/good.jsonl"
 refuse_replay "with a transcript that leaves ~/.claude/projects/ through .." "refused:" rp7 "$T/home/.claude/projects/../elsewhere-good.jsonl"
 refuse_replay "with a transcript that leaves ~/.claude/projects/ through a symlinked directory" "refused:" rp7 "$FX/linkdir/good.jsonl"

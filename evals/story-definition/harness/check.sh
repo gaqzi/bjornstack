@@ -88,6 +88,8 @@ if [ "$kind" = session ]; then
   text="Which orders count as yesterday's?"
   [ "$n" -le "${STUB_QUESTIONS:-2}" ] || text="Here are the stories."
   [ "$n" -ne 1 ] || echo "written by the session" > session-note.txt
+  # With STUB_SWAP ("path=target ...") the session replaces each path with a symlink to its target.
+  if [ "$n" -eq 1 ]; then for pair in ${STUB_SWAP:-}; do ln -sf "${pair#*=}" "${pair%%=*}"; done; fi
   # With STUB_REWRITE_COMMIT the session replaces the commit id mid-run.
   [ -z "${STUB_REWRITE_COMMIT:-}" ] || echo "$STUB_REWRITE_COMMIT" > "$EVALS_DIR/config/sources/bjornstack.commit"
   printf '{"type":"system","subtype":"init","model":"stub","plugins":%s}\n' "${STUB_PLUGINS:-$REAL_PLUGINS}"
@@ -325,6 +327,26 @@ mkdir -p "$SD/prompts/nested"
 echo "Nested prompt." > "$SD/prompts/nested/p.txt"
 run nested --prompt "$SD/prompts/nested/p.txt"
 check "a --prompt file in a subdirectory of evals/story-definition/ is accepted" "0" "$?"
+
+# Scenario: each input file is read once, right after its check. A symlink
+# swapped in during the session changes nothing the stand-in is given.
+echo "Swapped prompt text." > "$T/swap-prompt-target.txt"
+echo "Swapped stand-in text." > "$T/swap-standin-target.txt"
+echo "Add a CSV download button." > "$SD/swap-prompt.txt"
+echo "Answer as the owner of this app. Keep answers short." > "$SD/swap-standin.txt"
+STUB_SWAP="$SD/swap-prompt.txt=$T/swap-prompt-target.txt $SD/swap-standin.txt=$T/swap-standin-target.txt" \
+  STUB_QUESTIONS=2 STUB_ANSWERS=2 run swapped --prompt "$SD/swap-prompt.txt" --stand-in "$SD/swap-standin.txt"
+check "a swapped run exits 0" "0" "$?"
+check "stand-in calls carry the checked prompt and stand-in text, never the swapped text" "0 0 3 3" \
+  "$(grep -c 'Swapped prompt text' "$T"/stub.log.standin.? | awk -F: '{s+=$2} END {print s}') $(grep -c 'Swapped stand-in text' "$T"/stub.log.standin.? | awk -F: '{s+=$2} END {print s}') $(grep -c 'Add a CSV download button.' "$T"/stub.log.standin.? | awk -F: '{s+=$2} END {print s}') $(grep -c 'Answer as the owner of this app' "$T"/stub.log.standin.? | awk -F: '{s+=$2} END {print s}')"
+check "the swapped run's prompt.txt holds the checked prompt" "/bjornstack:story-definition Add a CSV download button." \
+  "$(head -n 1 "$T/evals/runs/swapped/prompt.txt")"
+
+# A file with more than one hard link is refused: its content can change through the other name.
+ln "$SD/prompt.txt" "$SD/prompt-hard.txt"
+ln "$SD/standin.txt" "$SD/standin-hard.txt"
+refused "--prompt with a hard-linked file" "hard-bad" --prompt "$SD/prompt-hard.txt"
+refused "--stand-in with a hard-linked file" "hard-bad" --prompt "$SD/prompt.txt" --stand-in "$SD/standin-hard.txt"
 
 # Usage errors.
 run u1 --stand-in "$SD/standin.txt"; check "--stand-in without --prompt exits 2" "2" "$?"

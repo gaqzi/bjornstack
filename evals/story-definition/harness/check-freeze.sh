@@ -132,12 +132,17 @@ EVALS_DIR="$EV" "$H/freeze.sh" "$CLEAN" > "$T/out" 2> "$T/err"
 check "a plugin with no hooks, servers or such manifest keys exits 0" "0" "$?"
 check "a plugin with no hooks, servers or such manifest keys is frozen" "$CLEAN" "$(cat "$EV/config/sources/bjornstack.commit")"
 
-CODE_NAMES=(hooks-dir mcp-file lsp-file manifest-hooks manifest-mcpServers)
+CODE_NAMES=(hooks-dir mcp-file lsp-file manifest-hooks manifest-mcpServers manifest-lspServers md-frontmatter-hooks md-nested-frontmatter-hooks md-bang-backtick md-nested-bang-backtick)
 code_hooks_dir() { mkdir -p "$R/plugin/hooks"; echo '{}' > "$R/plugin/hooks/hooks.json"; }
 code_mcp_file() { echo '{"mcpServers":{}}' > "$R/plugin/.mcp.json"; }
 code_lsp_file() { echo '{}' > "$R/plugin/.lsp.json"; }
 code_manifest_hooks() { echo '{"name":"bjornstack","hooks":{}}' > "$R/plugin/.claude-plugin/plugin.json"; }
 code_manifest_mcpServers() { echo '{"name":"bjornstack","mcpServers":{}}' > "$R/plugin/.claude-plugin/plugin.json"; }
+code_manifest_lspServers() { echo '{"name":"bjornstack","lspServers":{}}' > "$R/plugin/.claude-plugin/plugin.json"; }
+code_md_frontmatter_hooks() { printf -- '---\nname: x\nhooks:\n  PreToolUse: []\n---\nbody\n' > "$R/plugin/skills/h.md"; }
+code_md_nested_frontmatter_hooks() { mkdir -p "$R/plugin/skills/deep/er"; printf -- '---\nname: x\nhooks:\n  PreToolUse: []\n---\nbody\n' > "$R/plugin/skills/deep/er/h.md"; }
+code_md_bang_backtick() { printf 'Run !`ls` first.\n' > "$R/plugin/skills/b.md"; }
+code_md_nested_bang_backtick() { mkdir -p "$R/plugin/skills/deep/er"; printf 'Run !`ls` first.\n' > "$R/plugin/skills/deep/er/b.md"; }
 for N in "${CODE_NAMES[@]}"; do
   "code_${N//-/_}"
   g add -A; g commit -q -m "code $N"
@@ -148,6 +153,15 @@ for N in "${CODE_NAMES[@]}"; do
   check "a commit whose plugin holds $N leaves bjornstack.commit as it was" "$CLEAN" "$(cat "$EV/config/sources/bjornstack.commit")"
   g reset -q --hard "$CLEAN"
 done
+
+# A word 'hooks:' in a .md body, and a '!' next to a space and a backtick, are not code.
+mkdir -p "$R/plugin/skills/deep"
+printf -- '---\nname: x\n---\nhooks: are described here\nWow! `code` is fine.\n' > "$R/plugin/skills/deep/ok.md"
+g add -A; g commit -q -m "md control"
+CONTROL="$(g rev-parse HEAD)"
+EVALS_DIR="$EV" "$H/freeze.sh" "$CONTROL" > "$T/out" 2> "$T/err"
+check 'an .md with hooks: in the body and no bang-backtick freezes: exit 0' "0" "$?"
+check 'an .md with hooks: in the body and no bang-backtick is frozen' "$CONTROL" "$(cat "$EV/config/sources/bjornstack.commit")"
 
 # setup.sh freezes through freeze.sh, so the refusals above apply to it too.
 SETUP="$HERE/setup.sh"

@@ -11,8 +11,9 @@
 #   --stand-in     with --prompt: a second claude -p answers each question
 #                  as the owner, from this file's instruction, until DONE or 20
 #                  The --prompt and --stand-in files must resolve (pwd -P)
-#                  under the repo's evals/story-definition/; anything else is
-#                  refused with exit 2. Every claude call runs with
+#                  under the repo's evals/story-definition/ and have one hard
+#                  link; anything else is refused with exit 2. Each file is
+#                  read once, through its resolved path, right after that check. Every claude call runs with
 #                  --strict-mcp-config, and stand-in calls with
 #                  --no-session-persistence. The temp working directories
 #                  are removed when run.sh ends.
@@ -56,8 +57,16 @@ source "$HERE/inputs.sh"
 # --stand-in files must resolve under evals/story-definition/.
 check_arm "$ARM"
 ALLOWED="$(cd -P "$REPO" && pwd -P)/evals/story-definition/"
-[ -z "$PROMPT_FILE" ] || check_under --prompt "$PROMPT_FILE" "$ALLOWED"
-[ -z "$STAND_IN_FILE" ] || check_under --stand-in "$STAND_IN_FILE" "$ALLOWED"
+PROMPT_TEXT=
+STAND_IN_TEXT=
+if [ -n "$PROMPT_FILE" ]; then
+  check_under --prompt "$PROMPT_FILE" "$ALLOWED"
+  PROMPT_TEXT="$(cat "$(resolve_file "$PROMPT_FILE")" 2>/dev/null)" || { echo "cannot read $PROMPT_FILE" >&2; exit 1; }
+fi
+if [ -n "$STAND_IN_FILE" ]; then
+  check_under --stand-in "$STAND_IN_FILE" "$ALLOWED"
+  STAND_IN_TEXT="$(cat "$(resolve_file "$STAND_IN_FILE")" 2>/dev/null)" || { echo "cannot read $STAND_IN_FILE" >&2; exit 1; }
+fi
 
 E="${EVALS_DIR:-$REPO/tmp/evals}"
 OUT="$E/runs/$NAME"
@@ -83,13 +92,11 @@ if [ -n "$PROMPT_FILE" ]; then
   COMMIT_FILE="$E/config/sources/bjornstack.commit"
   [ -r "$COMMIT_FILE" ] || { echo "no $COMMIT_FILE; run freeze.sh or setup.sh first" >&2; exit 1; }
   [ -d "$FROZEN" ] || { echo "no frozen plugin at $FROZEN; run setup.sh first" >&2; exit 1; }
-  [ -r "$PROMPT_FILE" ] || { echo "cannot read $PROMPT_FILE" >&2; exit 1; }
-  [ -z "$STAND_IN_FILE" ] || [ -r "$STAND_IN_FILE" ] || { echo "cannot read $STAND_IN_FILE" >&2; exit 1; }
   mkdir -p "$OUT"
   cp "$COMMIT_FILE" "$OUT/plugin-commit.txt"
   cd "$WORK"
 
-  PROMPT="/bjornstack:story-definition $(cat "$PROMPT_FILE")"
+  PROMPT="/bjornstack:story-definition $PROMPT_TEXT"
   if [ "$AWAY" = 1 ]; then
     PROMPT="$PROMPT
 
@@ -147,14 +154,14 @@ The owner is away for this session"
     SID="$(jq -rs '[.[] | select(.type=="result")] | last | .session_id' "$TURN")"
     ANSWERS=0
     while [ "$ANSWERS" -lt 20 ]; do
-      ASK="$(cat "$STAND_IN_FILE")
+      ASK="$STAND_IN_TEXT
 
 You answer a Claude session's questions as the owner. Reply with only your
 answer. If the session's last turn asks the owner nothing, reply with the
 single word DONE.
 
 The prompt the session started from:
-$(cat "$PROMPT_FILE")
+$PROMPT_TEXT
 
 The session's last turn:
 $(last_text "$TURN")"

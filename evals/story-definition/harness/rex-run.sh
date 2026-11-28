@@ -21,8 +21,11 @@
 # run.sh's options are checked before rex is called, with exit 2: --arm a plain
 # name (letters, digits, '.', '_' and '-', not starting with '-'), and --prompt
 # and --stand-in files that resolve (pwd -P) under the repo's evals/story-definition/.
-# --replay accepts only a transcript that resolves under <eval home>/runs/ or
-# ~/.claude/projects/; anything else is refused with exit 2.
+# --replay accepts only a transcript that, once resolved, is exactly
+# <eval home>/runs/<plain name>/transcript.jsonl or
+# ~/.claude/projects/<slug>/<uuid>.jsonl (uuid: 8-4-4-4-12 hex digits);
+# anything else is refused with exit 2. --prompt and --stand-in files with
+# more than one hard link are refused too.
 # --freeze <commit> runs freeze.sh the same way instead, in the harness
 # directory, with the full id of a commit of the repo holding this script
 # (anything else is refused with exit 2 before rex is called), and prints
@@ -101,8 +104,16 @@ if [ "$REPLAYING" = 1 ]; then
   RESOLVED="$(resolve_file "$2")"
   EVAL_RUNS="$(cd -P "$E" && pwd -P)/runs/"
   CLAUDE_PROJECTS="$(cd -P "$HOME/.claude/projects" 2>/dev/null && pwd -P || echo /nonexistent)/"
+  UUID='[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'
+  REL=
   case "$RESOLVED" in
-    "$EVAL_RUNS"* | "$CLAUDE_PROJECTS"*) ;;
+    "$EVAL_RUNS"*) REL="${RESOLVED#"$EVAL_RUNS"}"
+      [[ "$REL" =~ ^[A-Za-z0-9._-]+/transcript\.jsonl$ ]] || REL= ;;
+    "$CLAUDE_PROJECTS"*) REL="${RESOLVED#"$CLAUDE_PROJECTS"}"
+      [[ "$REL" =~ ^[A-Za-z0-9._-]+/$UUID\.jsonl$ ]] || REL= ;;
+  esac
+  case "$REL" in
+    ?*) ;;
     *) echo "$REPLAY_USAGE" >&2; echo "refused: transcript '$2' is not under $EVAL_RUNS or ~/.claude/projects/" >&2; exit 2 ;;
   esac
 fi
