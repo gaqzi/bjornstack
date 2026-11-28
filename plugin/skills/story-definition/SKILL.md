@@ -68,7 +68,7 @@ With the owner present, everything you put to them carries a thread
 number: t1, t2, and so on, one sequence for the whole session, questions
 and calls alike. A number is never reused or renumbered. The owner
 answers with "t4: ..." and can give direction on any thread, a call
-included, not only answer a question. There are two kinds:
+included, not only answer a question. There are two kinds of thread:
 
 - **A question** is a decision the first prompt, the code and the rules
   leave open. Give it its number, the options you see and the one you
@@ -100,19 +100,14 @@ included, not only answer a question. There are two kinds:
   `t7 (call): Ties sort by id, because t5 made ids the shown key; not by name: names repeat.`
   "t<n>: ..." from the owner rejects or reworks it; until then it
   stands on its source, not on their silence. Some items are asked
-  even when a rule seems to settle them, because the rule says only
-  the owner knows: the kept offset of a time that enters with its
-  source's own offset, asked whenever the input brings such a time,
-  before any choice of which time an entry carries, so it comes with
-  the first ask or call that names which time an entry carries, in
-  whichever phase that is, not later in the clock step
-  (references/session.md, the clock question). Such an item is a
-  question, never a call. A call never rests on an open thread: state
-  it after the answer, or make it a question.
-- **An item that comes up while drafting** is one of these two before
-  the draft relies on it: a call, stated with a number and a source, or
-  a question answered before any draft that rests on it is shown. Never
-  show a draft that rests on an open thread.
+  even when a rule seems to settle them, and are questions, never
+  calls; references/session.md, "Technical choices the design points
+  to", lists them and says when each is asked. A call never rests on
+  an open thread: state it after the answer, or make it a question.
+An item that comes up while drafting is one of these two before the
+draft relies on it: a call, stated with a number and a source, or a
+question answered before any draft that rests on it is shown. Never
+show a draft that rests on an open thread.
 
 That covers the Goal questions, the Goal's exit test, the
 verification asks, a draft you ask them to approve and the file name
@@ -126,7 +121,7 @@ handing it back make it "the session's pick, owner deferred". The next
 new thread takes the next number after every one used so far.
 
 While the owner is away nothing is asked: open decisions are listed
-under "Open decisions for the user" as before. The Goal sentence, an
+under "Open decisions for the user". The Goal sentence, an
 exit test, the approval of a draft and the name of the file are
 questions only with the owner present; while away they are no open
 decision and are listed nowhere.
@@ -189,7 +184,7 @@ question waits for phase 3, where it is answered from the prompt or a
 rule, asked of the owner, or listed under "Open decisions for the
 user". Do not propose a line that says the system does not do it, and
 do not offer one as "strike or keep". Lines that settle no such
-question are written and offered as before.
+question are written and offered.
 
 **Exit test:** the user can say, in one sentence, what is true after the
 feature ships that is not true today. Ask it as a numbered question and
