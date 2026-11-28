@@ -104,6 +104,7 @@ included, not only answer a question. There are two kinds of thread:
   calls; references/session.md, "Technical choices the design points
   to", lists them and says when each is asked. A call never rests on
   an open thread: state it after the answer, or make it a question.
+
 An item that comes up while drafting is one of these two before the
 draft relies on it: a call, stated with a number and a source, or a
 question answered before any draft that rests on it is shown. Never
