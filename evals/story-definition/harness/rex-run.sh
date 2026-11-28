@@ -12,7 +12,8 @@
 # holds every run's output (the token is in the Keychain); the owner makes it, nothing
 # here creates it, and a caller's EVALS_DIR is ignored.
 # Prints the run directory (<eval home>/runs/<run-name>) and
-# exits with run.sh's exit status. The tab closes when run.sh ends. When
+# exits with run.sh's exit status. After a successful --replay, when
+# $RUN_DIR/unsettled.txt exists, its content follows the run directory line. The tab closes when run.sh ends. When
 # run.sh fails, rex-run.sh first prints the tab's last 20 lines of output
 # and the status message to stderr. Nothing else is saved: this script
 # writes no file of its own, and the run directory holds what the run needs.
@@ -176,3 +177,4 @@ fi
 
 [ "$STATUS" -eq 0 ] || exit "$STATUS"
 if [ "$FREEZING" = 1 ]; then echo "$COMMIT"; else echo "$RUN_DIR"; fi
+if [ "$REPLAYING" = 1 ] && [ -f "$RUN_DIR/unsettled.txt" ]; then cat "$RUN_DIR/unsettled.txt"; fi

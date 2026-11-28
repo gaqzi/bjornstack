@@ -69,11 +69,16 @@ STUB
 chmod +x "$H/freeze.sh"
 
 # Stub replay.sh: records each argument on its own line, EVALS_DIR and
-# REX_SESSION; exits $STUB_EXIT and prints a failure line when it is not 0.
+# REX_SESSION; with $STUB_UNSETTLED it leaves that text in the run dir's
+# unsettled.txt (a settle failed); exits $STUB_EXIT and prints a failure line when it is not 0.
 cat > "$H/replay.sh" <<'STUB'
 #!/usr/bin/env bash
 { printf 'arg=%s\n' "$@"; echo "evals=$EVALS_DIR"; echo "session=${REX_SESSION-unset}"; } > "$STUB_LOG.replaysh"
 echo "replay $1 started"
+if [ -n "${STUB_UNSETTLED:-}" ]; then
+  mkdir -p "$EVALS_DIR/runs/$1"
+  printf '%s\n' "$STUB_UNSETTLED" > "$EVALS_DIR/runs/$1/unsettled.txt"
+fi
 if [ "${STUB_EXIT:-0}" -ne 0 ]; then
   for i in $(seq 1 30); do echo "line $i"; done
   echo "replay failed on $1" >&2
@@ -129,7 +134,7 @@ case "$sub" in
     fi
     if [ -n "$direct" ]; then
       # Directly started: no login shell, so only a minimal environment.
-      (cd "$cwd" && env -i PATH=/usr/bin:/bin STUB_LOG="$STUB_LOG" STUB_EXIT="${STUB_EXIT:-0}" STUB_MKRUN="${STUB_MKRUN:-}" "$@") > "$STUB_LOG.tab" 2>&1
+      (cd "$cwd" && env -i PATH=/usr/bin:/bin STUB_LOG="$STUB_LOG" STUB_EXIT="${STUB_EXIT:-0}" STUB_MKRUN="${STUB_MKRUN:-}" STUB_UNSETTLED="${STUB_UNSETTLED:-}" "$@") > "$STUB_LOG.tab" 2>&1
     else
       (cd "$cwd" && sh -c "$*") > "$STUB_LOG.tab" 2>&1
     fi
@@ -425,6 +430,13 @@ check "--replay turns a relative transcript path into an absolute one" "$(abspat
 
 run --replay rpc "$FX/compacted.jsonl"
 check "--replay accepts a compacted transcript whose only owner message sits before the boundary" "0 $EV/runs/rpc" "$? $(cat "$T/out")"
+
+STUB_UNSETTLED="unsettled: id-7 id-9" run --replay rpu "$GOOD"
+check "a replay with an unsettled.txt prints the run directory, then the file's content, and exits 0" \
+  "0 $EV/runs/rpu|unsettled: id-7 id-9" "$? $(paste -sd'|' "$T/out")"
+
+run --replay rpn "$GOOD"
+check "a replay without an unsettled.txt prints the run directory only" "$EV/runs/rpn" "$(cat "$T/out")"
 
 STUB_EXIT=3 run --replay rp3 "$GOOD"
 check "a failing replay exits with replay.sh's status" "3" "$?"
