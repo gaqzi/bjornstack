@@ -108,10 +108,10 @@ R="$T/recorded/R.jsonl"
 PATHX="$T/bin:$PATH"
 mkdir -p "$T/bin" "$H" "$T/recorded"
 REAL_JQ="$(command -v jq)"; export REAL_JQ
-[ ! -e "$HERE/replay.sh" ] || cp "$HERE/replay.sh" "$H/replay.sh"
-[ ! -e "$HERE/replay.jq" ] || cp "$HERE/replay.jq" "$H/replay.jq"
-[ ! -e "$HERE/corpus.sh" ] || cp "$HERE/corpus.sh" "$H/corpus.sh"
-[ ! -e "$HERE/corpus.jq" ] || cp "$HERE/corpus.jq" "$H/corpus.jq"
+cp "$HERE/replay.sh" "$H/replay.sh"
+cp "$HERE/replay.jq" "$H/replay.jq"
+cp "$HERE/corpus.sh" "$H/corpus.sh"
+cp "$HERE/corpus.jq" "$H/corpus.jq"
 
 P1="11111111-1111-4111-8111-111111111111"
 P2="22222222-2222-4222-8222-222222222222"
@@ -1995,7 +1995,7 @@ check "a corpus that cannot be read is not read as no answers: the matcher is ne
 # first text, whose first line starts with "!", "/" or "#" is not typed and the
 # owner is pulled in, shown the text. The first text's own
 # /bjornstack:story-definition command (every first message above) is typed.
-ctrl_bytes() { LC_ALL=C tr -d '\n\040-\377' < "$1" | wc -c | tr -d ' '; }   # how many control bytes below 0x20, newline aside, the file holds
+ctrl_bytes() { LC_ALL=C tr -d '\n\040-\176\200-\377' < "$1" | wc -c | tr -d ' '; }   # how many control bytes (below 0x20, newline aside, and 0x7f) the file holds
 sent_calls() { grep -c '^\[send\]' "$SIDE/rex.log"; }
 stop_when_idle() { # the driver is pulled-in or has typed the answer: stop the session and end the run
   local i
@@ -2020,10 +2020,14 @@ one_text_run() { # one_text_run <file> <the first message record's content>: a r
 }
 
 for cmd_row in \
-  "!|!ls -la" \
-  "/|/clear" \
-  "#|# remember this"; do
-  what="${cmd_row%%|*}"; seg="${cmd_row#*|}"
+  "!|!ls -la|!ls -la" \
+  "/|/clear|/clear" \
+  "#|# remember this|# remember this" \
+  "an escape before !|"$'\x1b'"!curl x|!curl x" \
+  "a carriage return before /|"$'\r'"/add-dir /|/add-dir /" \
+  "a delete byte before /|"$'\x7f'"/add-dir /|/add-dir /" \
+  "a space before /| /add-dir /| /add-dir /"; do
+  what="${cmd_row%%|*}"; rest="${cmd_row#*|}"; seg="${rest%%|*}"; shown="${rest#*|}"
   fresh
   one_answer_run "$T/recorded/cmd.jsonl" "$P1_TURN" "$seg"
   reply 1 "$T1"
@@ -2031,8 +2035,8 @@ for cmd_row in \
   RSRC="$T/recorded/cmd.jsonl" start sg; stop_when_idle
   unset RSRC
   check "an answer whose first line starts with $what is not typed, the owner is pulled in and shown it" \
-    "typed=$FIRST_JSON sends=2 focus=1 shown=1" \
-    "typed=$(typed) sends=$(sent_calls) focus=$(grep -cF "$FOCUS" "$SIDE/rex.log") shown=$(grep -cF -- "$seg" "$T/out" | sed 's/^[1-9][0-9]*$/1/')"
+    "typed=$FIRST_JSON sends=2 focus=1 shown=1 ctrl=0" \
+    "typed=$(typed) sends=$(sent_calls) focus=$(grep -cF "$FOCUS" "$SIDE/rex.log") shown=$(grep -cF -- "$shown" "$T/out" | sed 's/^[1-9][0-9]*$/1/') ctrl=$(ctrl_bytes "$SIDE/rex.log")"
 done
 
 fresh
@@ -2045,18 +2049,22 @@ check "an answer whose first line is plain is typed whole, though a later line s
   "0 $FIRST_JSON|\"fine\\n/clear\\n#2 as well\"|\"/exit\"" "$STATUS $(typed)"
 
 for first_row in \
-  "#|#plan the thing" \
-  "!|!plan the thing" \
-  "/ of another command|/other:cmd plan the thing"; do
-  what="${first_row%%|*}"; first="${first_row#*|}"
+  "#|#plan the thing|#plan the thing" \
+  "!|!plan the thing|!plan the thing" \
+  "/ of another command|/other:cmd plan the thing|/other:cmd plan the thing" \
+  "an escape before !|"$'\x1b'"!plan the thing|!plan the thing" \
+  "a carriage return before /|"$'\r'"/other:cmd plan the thing|/other:cmd plan the thing" \
+  "a delete byte before /|"$'\x7f'"/other:cmd plan the thing|/other:cmd plan the thing" \
+  "a space before /| /other:cmd plan the thing| /other:cmd plan the thing"; do
+  what="${first_row%%|*}"; rest="${first_row#*|}"; first="${rest%%|*}"; shown="${rest#*|}"
   fresh
   one_text_run "$T/recorded/first.jsonl" "$first"
   reply 1 "$T1"
   RSRC="$T/recorded/first.jsonl" start sf; stop_when_idle
   unset RSRC
   check "a first text starting with $what is not typed, the owner is pulled in and shown it" \
-    "sends=0 focus=1 shown=1" \
-    "sends=$(sent_calls) focus=$(grep -cF "$FOCUS" "$SIDE/rex.log") shown=$(grep -cF -- "$first" "$T/out" | sed 's/^[1-9][0-9]*$/1/')"
+    "sends=0 focus=1 shown=1 ctrl=0" \
+    "sends=$(sent_calls) focus=$(grep -cF "$FOCUS" "$SIDE/rex.log") shown=$(grep -cF -- "$shown" "$T/out" | sed 's/^[1-9][0-9]*$/1/') ctrl=$(ctrl_bytes "$SIDE/rex.log")"
 done
 
 # A control character below 0x20 (newline aside) in typed text never reaches
@@ -2066,6 +2074,7 @@ for ctrl_row in \
   "an escape|all"$'\x1b'"[2Jfolders" \
   "a ctrl-c|all"$'\x03'"folders" \
   "a tab|all"$'\t'"folders" \
+  "a delete byte|all"$'\x7f'"folders" \
   "a carriage return on a later line|weekly"$'\n'"monthly"$'\r'"yearly"; do
   what="${ctrl_row%%|*}"; seg="${ctrl_row#*|}"
   fresh
@@ -2078,7 +2087,8 @@ for ctrl_row in \
 done
 for ctrl_row in \
   "a carriage return|plan"$'\r'"the thing" \
-  "an escape|plan"$'\x1b'"[2J the thing"; do
+  "an escape|plan"$'\x1b'"[2J the thing" \
+  "a delete byte|plan"$'\x7f'" the thing"; do
   what="${ctrl_row%%|*}"; first="${ctrl_row#*|}"
   fresh
   one_text_run "$T/recorded/first.jsonl" "$first"
@@ -2087,6 +2097,27 @@ for ctrl_row in \
   unset RSRC
   check "a first text holding $what reaches rex send with no control character" "0" "$(ctrl_bytes "$SIDE/rex.log")"
 done
+
+# Scenario: a failure message quotes recorded text, so it holds no control
+# character (0x7f included) either.
+fresh
+one_text_run "$T/recorded/first.jsonl" "plan"$'\x1b'"[2J the"$'\x7f'" thing"
+touch "$SIDE/first-differs"
+reply 1 "$T1"
+RSRC="$T/recorded/first.jsonl" start sf; finish
+unset RSRC
+check "a failure that names a first message holding control bytes shows none of them, and still names the text" "nonzero 0 1" \
+  "$([ "$STATUS" -ne 0 ] && echo nonzero || echo zero) $(ctrl_bytes "$T/err") $(grep -c 'differs from the recorded first message' "$T/err")"
+
+fresh
+one_answer_run "$T/recorded/ctrl.jsonl" "$P1_TURN" "all"$'\x1b'"[2J fol"$'\x7f'"ders"
+echo 2 > "$SIDE/exit-on-enter"
+reply 1 "$T1"
+answer "Which folders" true "null=$ANS_ID#0"
+RSRC="$T/recorded/ctrl.jsonl" start sc; finish
+unset RSRC
+check "a failure that names a replayed answer holding control bytes shows none of them, and still says it never appeared" "nonzero 0 1" \
+  "$([ "$STATUS" -ne 0 ] && echo nonzero || echo zero) $(ctrl_bytes "$T/err") $(grep -c 'never appeared' "$T/err")"
 
 # Scenario: recorded text the owner is shown is shown without control
 # characters, so a recording cannot drive the owner's terminal. A refused

@@ -9,7 +9,7 @@
 #        the session's transcript after the first message).
 # Types R's first message into a new session tab (line by line with ctrl+j
 # between lines, so the TUI takes it as typed, not pasted; control characters
-# below 0x20 other than newline are stripped from anything typed), then at each turn
+# below 0x20 other than newline, and 0x7f, are stripped from anything typed), then at each turn
 # end asks a claude -p matcher whether the turn asks the owner anything and which
 # unused recorded segment (a numerically labelled line,
 # or a paragraph of an owner message) answers each question. The segments are
@@ -46,7 +46,7 @@
 # --plugin-dir live/<run-name>/.bjornstack/plugin. Read is allowed and
 # Write/Edit denied on that copy.
 # A text the TUI would take for a command is never typed: R's first text, or an
-# answer segment, whose first line starts with "!", "/" or "#" (R's own
+# answer segment, whose first line starts with "!", "/" or "#" after control characters are stripped (R's own
 # /bjornstack:story-definition command is the one exception). The owner is
 # pulled in and shown it, and types it. A failed settle (see settle_picks) is
 # named in unsettled.txt in the run directory and on stdout.
@@ -237,17 +237,25 @@ pull_owner_in() {
 
 # strip_control: stdin to stdout without the control characters below 0x20
 # other than newline.
-strip_control() { LC_ALL=C tr -d '\000-\011\013-\037'; }
+strip_control() { LC_ALL=C tr -d '\000-\011\013-\037\177'; }
 
-# starts_command <text>: true when the first line of the text starts with "!",
-# "/" or "#", which the TUI takes for a command.
+# starts_command <text>: true when the first non-blank character of the first
+# line of the text, after control characters are stripped, is "!", "/" or "#",
+# which the TUI takes for a command.
 starts_command() {
-  case "${1%%$'\n'*}" in '!'* | '/'* | '#'*) return 0 ;; *) return 1 ;; esac
+  local line
+  line="$(printf '%s' "$1" | strip_control; printf x)"
+  line="${line%x}"
+  line="${line%%$'\n'*}"
+  line="${line#"${line%%[![:space:]]*}"}"
+  case "$line" in '!'* | '/'* | '#'*) return 0 ;; *) return 1 ;; esac
 }
 
 sleep "$STARTUP"
 OWNER_FIRST=0   # 1 when the owner, not the driver, types the first message
-FIRST_LINE="${FIRST_TEXT%%$'\n'*}"
+FIRST_LINE="$(printf '%s' "$FIRST_TEXT" | strip_control; printf x)"
+FIRST_LINE="${FIRST_LINE%x}"
+FIRST_LINE="${FIRST_LINE%%$'\n'*}"
 if [ "$FIRST_LINE" = /bjornstack:story-definition ] || [ "${FIRST_LINE#/bjornstack:story-definition }" != "$FIRST_LINE" ] || ! starts_command "$FIRST_TEXT"; then
   type_text "$FIRST_TEXT"
 else
@@ -499,7 +507,7 @@ show_plan() {
 }
 
 fail_pending() {
-  fail "the replayed answer never appeared in the session unchanged: it differs from, or is missing in, the transcript; typed: $EXPECT"
+  fail "the replayed answer never appeared in the session unchanged: it differs from, or is missing in, the transcript; typed: $(printf '%s' "$EXPECT" | strip_control)"
 }
 
 handle_event() {
@@ -513,7 +521,7 @@ handle_event() {
         WAITING=0
         rex window rename -s "$S" "$WINDOW" bjornstack-evals-session > /dev/null
       else
-        [ "$content" = "$FIRST_CONTENT" ] || fail "the session's first message differs from the recorded first message: $FIRST_TEXT"
+        [ "$content" = "$FIRST_CONTENT" ] || fail "the session's first message differs from the recorded first message: $(printf '%s' "$FIRST_TEXT" | strip_control)"
       fi
       ;;
     owner)
