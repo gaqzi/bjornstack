@@ -54,8 +54,8 @@ those is a different story.
   question when it enters, before the story that gives it is drafted.
 - With the owner present, ask before the first story is drafted, in
   the words "what does the actor do with it next?" naming the actor
-  and the output, and give your best guess as a pick. The answer is
-  the owner's call.
+  and the output, and give your best guess as a pick.
+  The owner decides it.
 - With the owner away, list it under "Open decisions for the user"
   with a pick, and draft the stories on the pick.
 - Record the answer in the epic's verification, or the story's Notes
@@ -206,9 +206,7 @@ Settle the question by the first of these that fits:
 Every recorded answer names where it came from: the rule entry as
 `<file>#<id>`, the first prompt's words, the owner, or, for an item a
 present owner handed back, "the session's pick, owner deferred". An
-answer with no source is a guess.
-
-An answer with no source is not recorded. Take these in order:
+answer with no source is a guess and is not recorded. Take these:
 
 - An assumption is not a source.
 - A rule entry is a source only for what its text says. Cite it for
@@ -343,14 +341,13 @@ step 4 before you show it. Write the qualified name, package then
 export, and check that the export repeats no word of the package name:
 the export adds what is new. When a word repeats, pick another export
 name first. Cite `strategies/domain-first-packaging.md`, step 4 as the
-source, and note in the design, on its own line, that the step has
-no id. It does not choose the package name; that stays with the
+source, as the next paragraph says for a rule with no id. It does not choose the package name; that stays with the
 rows above.
 
 Read each entry in the rule file before citing it; the table says where
-to look, not what the file says. When no id decides an item, cite the
-rule file and its section as the source, and note in the design, on
-its own line, that the rule has no id there. Add no id of your own. The files, by path from the plugin
+to look, not what the file says. When a rule has no id for an item, cite the
+file and its section as the source, and note on the item's own design
+line that the rule has no id there. Add no id of your own. The files, by path from the plugin
 root, each with its id marked as `**<id>.**`:
 
 - `strategies/domain-first-packaging.md`
@@ -390,7 +387,7 @@ Whenever the feature touches a system it does not own, ask whether it
 changes anything there, and what marks an input as handled. When its
 inputs wait in such a system, such as a topic, an object store or
 another team's API, also take design-for-replay's "Relying on another
-system" section, which has no id. Cite
+system" section, which has no id; cite it as the paragraph on rules with no id says. Cite
 design-for-replay#act-only-after-stored and
 design-for-replay#outside-effect-once-per-event for the decision, and
 name the section as context only; never cite the section, or the
@@ -454,8 +451,7 @@ that fits:
 The same question also calls out a time that enters with a zone a
 reader may care about, such as a photo's capture time from the
 camera. Settle it with strategies/utc-computation.md step 2 (the kept
-offset); that step has no id, so cite the file and the step and tell
-the owner so. Whether the feature keeps that offset is a business
+offset), citing it as the paragraph on rules with no id says. Whether the feature keeps that offset is a business
 choice only the owner knows, so rule entries do not settle it. Take
 the first that fits:
 
@@ -504,7 +500,7 @@ alternative. For any other choice, take the first that fits:
 Several calls that come up together are one message, each on its own
 line with its own number. Each call goes in the design, under the
 heading of the phase it belongs to, with its source and its runner-up
-when it has one. A "this rule has no id" remark, a size, a mark or any other detail
+when it has one. A size, a mark or any other detail
 goes on its own line in the design, never on the call line. While the owner is away no call is
 numbered and none is an open decision: each is in the design with its
 source, and an item with no source is listed as open instead.
@@ -531,9 +527,9 @@ strategies/thin-vertical-slice.md, in the order of the questions above (the firs
      layer, behind a flag.
   4. Otherwise it stays one slice.
 
-Each of these is stated as a call on one line without sizes or marks;
-the size reasons and slice marks go on their own line in the design,
-never in the call. Record in the design whether there is a slice 0, how the feature is
+Each of these that the prompt, the code or a rule settles is stated as a
+call (SKILL.md's call line); the size reasons and slice marks go on
+their own line in the design, never in the call. Record in the design whether there is a slice 0, how the feature is
 cut, who made each decision (the rule entry as `<file>#<id>`, the
 first prompt's words, the owner, or the session's pick, owner
 deferred), and, when the feature is split,
