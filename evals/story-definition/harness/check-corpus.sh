@@ -78,7 +78,7 @@ EV="$T/home/workspace/bjornstack-evals"
 PATHX="$T/bin:$PATH"
 mkdir -p "$T/bin" "$H" "$T/tmp" "$T/recorded"
 for f in corpus.sh corpus.jq replay.jq; do
-  [ ! -e "$HERE/$f" ] || cp "$HERE/$f" "$H/$f"
+  cp "$HERE/$f" "$H/$f"
 done
 
 check() { # check <description> <expected> <actual>
