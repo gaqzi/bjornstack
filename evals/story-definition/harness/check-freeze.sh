@@ -132,7 +132,7 @@ EVALS_DIR="$EV" "$H/freeze.sh" "$CLEAN" > "$T/out" 2> "$T/err"
 check "a plugin with no hooks, servers or such manifest keys exits 0" "0" "$?"
 check "a plugin with no hooks, servers or such manifest keys is frozen" "$CLEAN" "$(cat "$EV/config/sources/bjornstack.commit")"
 
-CODE_NAMES=(hooks-dir mcp-file lsp-file manifest-hooks manifest-mcpServers manifest-lspServers md-frontmatter-hooks md-nested-frontmatter-hooks md-bang-backtick md-nested-bang-backtick)
+CODE_NAMES=(hooks-dir mcp-file lsp-file manifest-hooks manifest-mcpServers manifest-lspServers md-frontmatter-hooks md-nested-frontmatter-hooks md-bang-backtick md-nested-bang-backtick md-crlf-frontmatter-hooks md-quoted-hooks-key md-spaced-hooks-key md-symlinked-dir md-symlinked-file md-upper-extension)
 code_hooks_dir() { mkdir -p "$R/plugin/hooks"; echo '{}' > "$R/plugin/hooks/hooks.json"; }
 code_mcp_file() { echo '{"mcpServers":{}}' > "$R/plugin/.mcp.json"; }
 code_lsp_file() { echo '{}' > "$R/plugin/.lsp.json"; }
@@ -143,6 +143,12 @@ code_md_frontmatter_hooks() { printf -- '---\nname: x\nhooks:\n  PreToolUse: []\
 code_md_nested_frontmatter_hooks() { mkdir -p "$R/plugin/skills/deep/er"; printf -- '---\nname: x\nhooks:\n  PreToolUse: []\n---\nbody\n' > "$R/plugin/skills/deep/er/h.md"; }
 code_md_bang_backtick() { printf 'Run !`ls` first.\n' > "$R/plugin/skills/b.md"; }
 code_md_nested_bang_backtick() { mkdir -p "$R/plugin/skills/deep/er"; printf 'Run !`ls` first.\n' > "$R/plugin/skills/deep/er/b.md"; }
+code_md_crlf_frontmatter_hooks() { printf -- '---\r\nname: x\r\nhooks:\r\n  PreToolUse: []\r\n---\r\nbody\r\n' > "$R/plugin/skills/c.md"; }
+code_md_quoted_hooks_key() { printf -- '---\nname: x\n"hooks":\n  PreToolUse: []\n---\nbody\n' > "$R/plugin/skills/q.md"; }
+code_md_spaced_hooks_key() { printf -- '---\nname: x\nhooks :\n  PreToolUse: []\n---\nbody\n' > "$R/plugin/skills/sp.md"; }
+code_md_symlinked_dir() { mkdir -p "$R/strategies/evil"; printf -- '---\nname: x\nhooks:\n  PreToolUse: []\n---\nbody\n' > "$R/strategies/evil/SKILL.md"; ln -s ../../strategies/evil "$R/plugin/skills/linked"; }
+code_md_symlinked_file() { printf -- '---\nname: x\nhooks:\n  PreToolUse: []\n---\nbody\n' > "$R/strategies/evil.md"; mkdir -p "$R/plugin/skills/l"; ln -s ../../../strategies/evil.md "$R/plugin/skills/l/SKILL.md"; }
+code_md_upper_extension() { mkdir -p "$R/plugin/skills/u"; printf -- '---\nname: x\nhooks:\n  PreToolUse: []\n---\nbody\n' > "$R/plugin/skills/u/SKILL.MD"; }
 for N in "${CODE_NAMES[@]}"; do
   "code_${N//-/_}"
   g add -A; g commit -q -m "code $N"
