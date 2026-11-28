@@ -17,6 +17,7 @@ FAILED=0
 SD="$T/repo/evals/story-definition"
 mkdir -p "$SD/harness" "$SD/prompts"
 cp "$HERE/run.sh" "$SD/harness/run.sh"
+cp "$HERE/inputs.sh" "$SD/harness/inputs.sh"
 git -C "$T/repo" init -q
 
 mkdir -p "$T/bin" "$T/tmpd" "$T/evals/config/sources/bjornstack/plugin" "$T/evals/config/sources/bjornstack/strategies" \
@@ -330,5 +331,17 @@ run u1 --stand-in "$SD/standin.txt"; check "--stand-in without --prompt exits 2"
 run u2 --prompt "$SD/prompt.txt" --stand-in "$SD/standin.txt" --owner-away; check "--stand-in with --owner-away exits 2" "2" "$?"
 check "usage line is printed without --prompt" "1" "$(grep -c '^usage: run.sh' "$T/u1.out")"
 check "usage line is printed with --owner-away" "1" "$(grep -c '^usage: run.sh' "$T/u2.out")"
+
+# run.sh shares its input checks: it sources inputs.sh and defines no resolve_file of its own.
+check "run.sh sources inputs.sh from its own directory" "1" \
+  "$(grep -v '^[[:space:]]*#' "$HERE/run.sh" | grep -cE '^[[:space:]]*(source|\.) +"\$HERE/inputs\.sh"')"
+check "run.sh defines no resolve_file of its own" "0" \
+  "$(grep -cE '^[[:space:]]*(resolve_file[[:space:]]*\(\)|function +resolve_file)' "$HERE/run.sh")"
+
+# A prompt under a directory that does not exist is refused naming the path given, not "/<name>".
+run missing-dir --prompt "$SD/nodir/p.txt"; rc=$?
+check "a --prompt under a missing directory exits 2" "2" "$rc"
+check "a --prompt under a missing directory is refused naming the real path" "1" \
+  "$(grep -c "^refused: --prompt '$SD/nodir/p.txt' resolves to $SD/nodir/p.txt, outside " "$T/missing-dir.out")"
 
 exit "$FAILED"

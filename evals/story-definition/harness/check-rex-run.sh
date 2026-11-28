@@ -24,6 +24,7 @@ EV="$T/home/workspace/bjornstack-evals"   # the default eval home under the temp
 mkdir -p "$T/bin" "$H" "$EV"
 EVP="$(cd "$EV" && pwd -P)"   # run.sh reports its physical directory
 cp "$HERE/rex-run.sh" "$H/rex-run.sh"
+cp "$HERE/inputs.sh" "$H/inputs.sh"
 # replay.jq sits beside rex-run.sh, which reads it for the owner-message check.
 cp "$HERE/replay.jq" "$H/replay.jq"
 # Prompt and stand-in files rex-run.sh may pass on live under the repo's evals/story-definition/.
@@ -594,5 +595,17 @@ check "--freeze calls no corpus.sh" "0" "$(corpus_calls)"
 
 check "the header comment of rex-run.sh does not mention the corpus" "0" \
   "$(sed -n '/^set -euo/q;p' "$HERE/rex-run.sh" | grep -ci 'corpus')"
+
+# rex-run.sh shares its input checks: it sources inputs.sh and defines no resolve_file of its own.
+check "rex-run.sh sources inputs.sh from its own directory" "1" \
+  "$(grep -v '^[[:space:]]*#' "$HERE/rex-run.sh" | grep -cE '^[[:space:]]*(source|\.) +"\$HERE/inputs\.sh"')"
+check "rex-run.sh defines no resolve_file of its own" "0" \
+  "$(grep -cE '^[[:space:]]*(resolve_file[[:space:]]*\(\)|function +resolve_file)' "$HERE/rex-run.sh")"
+
+# A prompt under a directory that does not exist is refused naming the path given, not "/<name>".
+run refopt --prompt "$SD/nodir/p.txt"; rc=$?
+check "a --prompt under a missing directory exits 2" "2" "$rc"
+check "a --prompt under a missing directory is refused naming the real path" "1" \
+  "$(grep -c "^refused: --prompt '$SD/nodir/p.txt' resolves to $SD/nodir/p.txt, outside " "$T/err")"
 
 exit "$FAILED"

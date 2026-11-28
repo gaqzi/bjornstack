@@ -48,35 +48,16 @@ if [ -n "$STAND_IN_FILE" ] && { [ -z "$PROMPT_FILE" ] || [ "$AWAY" = 1 ]; }; the
   exit 2
 fi
 
-REPO="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+REPO="$(git -C "$HERE" rev-parse --show-toplevel)"
+source "$HERE/inputs.sh"
 
-# An --arm value is a plain name: it becomes a path under config/.
-case "$ARM" in
-  "" | . | .. | -* | *[!A-Za-z0-9._-]*) echo "$USAGE" >&2; echo "refused: --arm '$ARM' is not a plain name" >&2; exit 2 ;;
-esac
-
-# Resolve a file's path through every symlink, as freeze.sh does.
-resolve_file() {
-  local P="$1" D
-  while [ -L "$P" ]; do
-    D="$(cd -P "$(dirname "$P")" && pwd -P)"
-    P="$(readlink "$P")"
-    case "$P" in /*) ;; *) P="$D/$P" ;; esac
-  done
-  echo "$(cd -P "$(dirname "$P")" 2>/dev/null && pwd -P)/$(basename "$P")"
-}
-# Refuse a prompt or stand-in file that does not resolve under evals/story-definition/.
-require_under_story_definition() { # <option> <file>
-  local RESOLVED ALLOWED
-  ALLOWED="$(cd -P "$REPO" && pwd -P)/evals/story-definition/"
-  RESOLVED="$(resolve_file "$2")"
-  case "$RESOLVED" in
-    "$ALLOWED"*) ;;
-    *) echo "$USAGE" >&2; echo "refused: $1 '$2' resolves to $RESOLVED, outside $ALLOWED" >&2; exit 2 ;;
-  esac
-}
-[ -z "$PROMPT_FILE" ] || require_under_story_definition --prompt "$PROMPT_FILE"
-[ -z "$STAND_IN_FILE" ] || require_under_story_definition --stand-in "$STAND_IN_FILE"
+# --arm is a plain name: it becomes a path under config/. --prompt and
+# --stand-in files must resolve under evals/story-definition/.
+check_arm "$ARM"
+ALLOWED="$(cd -P "$REPO" && pwd -P)/evals/story-definition/"
+[ -z "$PROMPT_FILE" ] || check_under --prompt "$PROMPT_FILE" "$ALLOWED"
+[ -z "$STAND_IN_FILE" ] || check_under --stand-in "$STAND_IN_FILE" "$ALLOWED"
 
 E="${EVALS_DIR:-$REPO/tmp/evals}"
 OUT="$E/runs/$NAME"

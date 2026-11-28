@@ -24,7 +24,8 @@ R="$T/repo"
 H="$R/evals/story-definition/harness"
 EV="$T/evals"
 mkdir -p "$H"
-cp "$HERE/freeze.sh" "$H/freeze.sh" 2>/dev/null
+cp "$HERE/freeze.sh" "$H/freeze.sh"
+cp "$HERE/inputs.sh" "$H/inputs.sh"
 git -C "$R" init -q
 g() { git -C "$R" -c user.name=t -c user.email=t@example.com "$@"; }
 
@@ -152,5 +153,11 @@ done
 SETUP="$HERE/setup.sh"
 check "setup.sh calls freeze.sh for the bjornstack copy" "1" "$(grep -c 'freeze\.sh' "$SETUP" | awk '{print ($1 > 0) ? 1 : 0}')"
 check "setup.sh no longer runs its own git archive" "0" "$(grep -v '^[[:space:]]*#' "$SETUP" | grep -c 'git .*archive')"
+
+# freeze.sh shares its input checks: it sources inputs.sh and defines no resolve of its own.
+check "freeze.sh sources inputs.sh from its own directory" "1" \
+  "$(grep -v '^[[:space:]]*#' "$HERE/freeze.sh" | grep -cE '^[[:space:]]*(source|\.) +"\$HERE/inputs\.sh"')"
+check "freeze.sh defines no resolve of its own" "0" \
+  "$(grep -cE '^[[:space:]]*(resolve[[:space:]]*\(\)|function +resolve)' "$HERE/freeze.sh")"
 
 exit "$FAILED"

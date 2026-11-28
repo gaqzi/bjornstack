@@ -71,16 +71,7 @@ case "${1:-}" in
   "" | -* | */* | *[!A-Za-z0-9._-]*) echo "$USAGE" >&2; echo "refused: rex-run.sh runs only run.sh, freeze.sh and replay.sh" >&2; exit 2 ;;
 esac
 
-# Resolve a file's path through every symlink, as freeze.sh does.
-resolve_file() {
-  local P="$1" D
-  while [ -L "$P" ]; do
-    D="$(cd -P "$(dirname "$P")" && pwd -P)"
-    P="$(readlink "$P")"
-    case "$P" in /*) ;; *) P="$D/$P" ;; esac
-  done
-  echo "$(cd -P "$(dirname "$P")" 2>/dev/null && pwd -P)/$(basename "$P")"
-}
+source "$HERE/inputs.sh"
 
 # run.sh's options: refuse what run.sh would refuse, before rex is called.
 if [ "$FREEZING" = 0 ] && [ "$REPLAYING" = 0 ]; then
@@ -92,16 +83,10 @@ if [ "$FREEZING" = 0 ] && [ "$REPLAYING" = 0 ]; then
     VAL="${shift_args[$((i + 1))]:-}"
     case "$OPT" in
       --arm)
-        case "$VAL" in
-          "" | . | .. | -* | *[!A-Za-z0-9._-]*) echo "$USAGE" >&2; echo "refused: --arm '$VAL' is not a plain name" >&2; exit 2 ;;
-        esac
+        check_arm "$VAL"
         i=$((i + 1)) ;;
       --prompt | --stand-in)
-        RESOLVED="$(resolve_file "$VAL")"
-        case "$RESOLVED" in
-          "$ALLOWED_SD"*) ;;
-          *) echo "$USAGE" >&2; echo "refused: $OPT '$VAL' resolves to $RESOLVED, outside $ALLOWED_SD" >&2; exit 2 ;;
-        esac
+        check_under "$OPT" "$VAL" "$ALLOWED_SD"
         i=$((i + 1)) ;;
     esac
     i=$((i + 1))

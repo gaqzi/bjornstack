@@ -22,6 +22,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(git -C "$HERE" rev-parse --show-toplevel)"
 E="${EVALS_DIR:-$REPO/tmp/evals}"
 SRC="$E/config/sources"
+source "$HERE/inputs.sh"
 
 FULL="$(git -C "$REPO" rev-parse --verify --quiet "$1^{commit}")" \
   || { echo "$1 is not a commit of $REPO" >&2; exit 1; }
@@ -36,19 +37,6 @@ git -C "$REPO" archive "$FULL" .claude-plugin plugin strategies tenets | tar -x 
 # through it finds nothing or leaves the copy. A file link is resolved by its
 # own target (following chains), not by the directory it sits in.
 ROOT="$(cd -P "$STAGE" && pwd -P)"
-resolve() {
-  local P="$1" D
-  while [ -L "$P" ]; do
-    D="$(cd -P "$(dirname "$P")" && pwd -P)"
-    P="$(readlink "$P")"
-    case "$P" in /*) ;; *) P="$D/$P" ;; esac
-  done
-  if [ -d "$P" ]; then
-    (cd -P "$P" && pwd -P)
-  else
-    echo "$(cd -P "$(dirname "$P")" && pwd -P)/$(basename "$P")"
-  fi
-}
 while IFS= read -r L; do
   [ -e "$L" ] || { echo "dangling symlink in the frozen copy: ${L#$STAGE/}" >&2; exit 1; }
   T="$(resolve "$L")"
