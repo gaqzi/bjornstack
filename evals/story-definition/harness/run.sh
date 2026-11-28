@@ -4,11 +4,18 @@
 # Usage: run.sh <run-name> [--owner-away] [--arm <arm>] [--prompt <file> [--stand-in <file>]]
 #   --owner-away   append "The owner is away for this session"
 #   --arm          config dir under tmp/evals/config/ (default bjornstack-arm);
-#                  ignored with --prompt
+#                  a plain name of letters, digits, '.', '_' and '-', not
+#                  starting with '-'; ignored with --prompt
 #   --prompt       run any first prompt as claude -p --restricted --plugin-dir
 #                  <frozen copy> on the normal config (needs CLAUDE_CODE_OAUTH_TOKEN)
 #   --stand-in     with --prompt: a second claude -p answers each question
 #                  as the owner, from this file's instruction, until DONE or 20
+#                  The --prompt and --stand-in files must resolve (pwd -P)
+#                  under the repo's evals/story-definition/; anything else is
+#                  refused with exit 2. Every claude call runs with
+#                  --strict-mcp-config, and stand-in calls with
+#                  --no-session-persistence. The temp working directories
+#                  are removed when run.sh ends.
 # Output: tmp/evals/runs/<run-name>/ with transcript.jsonl, stderr.log,
 #         prompt.txt, model.txt, workdir/ and workdir-path.txt, and
 #         standin.jsonl with --stand-in and plugin-commit.txt (a copy of
@@ -42,12 +49,43 @@ if [ -n "$STAND_IN_FILE" ] && { [ -z "$PROMPT_FILE" ] || [ "$AWAY" = 1 ]; }; the
 fi
 
 REPO="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
+
+# An --arm value is a plain name: it becomes a path under config/.
+case "$ARM" in
+  "" | . | .. | -* | *[!A-Za-z0-9._-]*) echo "$USAGE" >&2; echo "refused: --arm '$ARM' is not a plain name" >&2; exit 2 ;;
+esac
+
+# Resolve a file's path through every symlink, as freeze.sh does.
+resolve_file() {
+  local P="$1" D
+  while [ -L "$P" ]; do
+    D="$(cd -P "$(dirname "$P")" && pwd -P)"
+    P="$(readlink "$P")"
+    case "$P" in /*) ;; *) P="$D/$P" ;; esac
+  done
+  echo "$(cd -P "$(dirname "$P")" 2>/dev/null && pwd -P)/$(basename "$P")"
+}
+# Refuse a prompt or stand-in file that does not resolve under evals/story-definition/.
+require_under_story_definition() { # <option> <file>
+  local RESOLVED ALLOWED
+  ALLOWED="$(cd -P "$REPO" && pwd -P)/evals/story-definition/"
+  RESOLVED="$(resolve_file "$2")"
+  case "$RESOLVED" in
+    "$ALLOWED"*) ;;
+    *) echo "$USAGE" >&2; echo "refused: $1 '$2' resolves to $RESOLVED, outside $ALLOWED" >&2; exit 2 ;;
+  esac
+}
+[ -z "$PROMPT_FILE" ] || require_under_story_definition --prompt "$PROMPT_FILE"
+[ -z "$STAND_IN_FILE" ] || require_under_story_definition --stand-in "$STAND_IN_FILE"
+
 E="${EVALS_DIR:-$REPO/tmp/evals}"
 OUT="$E/runs/$NAME"
 [ ! -e "$OUT" ] || { echo "$OUT exists; pick a new run name" >&2; exit 1; }
 
 # Empty working directory outside any repo, so no CLAUDE.md or beads load.
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/story-eval.XXXXXX")"
+STAND_WORK=
+trap 'rm -rf "$WORK" ${STAND_WORK:+"$STAND_WORK"}' EXIT
 
 if [ -n "$PROMPT_FILE" ]; then
   # Any first prompt: claude -p --restricted on the owner's normal config,
@@ -86,19 +124,26 @@ The owner is away for this session"
   # The token is set on each claude call only, never exported, and no
   # API key reaches the call.
   claude_tok() { env -u ANTHROPIC_API_KEY "CLAUDE_CODE_OAUTH_TOKEN=$TOKEN" claude "$@"; }
+  # session first <prompt> | session resume <session id> <answer>. An answer
+  # comes last, after "--", so it is never read as an option.
   session() {
-    claude_tok -p "$@" --restricted --plugin-dir "$FROZEN" \
+    local BEFORE=() AFTER=()
+    case "$1" in
+      first) BEFORE=("$2") ;;
+      resume) BEFORE=(--resume "$2"); AFTER=(-- "$3") ;;
+    esac
+    claude_tok -p "${BEFORE[@]}" --restricted --plugin-dir "$FROZEN" --strict-mcp-config \
       --tools "Read,Write,Edit" --permission-mode acceptEdits \
       --allowedTools "Read(/$COPY/**)" \
       --add-dir "$COPY" \
       --disallowedTools "Write(/$COPY/**),Edit(/$COPY/**)" \
-      --output-format stream-json --verbose
+      --output-format stream-json --verbose ${AFTER[@]+"${AFTER[@]}"}
   }
   # The session's last turn: the text of the final result event.
   last_text() { jq -rs '[.[] | select(.type=="result")] | last | .result // ""' "$1"; }
 
   TURN="$OUT/turn.tmp"
-  session "$PROMPT" > "$TURN" 2>> "$OUT/stderr.log"
+  session first "$PROMPT" > "$TURN" 2>> "$OUT/stderr.log"
   cat "$TURN" > "$OUT/transcript.jsonl"
 
   # Only builtins and the frozen plugin may be loaded. An entry is an object
@@ -134,14 +179,14 @@ The session's last turn:
 $(last_text "$TURN")"
       # The stand-in sees only the above: no tools, its own empty directory,
       # not the session's (which holds what the session wrote).
-      (cd "$STAND_WORK" && claude_tok -p "$ASK" --restricted --tools "" \
+      (cd "$STAND_WORK" && claude_tok -p "$ASK" --restricted --strict-mcp-config --no-session-persistence --tools "" \
         --output-format stream-json --verbose) \
         > "$OUT/standin.turn" 2>> "$OUT/stderr.log"
       cat "$OUT/standin.turn" >> "$OUT/standin.jsonl"
       ANSWER="$(last_text "$OUT/standin.turn")"
       [ "$(printf '%s' "$ANSWER" | tr -d '[:space:]')" != DONE ] || break
       ANSWERS=$((ANSWERS + 1))
-      session "$ANSWER" --resume "$SID" > "$TURN" 2>> "$OUT/stderr.log"
+      session resume "$SID" "$ANSWER" > "$TURN" 2>> "$OUT/stderr.log"
       cat "$TURN" >> "$OUT/transcript.jsonl"
     done
     rm -f "$OUT/standin.turn"
@@ -161,7 +206,7 @@ The owner is away for this session"
   printf '%s\n' "$PROMPT" > "$OUT/prompt.txt"
 
   # Read is allowed on the frozen plugin copies only; Bash stays denied.
-  claude -p "$PROMPT" \
+  claude -p "$PROMPT" --strict-mcp-config \
     --output-format stream-json --verbose \
     --permission-mode acceptEdits \
     --allowedTools "Read($E/config/sources/**)" \

@@ -17,7 +17,11 @@
 # and the status message to stderr. Nothing else is saved: this script
 # writes no file of its own, and the run directory holds what the run needs.
 # If rex names no window, the tab is left open and a message says so.
-# No scan of earlier answers runs before or after a run, and nothing blocks a replay.
+# run.sh's options are checked before rex is called, with exit 2: --arm a plain
+# name (letters, digits, '.', '_' and '-', not starting with '-'), and --prompt
+# and --stand-in files that resolve (pwd -P) under the repo's evals/story-definition/.
+# --replay accepts only a transcript that resolves under <eval home>/runs/ or
+# ~/.claude/projects/; anything else is refused with exit 2.
 # --freeze <commit> runs freeze.sh the same way instead, in the harness
 # directory, with the full id of a commit of the repo holding this script
 # (anything else is refused with exit 2 before rex is called), and prints
@@ -65,11 +69,57 @@ fi
 case "${1:-}" in
   "" | -* | */* | *[!A-Za-z0-9._-]*) echo "$USAGE" >&2; echo "refused: rex-run.sh runs only run.sh, freeze.sh and replay.sh" >&2; exit 2 ;;
 esac
+
+# Resolve a file's path through every symlink, as freeze.sh does.
+resolve_file() {
+  local P="$1" D
+  while [ -L "$P" ]; do
+    D="$(cd -P "$(dirname "$P")" && pwd -P)"
+    P="$(readlink "$P")"
+    case "$P" in /*) ;; *) P="$D/$P" ;; esac
+  done
+  echo "$(cd -P "$(dirname "$P")" 2>/dev/null && pwd -P)/$(basename "$P")"
+}
+
+# run.sh's options: refuse what run.sh would refuse, before rex is called.
+if [ "$FREEZING" = 0 ] && [ "$REPLAYING" = 0 ]; then
+  ALLOWED_SD="$(cd -P "$(git -C "$HERE" rev-parse --show-toplevel)" && pwd -P)/evals/story-definition/"
+  shift_args=("${@:2}")   # the run name comes first
+  i=0
+  while [ "$i" -lt "${#shift_args[@]}" ]; do
+    OPT="${shift_args[$i]}"
+    VAL="${shift_args[$((i + 1))]:-}"
+    case "$OPT" in
+      --arm)
+        case "$VAL" in
+          "" | . | .. | -* | *[!A-Za-z0-9._-]*) echo "$USAGE" >&2; echo "refused: --arm '$VAL' is not a plain name" >&2; exit 2 ;;
+        esac
+        i=$((i + 1)) ;;
+      --prompt | --stand-in)
+        RESOLVED="$(resolve_file "$VAL")"
+        case "$RESOLVED" in
+          "$ALLOWED_SD"*) ;;
+          *) echo "$USAGE" >&2; echo "refused: $OPT '$VAL' resolves to $RESOLVED, outside $ALLOWED_SD" >&2; exit 2 ;;
+        esac
+        i=$((i + 1)) ;;
+    esac
+    i=$((i + 1))
+  done
+fi
 : "${REX_SESSION:?REX_SESSION is not set}"
 
 E="${BJORNSTACK_EVALS_HOME:-$HOME/workspace/bjornstack-evals}"
 [ -d "$E" ] || { echo "eval home $E does not exist; the owner makes it (see the harness README)" >&2; exit 1; }
 NAME="$1"
+if [ "$REPLAYING" = 1 ]; then
+  RESOLVED="$(resolve_file "$2")"
+  EVAL_RUNS="$(cd -P "$E" && pwd -P)/runs/"
+  CLAUDE_PROJECTS="$(cd -P "$HOME/.claude/projects" 2>/dev/null && pwd -P || echo /nonexistent)/"
+  case "$RESOLVED" in
+    "$EVAL_RUNS"* | "$CLAUDE_PROJECTS"*) ;;
+    *) echo "$REPLAY_USAGE" >&2; echo "refused: transcript '$2' is not under $EVAL_RUNS or ~/.claude/projects/" >&2; exit 2 ;;
+  esac
+fi
 if [ "$REPLAYING" = 1 ] && { [ -e "$E/runs/$NAME" ] || [ -e "$E/live/$NAME" ]; }; then
   echo "$REPLAY_USAGE" >&2
   echo "refused: run name '$NAME' already exists under $E/runs or $E/live" >&2

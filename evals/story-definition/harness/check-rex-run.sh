@@ -25,8 +25,13 @@ mkdir -p "$T/bin" "$H" "$EV"
 EVP="$(cd "$EV" && pwd -P)"   # run.sh reports its physical directory
 cp "$HERE/rex-run.sh" "$H/rex-run.sh"
 # replay.jq sits beside rex-run.sh, which reads it for the owner-message check.
-# It does not exist until --replay does; the copy is skipped, not faked, until then.
-[ ! -e "$HERE/replay.jq" ] || cp "$HERE/replay.jq" "$H/replay.jq"
+cp "$HERE/replay.jq" "$H/replay.jq"
+# Prompt and stand-in files rex-run.sh may pass on live under the repo's evals/story-definition/.
+SD="$T/repo/evals/story-definition"
+mkdir -p "$SD/prompts"
+echo "a prompt" > "$SD/my prompt.txt"
+echo "a stand-in" > "$SD/my standin.txt"
+echo "a prompt" > "$SD/a b; touch pwned"
 # The repo holding rex-run.sh, for --freeze: one commit, one file.
 echo content > "$T/repo/file.txt"
 git -C "$T/repo" init -q
@@ -162,16 +167,16 @@ check() { # check <description> <expected> <actual>
 }
 
 # Scenario: an agent starts a run in a new rex tab and gets its result.
-run r1 --prompt "$T/my prompt.txt" --owner-away
+run r1 --prompt "$SD/my prompt.txt" --owner-away
 check "successful run exits 0" "0" "$?"
 check "prints the run directory under the default eval home's runs/" "$EV/runs/r1" "$(cat "$T/out")"
 check "opens a tab named bjornstack-evals in REX_SESSION, direct, in the eval home with EVALS_DIR set to it" \
-  "[window][new][bjornstack-evals][--keep-open][--json][--focus=false][--shell=none][-s][sess-1][-c][$EV][--][env][EVALS_DIR=$EV][PATH=$T/bin:$PATH][HOME=$T/home][$H/run.sh][r1][--prompt][$T/my prompt.txt][--owner-away]" \
+  "[window][new][bjornstack-evals][--keep-open][--json][--focus=false][--shell=none][-s][sess-1][-c][$EV][--][env][EVALS_DIR=$EV][PATH=$T/bin:$PATH][HOME=$T/home][$H/run.sh][r1][--prompt][$SD/my prompt.txt][--owner-away]" \
   "$(grep '^\[window\]\[new\]' "$T/stub.log")"
 check "waits on the new block in REX_SESSION, without a time limit" \
   "[wait][-s][sess-1][blk-7]" "$(grep '^\[wait\]' "$T/stub.log")"
 check "run.sh gets exactly the given arguments, one word each, from the eval home" \
-  "cwd=$EVP|arg=r1|arg=--prompt|arg=$T/my prompt.txt|arg=--owner-away|evals=$EV|path=$T/bin:$PATH|home=$T/home" \
+  "cwd=$EVP|arg=r1|arg=--prompt|arg=$SD/my prompt.txt|arg=--owner-away|evals=$EV|path=$T/bin:$PATH|home=$T/home" \
   "$(paste -sd'|' "$T/stub.log.runsh")"
 check "a successful run prints no tab output" "" "$(cat "$T/err")"
 check "a successful run closes the tab once, after the wait" "new wait close" \
@@ -274,9 +279,37 @@ check "an exit status of 1 prints the tab's last lines and closes the tab once, 
   "line 30 new wait capture close" "$(grep '^line 30$' "$T/err") $(calls)"
 
 # A prompt path holding a space and a ';' reaches run.sh as one word and runs nothing.
-run r3 --prompt "$T/a b; touch $T/pwned"
-check "a ';' in an argument runs no second command" "no" "$([ -e "$T/pwned" ] && echo yes || echo no)"
-check "that argument arrives as one word" "arg=$T/a b; touch $T/pwned" "$(sed -n 4p "$T/stub.log.runsh")"
+run r3 --prompt "$SD/a b; touch pwned"
+check "a ';' in an argument runs no second command" "no" "$([ -e "$EV/pwned" ] && echo yes || echo no)"
+check "that argument arrives as one word" "arg=$SD/a b; touch pwned" "$(sed -n 4p "$T/stub.log.runsh")"
+
+# run.sh's options are checked before rex is called: --arm a plain name, --prompt
+# and --stand-in files that resolve under the repo's evals/story-definition/.
+refuse_option() { # refuse_option <description> <run.sh args...>
+  local d="$1"; shift
+  run refopt "$@"
+  check "$d is refused with exit 2 and no rex call" "2 0" "$? $(grep -c . "$T/stub.log")"
+}
+mkdir -p "$T/outside-dir" "$T/repo/evals/other"
+echo "outside" > "$T/outside.txt"
+echo "outside" > "$T/outside-dir/p.txt"
+echo "outside" > "$T/repo/evals/other/p.txt"
+echo "outside" > "$T/repo/README.txt"
+ln -s "$T/outside-dir" "$SD/linked"
+for bad in "../evil" "a/b" "/abs" "-x" "a b" "a;b"; do
+  refuse_option "--arm '$bad'" --arm "$bad"
+done
+for outside in "$T/outside.txt" "$T/repo/README.txt" "$T/repo/evals/other/p.txt" "$SD/../other/p.txt" "$SD/linked/p.txt"; do
+  refuse_option "--prompt $outside" --prompt "$outside"
+  refuse_option "--stand-in $outside" --prompt "$SD/my prompt.txt" --stand-in "$outside"
+done
+run refopt --arm plain-name_1.x --prompt "$SD/my prompt.txt" --stand-in "$SD/my standin.txt"
+check "a plain --arm name and --prompt and --stand-in files under evals/story-definition/ pass to run.sh" "0 yes" \
+  "$? $([ -e "$T/stub.log.runsh" ] && echo yes || echo no)"
+mkdir -p "$SD/prompts/nested"
+echo "nested" > "$SD/prompts/nested/p.txt"
+run refopt --prompt "$SD/prompts/nested/p.txt"
+check "a --prompt file in a subdirectory of evals/story-definition/ passes to run.sh" "0" "$?"
 
 # rex itself failing is not reported as a run.sh failure.
 STUB_RUN_FAIL=1 run r4
@@ -344,19 +377,20 @@ refuse_freeze "with a blob name" "HEAD:file.txt"
 # turn end, the owner's answer, and the /exit records (which are not owner messages).
 # Records chain by parentUuid as in a real transcript; only records on the chain
 # from the last record to the root count, so an abandoned sibling does not.
-mkdir -p "$T/fx"
+FX="$T/home/.claude/projects/fx"   # a transcript rex-run.sh accepts: under ~/.claude/projects/
+mkdir -p "$FX"
 FIRST='{"type":"user","uuid":"u1","parentUuid":null,"message":{"role":"user","content":"<command-message>x:y</command-message>\n<command-name>/x:y</command-name>\n<command-args>spec</command-args>"}}'
 CAVEAT='{"type":"user","uuid":"u2","parentUuid":"u1","isMeta":true,"message":{"role":"user","content":"<local-command-caveat>Caveat: ignore</local-command-caveat>"}}'
 ASSISTANT='{"type":"assistant","uuid":"a1","parentUuid":"u2","message":{"role":"assistant","content":[{"type":"text","text":"question?"}]}}'
 TURN='{"type":"system","uuid":"s1","parentUuid":"a1","subtype":"turn_duration","durationMs":5}'
 ANSWER='{"type":"user","uuid":"u3","parentUuid":"s1","message":{"role":"user","content":"answer"}}'
 EXITREC='{"type":"user","uuid":"u4","parentUuid":"u3","message":{"role":"user","content":"<command-name>/exit</command-name>\n<command-message>exit</command-message>\n<command-args></command-args>"}}'
-printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$ANSWER" "$EXITREC" > "$T/fx/good.jsonl"
-printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$EXITREC" > "$T/fx/no-owner.jsonl"
+printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$ANSWER" "$EXITREC" > "$FX/good.jsonl"
+printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$EXITREC" > "$FX/no-owner.jsonl"
 # The only owner message is an abandoned sibling: the chain from the last record runs past it.
 DRAFT='{"type":"user","uuid":"d1","parentUuid":"s1","message":{"role":"user","content":"an abandoned draft"}}'
 EXIT_AFTER_TURN="${EXITREC/\"parentUuid\":\"u3\"/\"parentUuid\":\"s1\"}"
-printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$DRAFT" "$EXIT_AFTER_TURN" > "$T/fx/abandoned-owner.jsonl"
+printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$DRAFT" "$EXIT_AFTER_TURN" > "$FX/abandoned-owner.jsonl"
 # Compacted: a compact_boundary has parentUuid null and the record before the
 # compaction as logicalParentUuid; an isCompactSummary user record (string
 # content) follows it.
@@ -365,10 +399,10 @@ SUMMARYREC='{"type":"user","isCompactSummary":true,"uuid":"cs1","parentUuid":"cb
 AFTER_ASSISTANT='{"type":"assistant","uuid":"a2","parentUuid":"cs1","message":{"role":"assistant","content":[{"type":"text","text":"next question?"}]}}'
 AFTER_EXIT='{"type":"user","uuid":"u9","parentUuid":"a2","message":{"role":"user","content":"<command-name>/exit</command-name>\n<command-message>exit</command-message>\n<command-args></command-args>"}}'
 # The only owner message sits before the boundary.
-printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$ANSWER" "${BOUNDARY/LOGICAL/u3}" "$SUMMARYREC" "$AFTER_ASSISTANT" "$AFTER_EXIT" > "$T/fx/compacted.jsonl"
+printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "$ANSWER" "${BOUNDARY/LOGICAL/u3}" "$SUMMARYREC" "$AFTER_ASSISTANT" "$AFTER_EXIT" > "$FX/compacted.jsonl"
 # The only string user record after the boundary is the summary.
-printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "${BOUNDARY/LOGICAL/s1}" "$SUMMARYREC" "$AFTER_ASSISTANT" "$AFTER_EXIT" > "$T/fx/compacted-summary-only.jsonl"
-GOOD="$T/fx/good.jsonl"
+printf '%s\n' "$FIRST" "$CAVEAT" "$ASSISTANT" "$TURN" "${BOUNDARY/LOGICAL/s1}" "$SUMMARYREC" "$AFTER_ASSISTANT" "$AFTER_EXIT" > "$FX/compacted-summary-only.jsonl"
+GOOD="$FX/good.jsonl"
 REPLAY_USAGE="usage: rex-run.sh --replay <run-name> <transcript>"
 # abspath <path>: the physical form of an absolute path, or the path itself when it is relative.
 abspath() { case "$1" in /*) echo "$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")" ;; *) echo "$1" ;; esac; }
@@ -385,11 +419,11 @@ check "replay.sh gets the run name and the transcript, EVALS_DIR and REX_SESSION
 check "--replay waits, then closes the tab once" "new wait close" "$(calls)"
 check "a successful --replay prints no tab output" "" "$(cat "$T/err")"
 
-(cd "$T/fx" && run --replay rp2 good.jsonl)
+(cd "$FX" && run --replay rp2 good.jsonl)
 check "--replay turns a relative transcript path into an absolute one" "$(abspath "$GOOD")" \
   "$(abspath "$(sed -n 's/^arg=//;2p' "$T/stub.log.replaysh")")"
 
-run --replay rpc "$T/fx/compacted.jsonl"
+run --replay rpc "$FX/compacted.jsonl"
 check "--replay accepts a compacted transcript whose only owner message sits before the boundary" "0 $EV/runs/rpc" "$? $(cat "$T/out")"
 
 STUB_EXIT=3 run --replay rp3 "$GOOD"
@@ -409,21 +443,35 @@ refuse_replay() { # refuse_replay <description> <problem text> <--replay args...
 }
 refuse_replay "with no arguments" "--replay takes a run name and a transcript"
 refuse_replay "with a run name and no transcript" "--replay takes a run name and a transcript" rp4
-refuse_replay "with a transcript that does not exist" "is not a readable file" rp4 "$T/fx/missing.jsonl"
-refuse_replay "with a transcript that is a directory" "is not a readable file" rp4 "$T/fx"
-refuse_replay "with a transcript holding no owner message" "holds no owner message" rp4 "$T/fx/no-owner.jsonl"
-refuse_replay "with a transcript whose only owner message is an abandoned sibling" "holds no owner message" rp4 "$T/fx/abandoned-owner.jsonl"
+refuse_replay "with a transcript that does not exist" "is not a readable file" rp4 "$FX/missing.jsonl"
+refuse_replay "with a transcript that is a directory" "is not a readable file" rp4 "$FX"
+refuse_replay "with a transcript holding no owner message" "holds no owner message" rp4 "$FX/no-owner.jsonl"
+refuse_replay "with a transcript whose only owner message is an abandoned sibling" "holds no owner message" rp4 "$FX/abandoned-owner.jsonl"
 for bad in "" "-x" "a/b" "a b" "a;b"; do
   refuse_replay "with the run name '$bad'" "run name '$bad' is not a plain name" "$bad" "$GOOD"
 done
 mkdir -p "$EV/runs/taken1"
-refuse_replay "with a compacted transcript whose only string user record after the boundary is the summary" "holds no owner message" rp4 "$T/fx/compacted-summary-only.jsonl"
+refuse_replay "with a compacted transcript whose only string user record after the boundary is the summary" "holds no owner message" rp4 "$FX/compacted-summary-only.jsonl"
 refuse_replay "with a run name that exists under runs/" "run name 'taken1' already exists" taken1 "$GOOD"
 mkdir -p "$EV/live/taken2"
 refuse_replay "with a run name that exists under live/" "run name 'taken2' already exists" taken2 "$GOOD"
 rmdir "$EV/runs/taken1" "$EV/live/taken2"
-run --replay rp4 "$T/fx/no-owner.jsonl"
+run --replay rp4 "$FX/no-owner.jsonl"
 check "a refusal for a transcript with no owner message says so" "1" "$(grep -c 'owner message' "$T/err")"
+
+# Only transcripts under <eval home>/runs/ or ~/.claude/projects/ are replayed.
+mkdir -p "$EV/runs/src-run" "$T/elsewhere" "$EV/live/src-live"
+cp "$GOOD" "$EV/runs/src-run/good.jsonl"
+cp "$GOOD" "$T/elsewhere/good.jsonl"
+cp "$GOOD" "$EV/live/src-live/good.jsonl"
+cp "$GOOD" "$T/home/.claude/elsewhere-good.jsonl"
+ln -s "$T/elsewhere" "$FX/linkdir"
+run --replay rp6 "$EV/runs/src-run/good.jsonl"
+check "--replay accepts a transcript under <eval home>/runs/" "0 $EV/runs/rp6" "$? $(cat "$T/out")"
+refuse_replay "with a transcript outside the eval home and ~/.claude/projects/" "refused:" rp7 "$T/elsewhere/good.jsonl"
+refuse_replay "with a transcript under <eval home>/live/" "refused:" rp7 "$EV/live/src-live/good.jsonl"
+refuse_replay "with a transcript that leaves ~/.claude/projects/ through .." "refused:" rp7 "$T/home/.claude/projects/../elsewhere-good.jsonl"
+refuse_replay "with a transcript that leaves ~/.claude/projects/ through a symlinked directory" "refused:" rp7 "$FX/linkdir/good.jsonl"
 
 EH="$T/nowhere" run --replay rp5 "$GOOD"
 check "--replay with a missing eval home exits 1, names it and makes no rex call" "1 1 0" \
@@ -518,9 +566,9 @@ STATUS=$?
 check "a run calls no corpus.sh, exits 0 and prints the run directory only" "0 0 $EV/runs/nc2" "$STATUS $(corpus_calls) $(cat "$T/out")"
 check "a run's stderr carries nothing from corpus.sh" "" "$(grep -e 'clash' -e 'corpus' "$T/err")"
 
-STUB_CORPUS_SAY=1 run nc3 --prompt "$T/my prompt.txt" --owner-away
+STUB_CORPUS_SAY=1 run nc3 --prompt "$SD/my prompt.txt" --owner-away
 check "an owner-away run calls no corpus.sh" "0" "$(corpus_calls)"
-STUB_CORPUS_SAY=1 run nc3b --prompt "$T/my prompt.txt" --owner-away
+STUB_CORPUS_SAY=1 run nc3b --prompt "$SD/my prompt.txt" --owner-away
 check "an owner-away run's stdout is the run directory and its stderr holds nothing from corpus.sh" "$EV/runs/nc3b|" \
   "$(cat "$T/out")|$(grep -e 'clash' -e 'corpus' "$T/err")"
 

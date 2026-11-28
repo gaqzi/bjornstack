@@ -12,12 +12,19 @@ T="$(mktemp -d "${TMPDIR:-/tmp}/harness-check.XXXXXX")"
 trap 'rm -rf "$T"' EXIT
 FAILED=0
 
-mkdir -p "$T/bin" "$T/evals/config/sources/bjornstack/plugin" "$T/evals/config/sources/bjornstack/strategies" \
+# run.sh runs from a copy inside a temp repo, so the repo it finds is the temp
+# one and "under the repo's evals/story-definition/" means $SD.
+SD="$T/repo/evals/story-definition"
+mkdir -p "$SD/harness" "$SD/prompts"
+cp "$HERE/run.sh" "$SD/harness/run.sh"
+git -C "$T/repo" init -q
+
+mkdir -p "$T/bin" "$T/tmpd" "$T/evals/config/sources/bjornstack/plugin" "$T/evals/config/sources/bjornstack/strategies" \
   "$T/evals/config/sources/bjornstack/tenets" "$T/evals/specs"
 echo "0123456789abcdef0123456789abcdef01234567" > "$T/evals/config/sources/bjornstack.commit"
 echo "briefkasten spec" > "$T/evals/specs/briefkasten.md"
-echo "Add a CSV download button." > "$T/prompt.txt"
-echo "Answer as the owner of this app. Keep answers short." > "$T/standin.txt"
+echo "Add a CSV download button." > "$SD/prompt.txt"
+echo "Answer as the owner of this app. Keep answers short." > "$SD/standin.txt"
 
 # The init event's plugins list in the shape the real CLI emits: the frozen
 # copy of the plugin plus builtins. Stubs use it unless STUB_PLUGINS is set.
@@ -54,6 +61,7 @@ cat > "$T/bin/claude" <<'STUB'
 line="$*"
 echo "${line//$'\n'/ }" >> "$STUB_LOG"
 kind=other
+printf '%s\n' "$@" > "$STUB_LOG.args.$$"
 for a in "$@"; do
   [ "$a" != --plugin-dir ] || kind=session
   [ "$a" != --restricted ] || [ "$kind" = session ] || kind=standin
@@ -61,13 +69,16 @@ done
 n=$(grep -c -- "^STUB_$kind" "$STUB_LOG.count" 2>/dev/null || true)
 echo "STUB_$kind" >> "$STUB_LOG.count"
 n=$((n + 1))
+mv "$STUB_LOG.args.$$" "$STUB_LOG.$kind.$n.args"
+prompt="$2"
+[ "${*: -2:1}" != -- ] || prompt="${*: -1}"
 # Full record of the call: cwd, whether it is empty, config dir, raw arguments.
 {
   echo "cwd=$PWD"
   echo "entries=$(ls -A | wc -l | tr -d ' ')"
   echo "config=${CLAUDE_CONFIG_DIR:-}"
   echo "prompt<<"
-  echo "$2"
+  echo "$prompt"
   echo ">>"
   echo "token=${CLAUDE_CODE_OAUTH_TOKEN:-}"
   echo "apikey=${ANTHROPIC_API_KEY-unset}"
@@ -82,7 +93,7 @@ if [ "$kind" = session ]; then
   printf '{"type":"result","session_id":"sid-1","result":"%s %s"}\n' "$text" "turn$n"
 elif [ "$kind" = standin ]; then
   text="DONE"
-  [ "$n" -gt "${STUB_ANSWERS:-1}" ] || text="Calendar day, store time."
+  [ "$n" -gt "${STUB_ANSWERS:-1}" ] || text="${STUB_ANSWER_TEXT:-Calendar day, store time.}"
   printf '{"type":"result","result":"%s"}\n' "$text"
 else
   printf '{"type":"system","subtype":"init","model":"stub-arm"}\n{"type":"result","result":"away"}\n'
@@ -93,8 +104,9 @@ chmod +x "$T/bin/claude"
 run() { # run <name> [run.sh args...]; stdout/stderr to $T/last.out
   local name="$1"; shift
   rm -f "$T"/stub.log*; : > "$T/stub.log"; : > "$T/stub.log.count"
-  PATH="$T/bin:$PATH" EVALS_DIR="$T/evals" STUB_LOG="$T/stub.log" \
-    ANTHROPIC_API_KEY=from-env "$HERE/run.sh" "$name" "$@" \
+  rm -rf "$T/tmpd"; mkdir "$T/tmpd"   # run.sh's TMPDIR: its temp directories must not outlive it
+  PATH="$T/bin:$PATH" EVALS_DIR="$T/evals" STUB_LOG="$T/stub.log" TMPDIR="$T/tmpd" \
+    ANTHROPIC_API_KEY=from-env "$SD/harness/run.sh" "$name" "$@" \
     > "$T/$name.out" 2>&1
 }
 
@@ -105,17 +117,18 @@ check() { # check <description> <expected> <actual>
 }
 
 # Scenario: a stand-in answers each question until the session asks none.
-STUB_QUESTIONS=2 STUB_ANSWERS=2 run standin --prompt "$T/prompt.txt" --stand-in "$T/standin.txt"
+STUB_QUESTIONS=2 STUB_ANSWERS=2 run standin --prompt "$SD/prompt.txt" --stand-in "$SD/standin.txt"
 check "stand-in run exits 0" "0" "$?"
 R="$T/evals/runs/standin"
 check "session turns in transcript.jsonl" "6" "$(wc -l < "$R/transcript.jsonl" | tr -d ' ')"
 check "stand-in turns in standin.jsonl" "3" "$(wc -l < "$R/standin.jsonl" | tr -d ' ')"
 check "first session call starts with the skill and the prompt" \
   "-p /bjornstack:story-definition Add a CSV download button. --restricted --plugin-dir $T/evals/config/sources/bjornstack/plugin --tools Read,Write,Edit --permission-mode acceptEdits --allowedTools Read(/$T/evals/config/sources/bjornstack/**) --add-dir $T/evals/config/sources/bjornstack --disallowedTools Write(/$T/evals/config/sources/bjornstack/**),Edit(/$T/evals/config/sources/bjornstack/**) --output-format stream-json --verbose" \
-  "$(grep -- '--plugin-dir' "$T/stub.log" | head -n 1)"
-check "session is resumed with the stand-in's answer" \
-  "-p Calendar day, store time. --resume sid-1" \
-  "$(grep -- '--plugin-dir' "$T/stub.log" | sed -n 2p | sed 's/ --restricted.*//')"
+  "$(grep -- '--plugin-dir' "$T/stub.log" | head -n 1 | sed 's/ --strict-mcp-config//')"
+check "session is resumed with the stand-in's answer as the last argument, after --" \
+  "--|Calendar day, store time." "$(tail -n 2 "$T/stub.log.session.2.args" | paste -sd'|' -)"
+check "session is resumed from the first turn's session id" "--resume|sid-1" \
+  "$(grep -x -A1 -e '--resume' "$T/stub.log.session.2.args" | paste -sd'|' -)"
 check "resumed session calls carry --add-dir <frozen>" "1" \
   "$(grep -- '--plugin-dir' "$T/stub.log" | sed -n 2p | grep -c -- "--add-dir $T/evals/config/sources/bjornstack ")"
 # What a --restricted session's file tools may reach: the resolved target of
@@ -157,12 +170,12 @@ check "stand-in runs from its own empty directory" "yes entries=0" \
 check "session turns carry the normal config (no CLAUDE_CONFIG_DIR)" "config=" "$(sed -n 3p "$T/stub.log.session.1")"
 
 # The cap: a stand-in that never says DONE stops after 20 answers.
-STUB_QUESTIONS=99 STUB_ANSWERS=99 run capped --prompt "$T/prompt.txt" --stand-in "$T/standin.txt"
+STUB_QUESTIONS=99 STUB_ANSWERS=99 run capped --prompt "$SD/prompt.txt" --stand-in "$SD/standin.txt"
 check "run stops after 20 answers" "21" \
   "$(grep -c -- '--plugin-dir' "$T/stub.log")"
 
 # Scenario: an owner-away run with any first prompt.
-run away --prompt "$T/prompt.txt" --owner-away
+run away --prompt "$SD/prompt.txt" --owner-away
 check "owner-away prompt ends with the away line" \
   "The owner is away for this session" "$(tail -n 1 "$T/evals/runs/away/prompt.txt")"
 check "owner-away run starts one session and no stand-in" "1" "$(wc -l < "$T/stub.log" | tr -d ' ')"
@@ -184,21 +197,21 @@ check "briefkasten prompt holds the spec" "/bjornstack:story-definition briefkas
 # Scenario: run.sh takes the token from the Keychain only.
 tokline() { grep '^token=' "$T/stub.log.$1"; }
 secline() { cat "$T/stub.log.security" 2>/dev/null; }
-USER=evaluser run tok --prompt "$T/prompt.txt"
+USER=evaluser run tok --prompt "$SD/prompt.txt"
 check "security is called once with the service and the account" \
   "find-generic-password -a evaluser -s bjornstack-evals -w" "$(secline)"
 check "session call gets the token from the Keychain" "token=tok-from-keychain" "$(tokline session.1)"
 check "session call has no ANTHROPIC_API_KEY" "apikey=unset" "$(grep '^apikey=' "$T/stub.log.session.1")"
-STUB_QUESTIONS=1 STUB_ANSWERS=1 run tok2 --prompt "$T/prompt.txt" --stand-in "$T/standin.txt"
+STUB_QUESTIONS=1 STUB_ANSWERS=1 run tok2 --prompt "$SD/prompt.txt" --stand-in "$SD/standin.txt"
 check "stand-in call gets the token from the Keychain" "token=tok-from-keychain" "$(tokline standin.1)"
 check "stand-in call has no ANTHROPIC_API_KEY" "apikey=unset" "$(grep '^apikey=' "$T/stub.log.standin.1")"
-CLAUDE_CODE_OAUTH_TOKEN=from-env run tok3 --prompt "$T/prompt.txt"
+CLAUDE_CODE_OAUTH_TOKEN=from-env run tok3 --prompt "$SD/prompt.txt"
 check "a token in the caller's environment is not used" "token=tok-from-keychain" "$(tokline session.1)"
 run tok4 --owner-away
 check "an arm run does not get the token" "token=" "$(tokline other.1)"
 check "an arm run makes no security call" "" "$(secline)"
 
-rc=$(unset USER; run nouser --prompt "$T/prompt.txt"; echo $?)
+rc=$(unset USER; run nouser --prompt "$SD/prompt.txt"; echo $?)
 check "with USER unset run.sh exits 0" "0" "$rc"
 check "with USER unset security gets the login name" \
   "find-generic-password -a $(id -un) -s bjornstack-evals -w" "$(secline)"
@@ -206,7 +219,7 @@ check "with USER unset security gets the login name" \
 namesfix() { # counts of lines naming the service, the account, setup-token, add-generic-password
   echo "$(grep -c -F 'bjornstack-evals' "$1") $(grep -c -F "$2" "$1") $(grep -c -F 'claude setup-token' "$1") $(grep -c -F 'security add-generic-password' "$1")"
 }
-USER=evaluser STUB_KEYCHAIN_MISSING=1 run nokey --prompt "$T/prompt.txt"
+USER=evaluser STUB_KEYCHAIN_MISSING=1 run nokey --prompt "$SD/prompt.txt"
 check "a missing Keychain entry exits non-zero" "1" "$([ "$?" -ne 0 ] && echo 1 || echo 0)"
 check "a missing Keychain entry names service, account and both steps" "1 1 1 1" "$(namesfix "$T/nokey.out" evaluser)"
 check "a missing Keychain entry starts no claude call" "0" "$(wc -l < "$T/stub.log" | tr -d ' ')"
@@ -224,7 +237,7 @@ REFUSED_LISTS=(
 )
 for i in "${!REFUSED_NAMES[@]}"; do
   n="${REFUSED_NAMES[$i]}"
-  STUB_PLUGINS="${REFUSED_LISTS[$i]}" run "refused-$n" --prompt "$T/prompt.txt" --stand-in "$T/standin.txt"
+  STUB_PLUGINS="${REFUSED_LISTS[$i]}" run "refused-$n" --prompt "$SD/prompt.txt" --stand-in "$SD/standin.txt"
   check "init plugins $n exits 1" "1" "$?"
   check "init plugins $n starts no stand-in call" "0" "$(grep -c '^STUB_standin' "$T/stub.log.count")"
 done
@@ -238,21 +251,83 @@ check "an arm run without --prompt writes no plugin-commit.txt" "no" \
   "$([ -e "$T/evals/runs/brief/plugin-commit.txt" ] && echo yes || echo no)"
 
 # plugin-commit.txt is the id as of run start: a rewrite during the session does not reach it.
-STUB_REWRITE_COMMIT="fedcba9876543210fedcba9876543210fedcba98" run rewritten --prompt "$T/prompt.txt"
+STUB_REWRITE_COMMIT="fedcba9876543210fedcba9876543210fedcba98" run rewritten --prompt "$SD/prompt.txt"
 check "plugin-commit.txt holds the id from run start when the session rewrites bjornstack.commit" \
   "0123456789abcdef0123456789abcdef01234567" "$(cat "$T/evals/runs/rewritten/plugin-commit.txt" 2>&1)"
 echo "0123456789abcdef0123456789abcdef01234567" > "$T/evals/config/sources/bjornstack.commit"
 
 mv "$T/evals/config/sources/bjornstack.commit" "$T/commit.away"
-run nocommit --prompt "$T/prompt.txt"
+run nocommit --prompt "$SD/prompt.txt"
 check "a --prompt run without bjornstack.commit exits non-zero" "1" "$([ "$?" -ne 0 ] && echo 1 || echo 0)"
 check "a --prompt run without bjornstack.commit names the file" "1" "$(grep -c 'bjornstack.commit' "$T/nocommit.out")"
 check "a --prompt run without bjornstack.commit starts no claude call" "0" "$(wc -l < "$T/stub.log" | tr -d ' ')"
 mv "$T/commit.away" "$T/evals/config/sources/bjornstack.commit"
 
+# Scenario: the stand-in's answer is data, never an option. Whatever it
+# starts with, it comes after "--" as the last argument.
+ANSWERS_NAMES=(dashed-option dash-space)
+ANSWERS_TEXT=("--x=1" "- not a list")
+for i in "${!ANSWERS_NAMES[@]}"; do
+  STUB_ANSWER_TEXT="${ANSWERS_TEXT[$i]}" STUB_QUESTIONS=1 STUB_ANSWERS=1 \
+    run "answer-${ANSWERS_NAMES[$i]}" --prompt "$SD/prompt.txt" --stand-in "$SD/standin.txt"
+  check "a stand-in answer '${ANSWERS_TEXT[$i]}' is the last argument of the resumed call, after --" \
+    "--|${ANSWERS_TEXT[$i]}" "$(tail -n 2 "$T/stub.log.session.2.args" | paste -sd'|' -)"
+done
+
+# Scenario: no claude call loads MCP servers from the user's config.
+STUB_QUESTIONS=1 STUB_ANSWERS=1 run mcp-session --prompt "$SD/prompt.txt" --stand-in "$SD/standin.txt"
+check "every claude call of a stand-in run (session, stand-in, resume, stand-in) carries --strict-mcp-config" "0 4" \
+  "$(grep -vc -- '--strict-mcp-config' "$T/stub.log") $(grep -c . "$T/stub.log")"
+run mcp-arm --owner-away
+check "the claude call of an arm run carries --strict-mcp-config" "0 1" \
+  "$(grep -vc -- '--strict-mcp-config' "$T/stub.log") $(grep -c . "$T/stub.log")"
+
+# Scenario: stand-in calls leave no session behind, and no temp directory outlives the run.
+STUB_QUESTIONS=1 STUB_ANSWERS=1 run persist --prompt "$SD/prompt.txt" --stand-in "$SD/standin.txt"
+check "every stand-in call carries --no-session-persistence" "0 2" \
+  "$(grep -v -- '--plugin-dir' "$T/stub.log" | grep -vc -- '--no-session-persistence') $(grep -vc -- '--plugin-dir' "$T/stub.log")"
+check "a stand-in run leaves nothing in its TMPDIR" "" "$(ls -A "$T/tmpd")"
+check "an owner-away run leaves nothing in its TMPDIR" "" "$(run tmp-away --prompt "$SD/prompt.txt" --owner-away; ls -A "$T/tmpd")"
+check "an arm run leaves nothing in its TMPDIR" "" "$(run tmp-arm --owner-away; ls -A "$T/tmpd")"
+check "a run that fails on the init plugin list leaves nothing in its TMPDIR" "" \
+  "$(STUB_PLUGINS="${REFUSED_LISTS[0]}" run tmp-refused --prompt "$SD/prompt.txt" --stand-in "$SD/standin.txt"; ls -A "$T/tmpd")"
+
+# Scenario: run.sh refuses what it must not pass on. Exit 2 before any
+# claude or security call, and no run directory.
+REFUSALS=0
+refused() { # refused <description> <run name prefix> <run.sh args...>
+  local d="$1" n="$2-$REFUSALS"; shift 2
+  REFUSALS=$((REFUSALS + 1))
+  run "$n" "$@"
+  check "$d is refused: exit 2, no claude call, no security call, no run directory" "2 0 0 no" \
+    "$? $(grep -c . "$T/stub.log") $(secline | grep -c .) $([ -e "$T/evals/runs/$n" ] && echo yes || echo no)"
+}
+mkdir -p "$T/outside-dir" "$T/repo/evals/other"
+echo "outside" > "$T/outside.txt"
+echo "outside" > "$T/outside-dir/p.txt"
+echo "outside" > "$T/repo/evals/other/p.txt"
+echo "outside" > "$T/repo/README.txt"
+ln -s "$T/outside-dir" "$SD/linked"
+for bad in "../evil" "a/b" "/abs" "-x" "a b" "a;b"; do
+  refused "--arm '$bad'" "arm-bad" --arm "$bad"
+done
+for flag in --prompt --stand-in; do
+  for outside in "$T/outside.txt" "$T/repo/README.txt" "$T/repo/evals/other/p.txt" "$SD/../other/p.txt" "$SD/linked/p.txt"; do
+    if [ "$flag" = --prompt ]; then
+      refused "$flag $outside" "file-bad" --prompt "$outside"
+    else
+      refused "$flag $outside" "file-bad" --prompt "$SD/prompt.txt" --stand-in "$outside"
+    fi
+  done
+done
+mkdir -p "$SD/prompts/nested"
+echo "Nested prompt." > "$SD/prompts/nested/p.txt"
+run nested --prompt "$SD/prompts/nested/p.txt"
+check "a --prompt file in a subdirectory of evals/story-definition/ is accepted" "0" "$?"
+
 # Usage errors.
-run u1 --stand-in "$T/standin.txt"; check "--stand-in without --prompt exits 2" "2" "$?"
-run u2 --prompt "$T/prompt.txt" --stand-in "$T/standin.txt" --owner-away; check "--stand-in with --owner-away exits 2" "2" "$?"
+run u1 --stand-in "$SD/standin.txt"; check "--stand-in without --prompt exits 2" "2" "$?"
+run u2 --prompt "$SD/prompt.txt" --stand-in "$SD/standin.txt" --owner-away; check "--stand-in with --owner-away exits 2" "2" "$?"
 check "usage line is printed without --prompt" "1" "$(grep -c '^usage: run.sh' "$T/u1.out")"
 check "usage line is printed with --owner-away" "1" "$(grep -c '^usage: run.sh' "$T/u2.out")"
 
