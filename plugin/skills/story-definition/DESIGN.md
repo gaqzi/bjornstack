@@ -374,11 +374,12 @@ versus permanent failures unnamed, a mechanism named but not specified
 parallel stories editing one function, test mechanics in scenarios.
 
 **The core is the short path; the long path loads on demand.**
-SKILL.md holds what every run needs: Before starting, Goal, the story
-shape, scenarios, the handoff checklist, and filing. Verification,
-Architecture, Skeleton, and Slices live in `references/session.md`, read when the
-Goal exit test passes, and the install procedure in
-`references/install.md`. Goal stays in the core because the short
+SKILL.md holds what every run needs: Before starting, Numbered threads,
+Goal, Whether the architecture phase runs, the story shape, scenarios,
+the handoff checklist, filing, and the relation to test design.
+Verification, Architecture, Skeleton, and Slices live in
+`references/session.md`, read when the Goal exit test passes, and the
+install procedure in `references/install.md`. Goal stays in the core because the short
 path applies its sentence method, and the two derivations stay with
 their rules because reviews reject a contrast pair without one.
 Forced by SKILL.md reaching 576 lines, over skill-creator's 500-line
