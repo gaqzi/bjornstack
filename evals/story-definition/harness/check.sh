@@ -360,10 +360,27 @@ check "run.sh sources inputs.sh from its own directory" "1" \
 check "run.sh defines no resolve_file of its own" "0" \
   "$(grep -cE '^[[:space:]]*(resolve_file[[:space:]]*\(\)|function +resolve_file)' "$HERE/run.sh")"
 
-# A prompt under a directory that does not exist is refused naming the path given, not "/<name>".
+# A prompt under a directory that does not exist is refused as not resolving.
 run missing-dir --prompt "$SD/nodir/p.txt"; rc=$?
 check "a --prompt under a missing directory exits 2" "2" "$rc"
-check "a --prompt under a missing directory is refused naming the real path" "1" \
-  "$(grep -c "^refused: --prompt '$SD/nodir/p.txt' resolves to $SD/nodir/p.txt, outside " "$T/missing-dir.out")"
+check "a --prompt under a missing directory is refused as a path that does not resolve" "1" \
+  "$(grep -c "^refused: --prompt '$SD/nodir/p.txt' does not resolve" "$T/missing-dir.out")"
+
+# check_under prints the one path the caller then reads, and prints nothing
+# when it refuses. A path that does not resolve is refused, not passed on.
+PSD="$(cd -P "$SD" && pwd -P)"
+under() { # under <file>: the exit status and stdout of check_under on a file, against evals/story-definition/
+  local out rc
+  out="$( ( USAGE=u; source "$HERE/inputs.sh"; check_under --prompt "$1" "$PSD/" ) 2> /dev/null )"; rc=$?
+  echo "$rc|$out"
+}
+echo under > "$SD/under.txt"
+ln -s under.txt "$SD/under-link.txt"
+check "check_under prints the path of a file it accepts" "0|$PSD/under.txt" "$(under "$SD/under.txt")"
+check "check_under prints the target of a symlink it accepts, not the link" "0|$PSD/under.txt" "$(under "$SD/under-link.txt")"
+check "check_under prints nothing for a file outside the allowed directory" "2|" "$(under "$T/outside.txt")"
+check "check_under prints nothing for a file in a directory that does not exist" "2|" "$(under "$SD/nodir/p.txt")"
+check "run.sh reads the path check_under printed and resolves nothing again" "0" \
+  "$(grep -v '^[[:space:]]*#' "$HERE/run.sh" | grep -c 'resolve_file')"
 
 exit "$FAILED"

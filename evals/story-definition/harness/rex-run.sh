@@ -89,7 +89,7 @@ if [ "$FREEZING" = 0 ] && [ "$REPLAYING" = 0 ]; then
         check_arm "$VAL"
         i=$((i + 1)) ;;
       --prompt | --stand-in)
-        check_under "$OPT" "$VAL" "$ALLOWED_SD"
+        check_under "$OPT" "$VAL" "$ALLOWED_SD" > /dev/null
         i=$((i + 1)) ;;
     esac
     i=$((i + 1))
@@ -101,7 +101,7 @@ E="${BJORNSTACK_EVALS_HOME:-$HOME/workspace/bjornstack-evals}"
 [ -d "$E" ] || { echo "eval home $E does not exist; the owner makes it (see the harness README)" >&2; exit 1; }
 NAME="$1"
 if [ "$REPLAYING" = 1 ]; then
-  RESOLVED="$(resolve_file "$2")"
+  RESOLVED="$(resolve_file "$2")" || RESOLVED=
   EVAL_RUNS="$(cd -P "$E" && pwd -P)/runs/"
   CLAUDE_PROJECTS="$(cd -P "$HOME/.claude/projects" 2>/dev/null && pwd -P || echo /nonexistent)/"
   UUID='[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'

@@ -623,10 +623,10 @@ check "rex-run.sh sources inputs.sh from its own directory" "1" \
 check "rex-run.sh defines no resolve_file of its own" "0" \
   "$(grep -cE '^[[:space:]]*(resolve_file[[:space:]]*\(\)|function +resolve_file)' "$HERE/rex-run.sh")"
 
-# A prompt under a directory that does not exist is refused naming the path given, not "/<name>".
+# A prompt under a directory that does not exist is refused as not resolving.
 run refopt --prompt "$SD/nodir/p.txt"; rc=$?
 check "a --prompt under a missing directory exits 2" "2" "$rc"
-check "a --prompt under a missing directory is refused naming the real path" "1" \
-  "$(grep -c "^refused: --prompt '$SD/nodir/p.txt' resolves to $SD/nodir/p.txt, outside " "$T/err")"
+check "a --prompt under a missing directory is refused as a path that does not resolve" "1" \
+  "$(grep -c "^refused: --prompt '$SD/nodir/p.txt' does not resolve" "$T/err")"
 
 exit "$FAILED"

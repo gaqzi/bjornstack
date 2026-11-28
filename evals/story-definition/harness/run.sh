@@ -60,12 +60,12 @@ ALLOWED="$(cd -P "$REPO" && pwd -P)/evals/story-definition/"
 PROMPT_TEXT=
 STAND_IN_TEXT=
 if [ -n "$PROMPT_FILE" ]; then
-  check_under --prompt "$PROMPT_FILE" "$ALLOWED"
-  PROMPT_TEXT="$(cat "$(resolve_file "$PROMPT_FILE")" 2>/dev/null)" || { echo "cannot read $PROMPT_FILE" >&2; exit 1; }
+  PROMPT_PATH="$(check_under --prompt "$PROMPT_FILE" "$ALLOWED")" || exit $?
+  PROMPT_TEXT="$(cat "$PROMPT_PATH" 2>/dev/null)" || { echo "cannot read $PROMPT_FILE" >&2; exit 1; }
 fi
 if [ -n "$STAND_IN_FILE" ]; then
-  check_under --stand-in "$STAND_IN_FILE" "$ALLOWED"
-  STAND_IN_TEXT="$(cat "$(resolve_file "$STAND_IN_FILE")" 2>/dev/null)" || { echo "cannot read $STAND_IN_FILE" >&2; exit 1; }
+  STAND_IN_PATH="$(check_under --stand-in "$STAND_IN_FILE" "$ALLOWED")" || exit $?
+  STAND_IN_TEXT="$(cat "$STAND_IN_PATH" 2>/dev/null)" || { echo "cannot read $STAND_IN_FILE" >&2; exit 1; }
 fi
 
 E="${EVALS_DIR:-$REPO/tmp/evals}"
