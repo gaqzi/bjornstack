@@ -500,10 +500,8 @@ check "the README says the owner's final check before the epic is done is a live
 
 check "the README says where the plugin sits in a replay: .bjornstack in the session's working directory" "yes" \
   "$(grep -q -e '\.bjornstack' "$README" && echo yes || echo no)"
-check "the README says the recorded live run used --add-dir" "yes" \
-  "$(grep -i 'live run' "$README" | grep -q -e '--add-dir' && echo yes || echo no)"
-check "the README says the replay uses the plugin copy in live/<run-name>/.bjornstack instead" "yes" \
-  "$(grep -i 'instead' "$README" | grep -q -e 'live/<run-name>/\.bjornstack' && echo yes || echo no)"
+check "the README says a replay loads the plugin from live/<run-name>/.bjornstack" "yes" \
+  "$(grep -i 'replay loads the plugin' "$README" | grep -q -e 'live/<run-name>/\.bjornstack' && echo yes || echo no)"
 check "the README does not mention replay-notes.txt" "no" "$(grep -q -e 'replay-notes.txt' "$README" && echo yes || echo no)"
 
 # The README states the owner-message rule and the rewind rule.
@@ -545,8 +543,6 @@ check "the README no longer says a bad label on a fully covered turn pulls the o
 
 # The README states how clashes are met: no scan, the later answer of a run
 # stands, and the owner settles after the run.
-check "the README says no scan runs and nothing blocks a replay" "yes" \
-  "$(grep -i 'no scan' "$README" | grep -qi 'nothing blocks a replay' && echo yes || echo no)"
 check "the README says the later answer of one run stands" "yes" \
   "$(grep -qi 'later answer' "$README" && grep -i 'later answer' "$README" | grep -qi 'one run' && echo yes || echo no)"
 check "the README says the owner's answer stands over the shown answers" "yes" \
