@@ -26,11 +26,12 @@ SRC="$E/config/sources"
 [ ! -e "$CFG" ] || { echo "$CFG exists; remove it for a fresh config dir" >&2; exit 1; }
 
 # Frozen plugin copies (shared by arms; refreshed on each setup).
-rm -rf "$SRC/bjornstack" "$SRC/gaqzi--private"
-mkdir -p "$SRC/bjornstack" "$SRC/gaqzi--private" "$CFG" "$E/specs" "$E/runs"
-git -C "$REPO" archive "$COMMIT" .claude-plugin plugin strategies tenets | tar -x -C "$SRC/bjornstack"
+# The bjornstack copy and its .commit file come from freeze.sh, which refuses
+# a plugin that carries hooks or servers.
+EVALS_DIR="$E" "$HERE/freeze.sh" "$COMMIT"
+rm -rf "$SRC/gaqzi--private"
+mkdir -p "$SRC/gaqzi--private" "$CFG" "$E/specs" "$E/runs"
 cp -R "$WORKFLOW_SRC/.claude-plugin" "$WORKFLOW_SRC/workflow" "$SRC/gaqzi--private/"
-git -C "$REPO" rev-parse "$COMMIT" > "$SRC/bjornstack.commit"
 
 cp "$HERE/briefkasten-spec.md" "$E/specs/briefkasten.md"
 

@@ -115,4 +115,38 @@ for i in "${!LEAKS[@]}"; do
   check "a file symlink with the ${LEAKS[$i]} target leaves bjornstack.commit as it was" "$COMMIT_BEFORE" "$(cat "$EV/config/sources/bjornstack.commit")"
 done
 
+# A plugin that carries hooks, MCP or LSP servers would run code in a session
+# that only means to read rules: the freeze refuses it. A manifest with other
+# keys freezes as before.
+rm -f "$R/plugin/leak.md"
+mkdir -p "$R/plugin/.claude-plugin"
+echo '{"name":"bjornstack","version":"1"}' > "$R/plugin/.claude-plugin/plugin.json"
+g add -A; g commit -q -m clean
+CLEAN="$(g rev-parse HEAD)"
+EVALS_DIR="$EV" "$H/freeze.sh" "$CLEAN" > "$T/out" 2> "$T/err"
+check "a plugin with no hooks, servers or such manifest keys exits 0" "0" "$?"
+check "a plugin with no hooks, servers or such manifest keys is frozen" "$CLEAN" "$(cat "$EV/config/sources/bjornstack.commit")"
+
+CODE_NAMES=(hooks-dir mcp-file lsp-file manifest-hooks manifest-mcpServers)
+code_hooks_dir() { mkdir -p "$R/plugin/hooks"; echo '{}' > "$R/plugin/hooks/hooks.json"; }
+code_mcp_file() { echo '{"mcpServers":{}}' > "$R/plugin/.mcp.json"; }
+code_lsp_file() { echo '{}' > "$R/plugin/.lsp.json"; }
+code_manifest_hooks() { echo '{"name":"bjornstack","hooks":{}}' > "$R/plugin/.claude-plugin/plugin.json"; }
+code_manifest_mcpServers() { echo '{"name":"bjornstack","mcpServers":{}}' > "$R/plugin/.claude-plugin/plugin.json"; }
+for N in "${CODE_NAMES[@]}"; do
+  "code_${N//-/_}"
+  g add -A; g commit -q -m "code $N"
+  FROZEN_BEFORE="$(frozen)"
+  EVALS_DIR="$EV" "$H/freeze.sh" "$(g rev-parse HEAD)" > "$T/out" 2> "$T/err"
+  check "a commit whose plugin holds $N exits non-zero" "1" "$([ "$?" -ne 0 ] && echo 1 || echo 0)"
+  check "a commit whose plugin holds $N leaves the frozen copy intact" "$FROZEN_BEFORE" "$(frozen)"
+  check "a commit whose plugin holds $N leaves bjornstack.commit as it was" "$CLEAN" "$(cat "$EV/config/sources/bjornstack.commit")"
+  g reset -q --hard "$CLEAN"
+done
+
+# setup.sh freezes through freeze.sh, so the refusals above apply to it too.
+SETUP="$HERE/setup.sh"
+check "setup.sh calls freeze.sh for the bjornstack copy" "1" "$(grep -c 'freeze\.sh' "$SETUP" | awk '{print ($1 > 0) ? 1 : 0}')"
+check "setup.sh no longer runs its own git archive" "0" "$(grep -v '^[[:space:]]*#' "$SETUP" | grep -c 'git .*archive')"
+
 exit "$FAILED"

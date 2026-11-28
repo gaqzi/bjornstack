@@ -10,7 +10,10 @@
 # config/sources/bjornstack.commit with the full commit id. Nothing else in
 # the eval home is touched. A commit that does not resolve changes nothing.
 # A symlink, to a file or a directory, that is dangling or whose target lies
-# outside the copy refuses the freeze.
+# outside the copy refuses the freeze. So does a plugin/ that holds hooks/,
+# .mcp.json or .lsp.json, or whose plugin/.claude-plugin/plugin.json has a
+# hooks or mcpServers key: the copy would run code in a session that only
+# means to read rules.
 set -euo pipefail
 
 USAGE="usage: freeze.sh <commit>"
@@ -51,6 +54,21 @@ while IFS= read -r L; do
   T="$(resolve "$L")"
   case "$T/" in "$ROOT"/*) ;; *) echo "symlink leaves the frozen copy: ${L#$STAGE/} -> $T" >&2; exit 1 ;; esac
 done < <(find "$STAGE" -type l)
+
+# A plugin that runs code (hooks, MCP or LSP servers) is not frozen.
+for F in hooks .mcp.json .lsp.json; do
+  [ ! -e "$STAGE/plugin/$F" ] || { echo "plugin/$F in the frozen copy would run code in an eval session; refusing $FULL" >&2; exit 1; }
+done
+MANIFEST="$STAGE/plugin/.claude-plugin/plugin.json"
+if [ -f "$MANIFEST" ]; then
+  python3 -I - "$MANIFEST" <<'PY' || exit 1
+import json, sys
+m = json.load(open(sys.argv[1]))
+bad = [k for k in ("hooks", "mcpServers") if k in m]
+if bad:
+    sys.exit("plugin/.claude-plugin/plugin.json has %s, which would run code in an eval session; refusing the freeze" % ", ".join(bad))
+PY
+fi
 
 rm -rf "$SRC/bjornstack"
 mv "$STAGE" "$SRC/bjornstack"
