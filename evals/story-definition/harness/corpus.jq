@@ -3,10 +3,11 @@
 # `include "corpus" {search: "<this directory>"};`, so that a corpus.jq in
 # the caller's working directory is never found first.
 #
-# The first block is copied from replay.jq, not included from it: jq 1.8.2
-# aborts ("Unknown function type") when a function of a module included by
-# this one calls another function of that module. Keep the copies equal to
-# replay.jq's.
+# first_user_index, final_chain, owner_text, is_owner_record, owner_messages,
+# first_user_content and assistant_text are copied from replay.jq, not
+# included from it: jq 1.8.2 aborts ("Unknown function type") when a function
+# of a module included by this one calls another function of that module.
+# Keep the copies equal to replay.jq's.
 
 # The first user record: the first message typed into the session, not an
 # owner message.

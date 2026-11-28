@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Black-box checks for replay.sh, the driver of rex-run.sh --replay, with a
-# stub rex and a stub claude on PATH. replay.sh, replay.jq, matcher.sh,
+# stub rex and a stub claude on PATH. replay.sh, replay.jq,
 # corpus.sh and corpus.jq are copied beside each other into a temp harness directory and run directly, as
 # rex-run.sh runs them. No real rex or claude runs.
 #
@@ -39,17 +39,19 @@
 #    makes of it), `send-key ctrl+j` appends a newline to the buffer, `send-key
 #    enter` submits the buffer to the session as one message (and logs it as
 #    typed); `wait` blocks until the session ends and returns its status;
-#    `capture` prints a canned tab; rename, focus and close are logged. Three
-#    switches in $SIDE: rename-fails makes `window rename` exit 1, wait-hangs
-#    makes `wait` record its pid and run until a release file exists (both
-#    wait loops and the session loop end at once when $SIDE is gone, so a
-#    case's stubs never outlive it), and
-#    exit-on-enter (holding n) makes the n-th enter submit "/exit" to the
-#    session instead of the buffer (the typed log still gets the buffer).
-#    `send` of a text starting with - exits 1 unless the argument before it is
-#    --, as the real rex reads such a text as a flag. A third switch,
-#    record-differs, makes the session record each answer typed to it with
-#    " (altered)" appended, as a session that changed part of the text would.
+#    `capture` prints a canned tab; rename, focus and close are logged. These
+#    switches are files in $SIDE: rename-fails makes `window rename` exit 1,
+#    wait-hangs makes `wait` record its pid and run until a release file exists
+#    (both wait loops and the session loop end at once when $SIDE is gone, so a
+#    case's stubs never outlive it), exit-on-enter (holding n) makes the n-th
+#    enter submit "/exit" to the session instead of the buffer (the typed log
+#    still gets the buffer), and record-differs makes the session record each
+#    answer typed to it with " (altered)" appended, as a session that changed
+#    part of the text would. `send` of a text starting with - exits 1 unless
+#    the argument before it is --, as the real rex reads such a text as a flag.
+#    A matcher answer row with an .err file prints its text to stderr, as the
+#    claude CLI does when it fails. The stub jq exits 5 on a call whose
+#    arguments hold the text in $SIDE/jq-fails-on.
 #    The stub claude as the matcher takes as long as the number of seconds in
 #    $SIDE/matcher-sleep to answer, when that file exists.
 #  - stub jq (in $T/bin, passing through to the real jq): when $SIDE/owner-at-lookup
@@ -108,13 +110,12 @@ mkdir -p "$T/bin" "$H" "$T/recorded"
 REAL_JQ="$(command -v jq)"; export REAL_JQ
 [ ! -e "$HERE/replay.sh" ] || cp "$HERE/replay.sh" "$H/replay.sh"
 [ ! -e "$HERE/replay.jq" ] || cp "$HERE/replay.jq" "$H/replay.jq"
-[ ! -e "$HERE/matcher.sh" ] || cp "$HERE/matcher.sh" "$H/matcher.sh"
 [ ! -e "$HERE/corpus.sh" ] || cp "$HERE/corpus.sh" "$H/corpus.sh"
 [ ! -e "$HERE/corpus.jq" ] || cp "$HERE/corpus.jq" "$H/corpus.jq"
 
 P1="11111111-1111-4111-8111-111111111111"
 P2="22222222-2222-4222-8222-222222222222"
-FIRST_TEXT=$'/x:y spec first line\nsecond line <ol><li>a</li></ol>'
+FIRST_TEXT=$'/bjornstack:story-definition spec first line\nsecond line <ol><li>a</li></ol>'
 P1_TURN="Which folders should a refresh read?"
 P1_MSG="only the ones I ticked"
 P2_TURN="How many items should a page hold, and should drafts show?"
@@ -141,7 +142,7 @@ rec() {
 }
 rec_abandoned() { local keep="$PREV"; rec "$@"; PREV="$keep"; }
 rec --arg a $'spec first line\nsecond line <ol><li>a</li></ol>' \
-  '{type:"user",uuid:"00000000-0000-4000-8000-000000000000",message:{role:"user",content:("<command-message>x:y</command-message>\n<command-name>/x:y</command-name>\n<command-args>"+$a+"</command-args>")}}'
+  '{type:"user",uuid:"00000000-0000-4000-8000-000000000000",message:{role:"user",content:("<command-message>bjornstack:story-definition</command-message>\n<command-name>/bjornstack:story-definition</command-name>\n<command-args>"+$a+"</command-args>")}}'
 rec '{type:"user",isMeta:true,uuid:"00000000-0000-4000-8000-000000000001",message:{role:"user",content:[{type:"text",text:"skill text"}]}}'
 rec '{type:"assistant",uuid:"a0000000-0000-4000-8000-000000000001",message:{role:"assistant",content:[{type:"thinking",thinking:"hm"}]}}'
 rec --arg t "$P1_TURN" '{type:"assistant",uuid:"a0000000-0000-4000-8000-000000000002",message:{role:"assistant",content:[{type:"text",text:$t}]}}'
@@ -176,7 +177,7 @@ R3="$T/recorded/R3.jsonl"
 SUMMARY="This session is being continued from a previous conversation. Summary: SUMMARY-TEXT-MARKER"
 RF="$R3"; PREV=
 rec --arg a $'spec first line\nsecond line <ol><li>a</li></ol>' \
-  '{type:"user",uuid:"00000000-0000-4000-8000-000000000000",message:{role:"user",content:("<command-message>x:y</command-message>\n<command-name>/x:y</command-name>\n<command-args>"+$a+"</command-args>")}}'
+  '{type:"user",uuid:"00000000-0000-4000-8000-000000000000",message:{role:"user",content:("<command-message>bjornstack:story-definition</command-message>\n<command-name>/bjornstack:story-definition</command-name>\n<command-args>"+$a+"</command-args>")}}'
 rec --arg t "$P1_TURN" '{type:"assistant",uuid:"a0000000-0000-4000-8000-000000000002",message:{role:"assistant",content:[{type:"text",text:$t}]}}'
 rec '{type:"system",subtype:"turn_duration",uuid:"b0000000-0000-4000-8000-000000000001"}'
 rec --arg u "$P1" --arg m "$P1_MSG" '{type:"user",uuid:$u,message:{role:"user",content:$m}}'
@@ -197,7 +198,7 @@ next_uuid() { SEQ=$((SEQ+1)); NEXT="$(printf '%08d-0000-4000-8000-%012d' "$SEQ" 
 recorded_start() {
   RF="$1"; PREV=
   rec --arg a $'spec first line\nsecond line <ol><li>a</li></ol>' \
-    '{type:"user",uuid:"00000000-0000-4000-8000-000000000000",message:{role:"user",content:("<command-message>x:y</command-message>\n<command-name>/x:y</command-name>\n<command-args>"+$a+"</command-args>")}}'
+    '{type:"user",uuid:"00000000-0000-4000-8000-000000000000",message:{role:"user",content:("<command-message>bjornstack:story-definition</command-message>\n<command-name>/bjornstack:story-definition</command-name>\n<command-args>"+$a+"</command-args>")}}'
 }
 recorded_turn() {
   next_uuid; rec --arg t "$1" --arg u "$NEXT" '{type:"assistant",uuid:$u,message:{role:"assistant",content:[{type:"text",text:$t}]}}'
@@ -374,6 +375,11 @@ chmod +x "$T/bin/rex"
 cat > "$T/bin/jq" <<'STUB'
 #!/usr/bin/env bash
 S="${STUB_SIDE:-}"
+if [ -n "$S" ] && [ -e "$S/jq-fails-on" ]; then
+  for a in "$@"; do
+    case "$a" in *"$(cat "$S/jq-fails-on")"*) echo "jq: stub failure" >&2; exit 5 ;; esac
+  done
+fi
 if [ -n "$S" ] && [ -e "$S/owner-at-lookup" ]; then
   prev=
   for a in "$@"; do
@@ -412,6 +418,7 @@ if [ "${1:-}" = -p ]; then
     [ -e "$m" ] || break
     if printf '%s' "$turn" | grep -qF -- "$(cat "$m")"; then
       cat "${m%.match}.out"
+      [ ! -e "${m%.match}.err" ] || cat "${m%.match}.err" >&2
       exit "$(cat "${m%.match}.exit")"
     fi
   done
@@ -633,6 +640,9 @@ bad_sends() { grep -cE '^\[send\].*(\\n|\[\]$)' "$SIDE/rex.log"; }
 matcher_persistence() { # per matcher call: whether its arguments hold --no-session-persistence
   local n; for n in "$@"; do jq -r 'index("--no-session-persistence") != null' "$SIDE/matcher/0$n.args"; done | paste -sd'|' -
 }
+matcher_strict() { # per matcher call: whether its arguments hold --strict-mcp-config
+  local n; for n in "$@"; do jq -r 'index("--strict-mcp-config") != null' "$SIDE/matcher/0$n.args"; done | paste -sd'|' -
+}
 wait_pid_state() { # the stub wait's pid: gone (within 3 s), alive, or none when it never started
   local pid i; pid="$(cat "$SIDE/wait.pid" 2>/dev/null)"
   [ -n "$pid" ] || { echo none; return; }
@@ -654,7 +664,7 @@ RENAME_ASK="[window][rename][-s][sess-1][win-1][bjornstack-evals-session: your a
 FOCUS="[window][focus][-s][sess-1][win-1]"
 RENAME_BACK="[window][rename][-s][sess-1][win-1][bjornstack-evals-session]"
 CLOSE="[window][close][-s][sess-1][win-1]"
-FIRST_JSON='"/x:y spec first line\nsecond line <ol><li>a</li></ol>"'
+FIRST_JSON='"/bjornstack:story-definition spec first line\nsecond line <ol><li>a</li></ol>"'
 P1_JSON='"only the ones I ticked"'
 P2_TYPED_JSON='"1: 50 per page\n\n2:   and hide the drafts \n- keep the drafts hidden"'
 
@@ -674,7 +684,8 @@ check "it opens the session tab named bjornstack-evals-session in <eval home>/li
 LIVE_COPY="$EV/live/r1/.bjornstack"
 check "the session runs claude with the live run's flags, the plugin inside the working directory, and no --add-dir" \
   "--session-id|UUID|--restricted|--plugin-dir|$LIVE_COPY/plugin|--tools|Read,Write,Edit|--permission-mode|acceptEdits|--allowedTools|Read(/$LIVE_COPY/**)|--disallowedTools|Write(/$LIVE_COPY/**),Edit(/$LIVE_COPY/**)" \
-  "$(awk 'NR==2{print "UUID";next}1' "$SIDE/session.argv" | paste -sd'|' -)"
+  "$(awk 'NR==2{print "UUID";next}1' "$SIDE/session.argv" | grep -vxF -- --strict-mcp-config | paste -sd'|' -)"
+check "the session runs claude with --strict-mcp-config, so no MCP server of the user's configuration loads" "1" "$(grep -cxF -- --strict-mcp-config "$SIDE/session.argv")"
 check "the session id is a lowercase uuid" "1" "$(sed -n 2p "$SIDE/session.argv" | grep -c -E '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')"
 check "the session starts in <eval home>/live/<name>, which holds only .bjornstack, without ANTHROPIC_API_KEY" \
   "$EV/live/r1 .bjornstack unset" "$(cat "$SIDE/session.cwd") $(cat "$SIDE/session.cwdentries") $(cat "$SIDE/session.key")"
@@ -695,14 +706,14 @@ check "the frozen copy itself is unchanged and its symlinks are still symlinks" 
 check "the driver types R's first message once, then R's owner messages as the matcher names them, then /exit, and nothing else" \
   "$FIRST_JSON|$P1_JSON|$P2_TYPED_JSON|\"/exit\"" "$(typed)"
 check "each message is typed line by line: a send per non-empty line, ctrl+j between lines, enter at the end; an empty line is a ctrl+j alone" \
-  "send:/x:y spec first line|key:ctrl+j|send:second line <ol><li>a</li></ol>|key:enter|send:only the ones I ticked|key:enter|send:1: 50 per page|key:ctrl+j|key:ctrl+j|send:2:   and hide the drafts |key:ctrl+j|send:- keep the drafts hidden|key:enter|send:/exit|key:enter" \
+  "send:/bjornstack:story-definition spec first line|key:ctrl+j|send:second line <ol><li>a</li></ol>|key:enter|send:only the ones I ticked|key:enter|send:1: 50 per page|key:ctrl+j|key:ctrl+j|send:2:   and hide the drafts |key:ctrl+j|send:- keep the drafts hidden|key:enter|send:/exit|key:enter" \
   "$(typing_calls)"
 check "no rex send carries a newline or an empty text" "0" "$(bad_sends)"
 check "a line starting with a dash is sent after --, and reaches the session byte for byte" "1" \
   "$(grep -cF '[send][-s][sess-1][-b][blk-1][--][- keep the drafts hidden]' "$SIDE/rex.log")"
 check "the first typed message reaches the session as one slash command with its spec" \
-  "<command-message>x:y</command-message>
-<command-name>/x:y</command-name>
+  "<command-message>bjornstack:story-definition</command-message>
+<command-name>/bjornstack:story-definition</command-name>
 <command-args>spec first line
 second line <ol><li>a</li></ol></command-args>" \
   "$(jq -rs '[.[] | select(.type=="user")][0].message.content' "$EV/runs/r1/transcript.jsonl")"
@@ -737,6 +748,7 @@ check "the second prompt lists only the segments not yet used" "[\"$P2S0\",\"$P2
 check "the third prompt lists no segment" "[]" "$(prompt_segments 3 '[.[].id]')"
 check "every matcher call is made with --no-session-persistence, so the CLI keeps no session of it" "true|true|true" "$(matcher_persistence 1 2 3)"
 check "the driver waits on the session with rex wait and no timeout argument" "[wait][-s][sess-1][blk-1]" "$(grep '^\[wait\]' "$SIDE/rex.log")"
+check "every matcher call is made with --strict-mcp-config, so no MCP server of the user's configuration loads" "true|true|true" "$(matcher_strict 1 2 3)"
 check "no matcher prompt or output is left in the eval home or TMPDIR" "0 0" \
   "$(grep -rlF 'RECORDED SEGMENTS' "$EV" | wc -l | tr -d ' ') $(ls -A "$T/tmpd" | wc -l | tr -d ' ')"
 check "a run in which every answer is typed and sent prints nothing to the driver tab" '""' "$(stdout_json)"
@@ -1567,7 +1579,7 @@ owner "weekly"
 finish
 unset RSRC
 check "the pre-fill is typed after the first message as sends and ctrl+j keys, and ends with no enter" \
-  "send:/x:y spec first line|key:ctrl+j|send:second line <ol><li>a</li></ol>|key:enter|send:1: weekly|key:ctrl+j|key:ctrl+j|send:2: |key:ctrl+j|key:ctrl+j|send:3: fifty items" "$before_calls"
+  "send:/bjornstack:story-definition spec first line|key:ctrl+j|send:second line <ol><li>a</li></ol>|key:enter|send:1: weekly|key:ctrl+j|key:ctrl+j|send:2: |key:ctrl+j|key:ctrl+j|send:3: fifty items" "$before_calls"
 
 # Scenario: a partly covered turn when the owner types before the driver does:
 # nothing is typed, nothing is pre-filled, nothing is displayed, the owner's
@@ -1695,7 +1707,7 @@ check "the line P logged as replayed is offered once, as L's answer, not again a
 fresh
 mkdir -p "$EV/runs/other-spec"
 RF="$EV/runs/other-spec/transcript.jsonl"; PREV=
-rec '{type:"user",uuid:"00000000-0000-4000-8000-000000000099",message:{role:"user",content:"<command-message>x:y</command-message>\n<command-name>/x:y</command-name>\n<command-args>another spec entirely</command-args>"}}'
+rec '{type:"user",uuid:"00000000-0000-4000-8000-000000000099",message:{role:"user",content:"<command-message>bjornstack:story-definition</command-message>\n<command-name>/bjornstack:story-definition</command-name>\n<command-args>another spec entirely</command-args>"}}'
 recorded_turn "$P1_TURN"; recorded_answer "$C_X" "everything"; recorded_exit
 RF="$R"
 reply 1 "$T1"; reply 2 "$T_DONE"
@@ -1965,7 +1977,7 @@ check "a clash whose pulled-in owner line was rewound off the final chain settle
 # exits 1 stops the replay with exit 1 and a message naming the corpus, before
 # any tab is opened, and no run directory or live directory is made.
 HX="$T/harness-broken"; rm -rf "$HX"; mkdir -p "$HX"
-for f in replay.sh replay.jq matcher.sh corpus.jq; do [ ! -e "$H/$f" ] || cp "$H/$f" "$HX/$f"; done
+for f in replay.sh replay.jq corpus.jq; do cp "$H/$f" "$HX/$f"; done
 printf '#!/usr/bin/env bash\necho "corpus.sh: broken stub" >&2\nexit 1\n' > "$HX/corpus.sh"
 fresh
 reply 1 "$T1"; reply 2 "$T_DONE"
@@ -1977,6 +1989,210 @@ check "a corpus that cannot be read stops the replay before any session tab is o
 check "a corpus that cannot be read leaves no run directory and no live directory" "no no" \
   "$([ -e "$EV/runs/rk" ] && echo yes || echo no) $([ -e "$EV/live/rk" ] && echo yes || echo no)"
 check "a corpus that cannot be read is not read as no answers: the matcher is never asked" "0" "$(ls "$SIDE"/matcher/*.prompt 2> /dev/null | wc -l | tr -d ' ')"
+
+# Scenario: recorded text is typed into a TUI that runs commands, so text the
+# TUI would take for a command is never typed. A segment of an answer, or the
+# first text, whose first line starts with "!", "/" or "#" is not typed and the
+# owner is pulled in, shown the text. The first text's own
+# /bjornstack:story-definition command (every first message above) is typed.
+ctrl_bytes() { LC_ALL=C tr -d '\n\040-\377' < "$1" | wc -c | tr -d ' '; }   # how many control bytes below 0x20, newline aside, the file holds
+sent_calls() { grep -c '^\[send\]' "$SIDE/rex.log"; }
+stop_when_idle() { # the driver is pulled-in or has typed the answer: stop the session and end the run
+  local i
+  for i in $(seq 1 100); do
+    logged "[window][focus]" && break
+    [ -e "$SIDE/typed/0002" ] && break
+    kill -0 "$DRV" 2>/dev/null || break
+    sleep 0.05
+  done
+  sleep 0.5
+  touch "$SIDE/kill"
+  finish
+}
+ANS_ID="a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1"
+one_answer_run() { # one_answer_run <file> <the turn> <the owner's answer>: R's first message, one turn, one answer
+  rm -f "$1"; recorded_start "$1"; recorded_turn "$2"; recorded_answer "$ANS_ID" "$3"; recorded_exit; RF="$R"
+}
+one_text_run() { # one_text_run <file> <the first message record's content>: a run whose first message is that text
+  rm -f "$1"; RF="$1"; PREV=
+  rec --arg m "$2" '{type:"user",uuid:"00000000-0000-4000-8000-000000000000",message:{role:"user",content:$m}}'
+  RF="$R"
+}
+
+for cmd_row in \
+  "!|!ls -la" \
+  "/|/clear" \
+  "#|# remember this"; do
+  what="${cmd_row%%|*}"; seg="${cmd_row#*|}"
+  fresh
+  one_answer_run "$T/recorded/cmd.jsonl" "$P1_TURN" "$seg"
+  reply 1 "$T1"
+  answer "Which folders" true "null=$ANS_ID#0"
+  RSRC="$T/recorded/cmd.jsonl" start sg; stop_when_idle
+  unset RSRC
+  check "an answer whose first line starts with $what is not typed, the owner is pulled in and shown it" \
+    "typed=$FIRST_JSON sends=2 focus=1 shown=1" \
+    "typed=$(typed) sends=$(sent_calls) focus=$(grep -cF "$FOCUS" "$SIDE/rex.log") shown=$(grep -cF -- "$seg" "$T/out" | sed 's/^[1-9][0-9]*$/1/')"
+done
+
+fresh
+one_answer_run "$T/recorded/cmd.jsonl" "$P1_TURN" $'fine\n/clear\n#2 as well'
+reply 1 "$T1"; reply 2 "$T_DONE"
+answer "Which folders" true "null=$ANS_ID#0"; answer "Nothing more" false
+RSRC="$T/recorded/cmd.jsonl" start sg2; finish
+unset RSRC
+check "an answer whose first line is plain is typed whole, though a later line starts with / or #" \
+  "0 $FIRST_JSON|\"fine\\n/clear\\n#2 as well\"|\"/exit\"" "$STATUS $(typed)"
+
+for first_row in \
+  "#|#plan the thing" \
+  "!|!plan the thing" \
+  "/ of another command|/other:cmd plan the thing"; do
+  what="${first_row%%|*}"; first="${first_row#*|}"
+  fresh
+  one_text_run "$T/recorded/first.jsonl" "$first"
+  reply 1 "$T1"
+  RSRC="$T/recorded/first.jsonl" start sf; stop_when_idle
+  unset RSRC
+  check "a first text starting with $what is not typed, the owner is pulled in and shown it" \
+    "sends=0 focus=1 shown=1" \
+    "sends=$(sent_calls) focus=$(grep -cF "$FOCUS" "$SIDE/rex.log") shown=$(grep -cF -- "$first" "$T/out" | sed 's/^[1-9][0-9]*$/1/')"
+done
+
+# A control character below 0x20 (newline aside) in typed text never reaches
+# rex send: a "\r" would submit the line, an escape would drive the TUI.
+for ctrl_row in \
+  "a carriage return|weekly"$'\r'"monthly" \
+  "an escape|all"$'\x1b'"[2Jfolders" \
+  "a ctrl-c|all"$'\x03'"folders" \
+  "a tab|all"$'\t'"folders" \
+  "a carriage return on a later line|weekly"$'\n'"monthly"$'\r'"yearly"; do
+  what="${ctrl_row%%|*}"; seg="${ctrl_row#*|}"
+  fresh
+  one_answer_run "$T/recorded/ctrl.jsonl" "$P1_TURN" "$seg"
+  reply 1 "$T1"; reply 2 "$T_DONE"
+  answer "Which folders" true "null=$ANS_ID#0"; answer "Nothing more" false
+  RSRC="$T/recorded/ctrl.jsonl" start sc; stop_when_idle
+  unset RSRC
+  check "an answer holding $what reaches rex send with no control character" "0" "$(ctrl_bytes "$SIDE/rex.log")"
+done
+for ctrl_row in \
+  "a carriage return|plan"$'\r'"the thing" \
+  "an escape|plan"$'\x1b'"[2J the thing"; do
+  what="${ctrl_row%%|*}"; first="${ctrl_row#*|}"
+  fresh
+  one_text_run "$T/recorded/first.jsonl" "$first"
+  reply 1 "$T1"
+  RSRC="$T/recorded/first.jsonl" start sf; stop_when_idle
+  unset RSRC
+  check "a first text holding $what reaches rex send with no control character" "0" "$(ctrl_bytes "$SIDE/rex.log")"
+done
+
+# Scenario: recorded text the owner is shown is shown without control
+# characters, so a recording cannot drive the owner's terminal. A refused
+# near-match shows its segment and the turn it answered.
+fresh
+rm -f "$T/recorded/ctrl.jsonl"; recorded_start "$T/recorded/ctrl.jsonl"
+recorded_turn $'Which \x1b]0;pwned\x07folders should it read?'; recorded_answer "$ANS_ID" $'all\x1b[2J folders'; recorded_exit
+RF="$R"
+reply 1 "$T1"
+answer "Which folders" true "null=null=$ANS_ID#0"
+RSRC="$T/recorded/ctrl.jsonl" start sd; stop_when_idle
+unset RSRC
+check "the segment and the turn shown to the pulled-in owner hold no control character, and the text around them stays" \
+  "ctrl=0 segment=1 turn=1" \
+  "ctrl=$(ctrl_bytes "$T/out") segment=$(grep -cF '[2J folders' "$T/out") turn=$(grep -cF ']0;pwnedfolders should it read?' "$T/out")"
+
+# Scenario: a settle that fails leaves a trace. The run keeps its exit status;
+# its directory holds one file besides the usual ones, naming the clash's ids,
+# and replay.sh prints the ids to its own stdout beyond what the pull-in shows.
+extra_files() { (cd "$EV/runs/$1" && LC_ALL=C ls -A | grep -vxE 'clashes.jsonl|plugin-commit.txt|replay.jsonl|replayed-from.txt|transcript.jsonl|workdir' | paste -sd' ' -); }
+trace_names() { # trace_names <run name> <id>...: yes when the run's one extra file holds every id
+  local f id; f="$EV/runs/$1/$(extra_files "$1")"; shift
+  for id in "$@"; do grep -qF -- "$id" "$f" 2> /dev/null || { echo no; return; }; done
+  echo yes
+}
+unsettled_run() { # unsettled_run <name>: a one-question clash the owner's line would settle
+  fresh
+  clashing_run
+  reply 1 "$T1"; reply 2 "$T_DONE"
+  answer "Which folders" true "null=null==$P1S,$C_LAS"; answer "Nothing more" false
+}
+unsettled_run
+start us0
+pull_in_and_answer "$OWN_LINE"
+finish
+BASE_MENTIONS="$(grep -cF -- "$P1S" "$T/out")"
+check "a settle that works leaves nothing extra in the run directory" "0 []" "$STATUS [$(extra_files us0)]"
+
+HX="$T/harness-nosettle"; rm -rf "$HX"; mkdir -p "$HX"
+for f in replay.sh replay.jq corpus.jq; do cp "$H/$f" "$HX/$f"; done
+printf '#!/usr/bin/env bash\n[ "$1" != settle ] || { echo "corpus.sh: settle broke" >&2; exit 1; }\nexec bash "%s/corpus.sh" "$@"\n' "$H" > "$HX/corpus.sh"
+unsettled_run
+start us1
+pull_in_and_answer "$OWN_LINE"
+finish
+unset HX
+check "a settle that fails keeps the run's exit status, settles nothing and leaves one extra file in the run directory naming both ids" \
+  "0 [] 1 yes" "$STATUS [$(settled_log)] $(extra_files us1 | wc -w | tr -d ' ') $(trace_names us1 "$P1S" "$C_LAS")"
+check "a settle that fails prints the unsettled ids to replay.sh's stdout, beyond the pull-in's own display" "yes" \
+  "$([ "$(grep -cF -- "$P1S" "$T/out")" -gt "$BASE_MENTIONS" ] && [ "$(grep -cF -- "$C_LAS" "$T/out")" -gt "$BASE_MENTIONS" ] && echo yes || echo no)"
+
+unsettled_run
+echo owner_messages > "$SIDE/jq-fails-on"
+start us2
+pull_in_and_answer "$OWN_LINE"
+finish
+check "a settle whose chain cannot be read counts as a failed one: exit status kept, one extra file naming both ids" \
+  "0 [] 1 yes" "$STATUS [$(settled_log)] $(extra_files us2 | wc -w | tr -d ' ') $(trace_names us2 "$P1S" "$C_LAS")"
+
+fresh
+reply 1 "$T1"; reply 2 "$T_DONE"
+answer "Which folders" true "null=$P1S"; answer "Nothing more" false
+echo replay_log > "$SIDE/jq-fails-on"
+start us3; finish
+check "a replay.jsonl that cannot be written is reported on stderr, not left silently empty" "yes" \
+  "$(grep -qF 'replay.jsonl' "$T/err" && echo yes || echo no)"
+
+# Scenario: the matcher's own complaint is not thrown away. claude -p's stderr
+# is reported with the failure.
+fresh
+reply 1 "$T2"; reply 2 "$T_DONE"
+row "prune run" "" 1; echo "CLAUDE-SAID-QUOTA-EXCEEDED" > "$SIDE/answers/01.err"
+answer "Nothing more" false
+start mf
+until_true logged "[window][focus]"
+sleep 0.6
+owner "weekly"
+finish
+check "when the matcher fails, what claude printed to stderr is in replay.sh's stderr" "1" "$(grep -cF 'CLAUDE-SAID-QUOTA-EXCEEDED' "$T/err")"
+
+# Scenario: answer_plan assembles the message. Its output carries it, so the
+# caller types or pre-fills what the plan says. answer_plan is run from the
+# text of replay.sh, over segments and used ids given here.
+PLAN_SEGS='[{"id":"a#0","label":null,"segment":"50 per page","session_turn":"t","run":"R","record":"a","order":1},{"id":"b#0","label":null,"segment":"hide the drafts","session_turn":"t","run":"R","record":"b","order":2}]'
+plan_message() { # plan_message <matcher answer JSON> <turn text>: the message of answer_plan's output
+  ( SEGMENTS="$PLAN_SEGS"; USED='[]'
+    eval "$(sed -n '/^answer_plan() {$/,/^}$/p' "$H/replay.sh")"
+    answer_plan "$1" "$2" | jq -c '.message' )
+}
+Q_ONE='{"asks":true,"questions":[{"number":null,"segment":"a#0"}]}'
+Q_LAB='{"asks":true,"questions":[{"number":1,"segment":"a#0"},{"number":2,"segment":"b#0"}]}'
+Q_NUM='{"asks":true,"questions":[{"number":null,"segment":"a#0"},{"number":null,"segment":"b#0"}]}'
+Q_LAB_PART='{"asks":true,"questions":[{"number":1,"segment":"a#0"},{"number":2,"segment":null}]}'
+Q_NUM_PART='{"asks":true,"questions":[{"number":null,"segment":"a#0"},{"number":null,"segment":null}]}'
+TWO_NUMBERED=$'1. How many per page?\n2. Hide the drafts?'
+TWO_PLAIN=$'How many per page?\nHide the drafts?'
+ONE_TURN="Which page size?"
+for plan_row in \
+  "one question, no label|Q_ONE|ONE_TURN|\"50 per page\"" \
+  "two labelled questions, both covered|Q_LAB|TWO_NUMBERED|\"1: 50 per page\\n\\n2: hide the drafts\"" \
+  "two unlabelled questions, both covered|Q_NUM|TWO_PLAIN|\"1: 50 per page\\n\\n2: hide the drafts\"" \
+  "two labelled questions, the second uncovered|Q_LAB_PART|TWO_NUMBERED|\"1: 50 per page\\n\\n2: \"" \
+  "two unlabelled questions, the second uncovered|Q_NUM_PART|TWO_PLAIN|\"50 per page\""; do
+  IFS='|' read -r what ans turn want <<< "$plan_row"
+  check "answer_plan's message for $what" "$want" "$(plan_message "${!ans}" "${!turn}")"
+done
 
 # Scenario: the stubs end by themselves once their case's side directory is
 # gone, so a case that is killed halfway leaves no stub behind. Started by hand

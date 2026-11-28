@@ -8,7 +8,8 @@
 #        before the first message), REPLAY_FIRST_TIMEOUT (60, seconds to see
 #        the session's transcript after the first message).
 # Types R's first message into a new session tab (line by line with ctrl+j
-# between lines, so the TUI takes it as typed, not pasted), then at each turn
+# between lines, so the TUI takes it as typed, not pasted; control characters
+# below 0x20 other than newline are stripped from anything typed), then at each turn
 # end asks a claude -p matcher whether the turn asks the owner anything and which
 # unused recorded segment (a numerically labelled line,
 # or a paragraph of an owner message) answers each question. The segments are
@@ -44,12 +45,18 @@
 # copy is copied to live/<run-name>/.bjornstack and the session loads
 # --plugin-dir live/<run-name>/.bjornstack/plugin. Read is allowed and
 # Write/Edit denied on that copy.
+# A text the TUI would take for a command is never typed: R's first text, or an
+# answer segment, whose first line starts with "!", "/" or "#" (R's own
+# /bjornstack:story-definition command is the one exception). The owner is
+# pulled in and shown it, and types it. A failed settle (see settle_picks) is
+# named in unsettled.txt in the run directory and on stdout.
 # Output: $EVALS_DIR/runs/<run-name>/ with transcript.jsonl, plugin-commit.txt,
 #         replay.jsonl (one line per owner message on the session's final
 #         chain: n, source, and when replayed the segment ids typed and, for
 #         each, the run and record it came from),
 #         clashes.jsonl (only when a clash was met: {question: the turn's
 #         text, answers: [segment ids]} per clash),
+#         unsettled.txt (only when a settle failed: the unsettled ids and why),
 #         replayed-from.txt and workdir/ (the working directory without
 #         .bjornstack). The session's working directory is
 #         $EVALS_DIR/live/<run-name>, which keeps .bjornstack. Nothing else
@@ -57,7 +64,6 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-. "$HERE/matcher.sh"
 USAGE="usage: replay.sh <run-name> <transcript>"
 NAME="${1:?$USAGE}"
 R="${2:?$USAGE}"
@@ -99,11 +105,13 @@ TYPED='[]'   # [{text, segments, from, uuid}]: what the driver typed as answers,
 CLASHES='[]'   # [{question, answers}]: the clashes met, one per set of answer ids
 SETTLES='[]'   # [{ids, uuid}]: clashes on a one-question turn to settle at exit by dropping ids; uuid: the owner's first record after the pull-in, null until it appears
 SETTLE_PENDING=0
+WAITING=0
+UNSETTLED=   # lines "<ids>: <why>" of the clashes whose settle failed
 
 UUID="$(uuidgen | tr A-Z a-z)"
 CREATED="$(rex window new bjornstack-evals-session --keep-open --json --focus=false --shell=none -s "$S" -c "$LIVE" -- \
   env -u ANTHROPIC_API_KEY "PATH=$PATH" "HOME=$HOME" \
-  claude --session-id "$UUID" --restricted --plugin-dir "$LIVE/.bjornstack/plugin" --tools Read,Write,Edit \
+  claude --session-id "$UUID" --restricted --strict-mcp-config --plugin-dir "$LIVE/.bjornstack/plugin" --tools Read,Write,Edit \
   --permission-mode acceptEdits --allowedTools "Read(/$LIVE/.bjornstack/**)" \
   --disallowedTools "Write(/$LIVE/.bjornstack/**),Edit(/$LIVE/.bjornstack/**)")" \
   || { echo "replay.sh: rex window new failed; no session tab was started" >&2; exit 1; }
@@ -119,7 +127,10 @@ WAITER=$!
 write_replay_log() {
   local log
   [ -d "$RUN" ] && [ -n "$TF" ] && [ -r "$TF" ] || return 0
-  log="$(complete_lines "$TF" | jq -sc --argjson typed "$TYPED" "$INC replay_log(\$typed)[]" 2> /dev/null)" || return 0
+  if ! log="$(complete_lines "$TF" | jq -sc --argjson typed "$TYPED" "$INC replay_log(\$typed)[]" 2>&1)"; then
+    echo "replay.sh: replay.jsonl could not be written: $log" >&2
+    return 0
+  fi
   if [ -n "$log" ]; then printf '%s\n' "$log" > "$RUN/replay.jsonl"; fi
   return 0
 }
@@ -135,18 +146,41 @@ write_clashes() {
 
 # settle_picks: for each clash settled by the owner's answer whose record is on
 # the session transcript's final chain, drop the clash's answers
-# (corpus.sh settle --drop). A failure is not reported as the run's.
+# (corpus.sh settle --drop). A settle that fails (corpus.sh exits non-zero, or
+# the chain cannot be read) does not change the run's exit status: its ids and
+# why are written to unsettled.txt in the run directory and to stdout.
 settle_picks() {
-  local on ids id idlist
+  local on ids id idlist why
   [ -n "$TF" ] && [ -r "$TF" ] || return 0
-  on="$(complete_lines "$TF" | jq -sc "$INC [owner_messages | .[].uuid]" 2> /dev/null)" || return 0
+  if ! on="$(complete_lines "$TF" | jq -sc "$INC [owner_messages | .[].uuid]" 2>&1)"; then
+    while IFS= read -r ids; do
+      [ -n "$ids" ] && add_unsettled "$ids" "the session transcript's chain could not be read: $on"
+    done < <(printf '%s' "$SETTLES" | jq -c '.[] | select(.uuid != null) | .ids')
+    report_unsettled
+    return 0
+  fi
   while IFS= read -r ids; do
     [ -n "$ids" ] || continue
     idlist=()
     while IFS= read -r id; do idlist+=("$id"); done < <(printf '%s' "$ids" | jq -r '.[]')
-    EVALS_DIR="$E" bash "$HERE/corpus.sh" settle "$R" --drop "${idlist[@]}" > /dev/null 2>&1 || true
+    if ! why="$(EVALS_DIR="$E" bash "$HERE/corpus.sh" settle "$R" --drop "${idlist[@]}" 2>&1 > /dev/null)"; then
+      add_unsettled "$ids" "corpus.sh settle failed: $why"
+    fi
   done < <(printf '%s' "$SETTLES" | jq -c --argjson on "$on" '.[] | select(.uuid as $u | $u != null and ($on | index($u)) != null) | .ids')
+  report_unsettled
   return 0
+}
+
+# add_unsettled <ids as a JSON array> <why>
+add_unsettled() {
+  UNSETTLED="${UNSETTLED:+$UNSETTLED
+}$(printf '%s' "$1" | jq -r 'join(" ")'): $2"
+}
+
+report_unsettled() {
+  [ -n "$UNSETTLED" ] || return 0
+  [ ! -d "$RUN" ] || printf '%s\n' "$UNSETTLED" > "$RUN/unsettled.txt"
+  printf 'replay.sh: not settled, drop these by hand with corpus.sh settle:\n%s\n' "$UNSETTLED"
 }
 
 # On any exit: write replay.jsonl and clashes.jsonl, close the session tab and stop the
@@ -175,7 +209,9 @@ type_lines() { # a text into the session tab, line by line, without the final en
   # never runs. Each line is sent alone with ctrl+j (a newline that does not
   # submit) between lines. An empty line sends nothing, only its ctrl+j. rex
   # reads a text starting with '-' as a flag, so such a line follows `--`.
-  local line first=1
+  local line first=1 text
+  text="$(printf '%s' "$1" | strip_control; printf x)"
+  text="${text%x}"
   while IFS= read -r line || [ -n "$line" ]; do
     [ "$first" = 1 ] || rex send-key -s "$S" -b "$BLOCK" ctrl+j
     first=0
@@ -185,7 +221,7 @@ type_lines() { # a text into the session tab, line by line, without the final en
     else
       rex send -s "$S" -b "$BLOCK" "$line"
     fi
-  done <<< "$1"
+  done <<< "$text"
 }
 
 type_text() { # one message into the session tab, then enter
@@ -193,12 +229,53 @@ type_text() { # one message into the session tab, then enter
   rex send-key -s "$S" -b "$BLOCK" enter
 }
 
+pull_owner_in() {
+  rex window rename -s "$S" "$WINDOW" "bjornstack-evals-session: your answer" > /dev/null
+  rex window focus -s "$S" "$WINDOW" > /dev/null
+  WAITING=1
+}
+
+# strip_control: stdin to stdout without the control characters below 0x20
+# other than newline.
+strip_control() { LC_ALL=C tr -d '\000-\011\013-\037'; }
+
+# starts_command <text>: true when the first line of the text starts with "!",
+# "/" or "#", which the TUI takes for a command.
+starts_command() {
+  case "${1%%$'\n'*}" in '!'* | '/'* | '#'*) return 0 ;; *) return 1 ;; esac
+}
+
 sleep "$STARTUP"
-type_text "$FIRST_TEXT"
+OWNER_FIRST=0   # 1 when the owner, not the driver, types the first message
+FIRST_LINE="${FIRST_TEXT%%$'\n'*}"
+if [ "$FIRST_LINE" = /bjornstack:story-definition ] || [ "${FIRST_LINE#/bjornstack:story-definition }" != "$FIRST_LINE" ] || ! starts_command "$FIRST_TEXT"; then
+  type_text "$FIRST_TEXT"
+else
+  OWNER_FIRST=1
+  printf 'replay.sh: the first message starts with !, / or #, so it is not typed; type it yourself:\n%s\n' "$(printf '%s' "$FIRST_TEXT" | strip_control)"
+  pull_owner_in
+fi
 STARTED="$(date +%s)"
 
 complete_lines() { # the file without a last line that has no newline yet
   if [ -n "$(tail -c1 "$1")" ]; then sed '$d' "$1"; else cat "$1"; fi
+}
+
+# run_matcher <prompt>: asks the matcher (claude -p, no tools, in an empty temp
+# dir) and prints its result text with any code-fence lines removed. When
+# claude exits non-zero, or its output is not the JSON envelope with a string
+# result, it prints the reason to stderr, with what claude printed to stderr,
+# and returns 1. It never prints the raw output.
+run_matcher() {
+  local dir out err result status=0
+  dir="$(mktemp -d "${TMPDIR:-/tmp}/replay-matcher.XXXXXX")"
+  out="$(cd "$dir" && env -u ANTHROPIC_API_KEY claude -p "$1" --restricted --strict-mcp-config --tools "" --output-format json --no-session-persistence < /dev/null 2> "$dir.err")" || status=$?
+  err="$(cat "$dir.err")"
+  rm -rf "$dir" "$dir.err"
+  if [ "$status" != 0 ]; then echo "replay.sh: the matcher (claude -p) exited $status${err:+: $err}" >&2; return 1; fi
+  result="$(printf '%s' "$out" | jq -er 'select(type == "object" and .is_error != true and (.result | type) == "string") | .result' 2> /dev/null | sed '/^```/d')" \
+    || { echo "replay.sh: the matcher's output is not the expected JSON${err:+: $err}" >&2; return 1; }
+  printf '%s' "$result"
 }
 
 # ask_matcher <turn text>: prints the matcher's JSON answer. Returns
@@ -212,7 +289,7 @@ ask_matcher() {
   unused="$(printf '%s' "$SEGMENTS" | jq -c --argjson used "$USED" \
     '[.[] | select(.id as $i | $used | index($i) | not) | {id, label, segment, session_turn, run, order}]')"
   prompt="$(printf 'You are matching a live session to a recorded one. Below is THIS TURN, the text the session has just shown the owner, and RECORDED SEGMENTS, each a part of a recorded owner message (a line that starts with its label, or a paragraph; only a numeric label such as "4:", "4." or "4)" is kept apart in the label field, any other words stay in the segment text) with the session turn it answered.\n\nSay whether this turn asks the owner anything. If it does, list every question of this turn, in the order the turn asks them, with the label the turn gives the question (a number or a single letter; null when it has none) and the id of the one recorded segment that answers it (null when none does). List every question, a question no segment answers with segment null.\n\nA segment matches a question only when (a) its recorded session turn asked the same decision about the same design and (b), read against this turn alone, it means what it meant against its recorded turn: everything it names, accepts or rejects must be in this turn. A "yes" or praise matches only the same proposal. A segment that names, accepts or rejects something this turn does not hold does not match. A bare option letter (such as "B" or "a + b") matches only with the same options under the same letters. A segment answers at most one question.\n\nWhen a segment nearly matches a question but fails the test above, name its id in that question'"'"'s "refused" list.\n\nWhen two or more segments each answer a question under the test above but say different things, so that they cannot both stand, the question is a clash: give segment null and list their ids in that question'"'"'s "clash" list. Each segment carries its run and its order (the place of its owner message in that run). List every answer of the same run that answers a question in "clash" too, so that the driver can let the later one of a run stand.\n\nReply with only JSON: {"asks": true or false, "questions": [{"number": <integer, a single letter, or null>, "segment": "<segment id>" or null, "refused": ["<segment id>", ...], "clash": ["<segment id>", "<segment id>", ...]}, ...]} ("refused" and "clash" may be left out).\n\nTHIS TURN:\n%s\n\nRECORDED SEGMENTS (JSON):\n%s' "$1" "$unused")"
-  result="$(run_matcher replay.sh "$prompt")" || return 1
+  result="$(run_matcher "$prompt")" || return 1
   printf '%s' "$result" | jq -ce 'select(type == "object" and (.asks | type) == "boolean"
       and (.questions == null or ((.questions | type) == "array"
         and (.questions | all(type == "object" and (.number == null or (.number | type) == "number" or (.number | type) == "string")
@@ -224,7 +301,6 @@ ask_matcher() {
 USED='[]'
 EXPECT=
 EXPECTING=0
-WAITING=0
 EXIT_SEEN=0
 TURN=
 DONE_EVENTS=0
@@ -236,31 +312,36 @@ owner_acted() {
     "$INC [session_events] | .[\$done:] | any(.kind == \"owner\" or .kind == \"exit\")" > /dev/null
 }
 
-pull_owner_in() {
-  rex window rename -s "$S" "$WINDOW" "bjornstack-evals-session: your answer" > /dev/null
-  rex window focus -s "$S" "$WINDOW" > /dev/null
-  WAITING=1
-}
-
 # answer_plan <answer> <turn text>: prints one JSON object
-# {kind, lines, ids, display}; lines is [{label, id}], id null for an empty marker.
+# {kind, message, lines, ids, display, clashes, settle, superseded}.
+#   kind: "full", "partial" or "pull" (below).
+#   message: the text to type or pre-fill, the lines joined by a blank line,
+#     each "<label>: <segment>" (just the segment when the label is ""); absent
+#     for "pull".
+#   lines: [{label, id}], id null for an empty marker.
+#   ids: the segments typed or pre-filled.
+#   display: the matched segments and refused near-matches, and the clashing
+#     answers, each with the recorded turn it answered.
+#   clashes: [[segment id, ...]] the clashes the owner settles after the run.
+#   settle: the ids of a clash on a one-question turn, which the owner's answer
+#     settles by dropping them; [] otherwise.
+#   superseded: the ids of answers that a later answer of the same run replaced
+#     within a clash list; they are used with the plan's ids.
 # A question's label is a whole positive integer (a JSON integer or a digit
 # string) or a single ASCII letter. The answer is labelled when every question
 # has a label, all of one kind, distinct (letters ignoring case) and each
 # starting a line of the turn text (after optional spaces, "*", "-", ">" or
 # "(", then "." ":" or ")", a letter also a space or the end of the line).
 # kind "full": every question has a distinct unused segment of R and the
-# answer is labelled or no question has a label; message is the segments typed
-# as one message, each prefixed "<label>: " (the turn's labels, else 1, 2, ...,
-# none for a single question: label ""), ids the segments used.
+# answer is labelled or no question has a label; the message is each segment
+# prefixed "<label>: " (the turn's labels, else 1, 2, ...; none for a single
+# question: label "").
 # kind "partial": at least one question has such a segment, and either some
 # do not (segment id null is uncovered) or all do but the labelling is mixed
 # or bad (any id that is unknown, used or repeated makes the kind "pull");
-# ids the segments pre-filled; lines is the pre-fill: "<label>: <segment>"
-# or "<label>: " for each question, or just the covered segments (label "")
-# when not labelled.
-# kind "pull": anything else. display describes the matched segments and the
-# refused near-matches the answer names.
+# the message is the pre-fill: "<label>: <segment>" or "<label>: " for each
+# question, or just the covered segments (label "") when not labelled.
+# kind "pull": anything else.
 answer_plan() {
   printf '%s' "$SEGMENTS" | jq -c --argjson used "$USED" --argjson ans "$1" --arg turn "$2" '
     def whole:
@@ -317,12 +398,15 @@ answer_plan() {
          | (if $labelled then $labs[.key].v elif $n == 1 then "" else (.key + 1 | tostring) end) as $l
          | select(.value.segment != null or $withmarkers)
          | {label: $l, id: .value.segment}];
+      def text($ls):
+        [$ls[] | . as $l | (if $l.label == "" then "" else $l.label + ": " end)
+                 + (if $l.id == null then "" else ($segs[] | select(.id == $l.id) | .segment) end)] | join("\n\n");
       if $n == 0 or ($got | length) == 0 or ($idsok | not) then {kind: "pull", display: $display, clashes: (if $idsok then $clashes else [] end), settle: $settle, superseded: $superseded}
       elif ($got | length) == $n and ($labelled or $unlabelled)
-      then {kind: "full", lines: lines(false), ids: $got, display: $display, clashes: [], settle: [], superseded: $superseded}
+      then lines(false) as $ls | {kind: "full", message: text($ls), lines: $ls, ids: $got, display: $display, clashes: [], settle: [], superseded: $superseded}
       else
-        {kind: "partial", display: $display, ids: $got, clashes: $clashes, settle: $settle, superseded: $superseded,
-            lines: (if $labelled then lines(true) else [lines(false)[] | .label = ""] end)}
+        (if $labelled then lines(true) else [lines(false)[] | .label = ""] end) as $ls
+        | {kind: "partial", message: text($ls), display: $display, ids: $got, clashes: $clashes, settle: $settle, superseded: $superseded, lines: $ls}
       end'
 }
 
@@ -348,12 +432,11 @@ remember_settle() {
 # input box (no enter) and pull the owner in; else pull the owner in. A pull-in
 # prints the matched segments and refused near-matches (see answer_plan).
 decide() {
-  local answer plan kind label id seg message= ids
-  local matched=0
-  answer="$(ask_matcher "$1")" || matched=1
+  local answer plan kind message matcher_failed=0
+  answer="$(ask_matcher "$1")" || matcher_failed=1
   # The owner typed while the matcher ran: type nothing, decide on the next turn.
   if owner_acted; then return; fi
-  if [ "$matched" = 1 ]; then pull_owner_in; return; fi
+  if [ "$matcher_failed" = 1 ]; then pull_owner_in; return; fi
   if [ "$(printf '%s' "$answer" | jq -r '.asks')" = false ]; then
     EXITING=1
     type_text /exit
@@ -361,50 +444,58 @@ decide() {
   fi
   plan="$(answer_plan "$answer" "$1")"
   kind="$(printf '%s' "$plan" | jq -r '.kind')"
-  while IFS='|' read -r label id; do
-    [ -n "$label$id" ] || continue
-    if [ "$id" = null ]; then
-      seg=
-    else
-      seg="$(printf '%s' "$SEGMENTS" | jq -j --arg id "$id" '.[] | select(.id == $id) | .segment'; printf x)"
-      seg="${seg%x}"
-    fi
-    [ -z "$label" ] || seg="$label: $seg"
-    message="${message:+$message
-
-}$seg"
-  done <<< "$(printf '%s' "$plan" | jq -r '(.lines // [])[] | .label + "|" + (.id // "null")')"
+  # A segment the TUI would take for a command is shown, never typed.
+  if [ "$kind" != pull ] && plan_starts_command "$plan"; then kind=pull; fi
+  message="$(printf '%s' "$plan" | jq -j '.message // ""' | strip_control; printf x)"
+  message="${message%x}"
   case "$kind" in
     full)
       if [ -z "$message" ]; then pull_owner_in; return; fi
       if owner_acted; then return; fi
-      ids="$(printf '%s' "$plan" | jq -c '.ids + .superseded')"
-      USED="$(printf '%s' "$USED" | jq -c --argjson s "$ids" '. + $s')"
-      ids="$(printf '%s' "$plan" | jq -c '.ids')"
-      TYPED="$(printf '%s' "$TYPED" | jq -c --arg t "$message" --argjson s "$ids" --argjson all "$SEGMENTS" \
-        '. + [{text: $t, segments: $s, from: [$s[] as $i | $all[] | select(.id == $i) | {run, record}]}]')"
+      use_plan "$plan" "$message"
       EXPECT="$message"
       EXPECTING=1
       type_text "$message"
       ;;
     partial)
       if owner_acted; then return; fi
-      ids="$(printf '%s' "$plan" | jq -c '.ids + .superseded')"
-      USED="$(printf '%s' "$USED" | jq -c --argjson s "$ids" '. + $s')"
-      ids="$(printf '%s' "$plan" | jq -c '.ids')"
+      use_plan "$plan"
       [ -z "$message" ] || type_lines "$message"
-      printf '%s' "$plan" | jq -j '.display'
-      record_clashes "$plan" "$1"
-      remember_settle "$plan"
-      pull_owner_in
+      show_plan "$plan" "$1"
       ;;
     *)
-      printf '%s' "$plan" | jq -j '.display'
-      record_clashes "$plan" "$1"
-      remember_settle "$plan"
-      pull_owner_in
+      show_plan "$plan" "$1"
       ;;
   esac
+}
+
+# plan_starts_command <plan>: true when a segment the plan would type starts
+# with a command character (see starts_command).
+plan_starts_command() {
+  local id seg
+  while IFS= read -r id; do
+    seg="$(printf '%s' "$SEGMENTS" | jq -j --arg id "$id" '.[] | select(.id == $id) | .segment'; printf x)"
+    if starts_command "${seg%x}"; then return 0; fi
+  done < <(printf '%s' "$1" | jq -r '(.ids // [])[]')
+  return 1
+}
+
+# use_plan <plan> [<typed message>]: marks the plan's segments used and, with a
+# message, records it as typed.
+use_plan() {
+  USED="$(printf '%s' "$USED" | jq -c --argjson p "$1" '. + $p.ids + $p.superseded')"
+  [ -n "${2:-}" ] || return 0
+  TYPED="$(printf '%s' "$TYPED" | jq -c --arg t "$2" --argjson p "$1" --argjson all "$SEGMENTS" \
+    '. + [{text: $t, segments: $p.ids, from: [$p.ids[] as $i | $all[] | select(.id == $i) | {run, record}]}]')"
+}
+
+# show_plan <plan> <turn text>: prints what the plan shows the owner, records
+# its clashes and pulls the owner in.
+show_plan() {
+  printf '%s' "$1" | jq -j '.display' | strip_control
+  record_clashes "$1" "$2"
+  remember_settle "$1"
+  pull_owner_in
 }
 
 fail_pending() {
@@ -418,7 +509,12 @@ handle_event() {
     first)
       content="$(printf '%s' "$1" | jq -j '.content'; printf x)"
       content="${content%x}"
-      [ "$content" = "$FIRST_CONTENT" ] || fail "the session's first message differs from the recorded first message: $FIRST_TEXT"
+      if [ "$OWNER_FIRST" = 1 ]; then
+        WAITING=0
+        rex window rename -s "$S" "$WINDOW" bjornstack-evals-session > /dev/null
+      else
+        [ "$content" = "$FIRST_CONTENT" ] || fail "the session's first message differs from the recorded first message: $FIRST_TEXT"
+      fi
       ;;
     owner)
       content="$(printf '%s' "$1" | jq -j '.content'; printf x)"
@@ -476,7 +572,7 @@ while :; do
       DONE_EVENTS=$((DONE_EVENTS + 1))
       handle_event "$EV"
     done <<< "$NEW"
-  elif [ $(($(date +%s) - STARTED)) -ge "$FIRST_TIMEOUT" ]; then
+  elif [ "$OWNER_FIRST" = 0 ] && [ $(($(date +%s) - STARTED)) -ge "$FIRST_TIMEOUT" ]; then
     fail "no session transcript $UUID.jsonl appeared within ${FIRST_TIMEOUT}s of the first message"
   fi
   if [ "$ENDED" = 1 ]; then

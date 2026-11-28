@@ -20,8 +20,8 @@
 # files only. clashes prints the clashes in the target run directory's own
 # clashes.jsonl, less what settling removed, ready to settle (nothing when
 # there are none or the target is a transcript without a run directory).
-# Exit: 0 done, 2 usage, an unknown subcommand (check is one: it
-# is removed), a spec-less run, or an id that is not in the corpus.
+# Exit: 0 done, 2 usage, an unknown subcommand, a spec-less run, or an id
+# that is not in the corpus.
 # A run directory holding replayed-from.txt also counts the recorded transcript
 # it names.
 set -euo pipefail
@@ -131,7 +131,7 @@ clashes)
     MET="$(jq -sc . "$TARGET_DIR/clashes.jsonl")"
     LISTING="$(jq -nr --argjson met "$MET" --argjson segs "$EFFECTIVE" \
       "$INC clash_listing(merge_clashes(\$met; \$segs); \$segs)")"
-    [ -z "$LISTING" ] || printf '%s\n' "$LISTING"
+    [ -z "$LISTING" ] || printf '%s\n' "$LISTING" | LC_ALL=C tr -d '\000-\011\013-\037'
   fi
   ;;
 

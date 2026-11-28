@@ -21,7 +21,7 @@
 #    no corpus.sh is in check-rex-run.sh.
 #
 # Interface the cases pin (corpus.jq, include "corpus" {search: <dir>}; it
-# includes replay.jq):
+# holds copies of replay.jq's shared definitions, kept equal by the last cases):
 #   spec_text                      over a transcript array; the first user record's
 #                                  <command-args> (or the plain first message) with trailing
 #                                  whitespace and a trailing "\n\nThe owner is away for this
@@ -77,7 +77,7 @@ H="$T/harness"
 EV="$T/home/workspace/bjornstack-evals"
 PATHX="$T/bin:$PATH"
 mkdir -p "$T/bin" "$H" "$T/tmp" "$T/recorded"
-for f in corpus.sh corpus.jq replay.jq matcher.sh; do
+for f in corpus.sh corpus.jq replay.jq; do
   [ ! -e "$HERE/$f" ] || cp "$HERE/$f" "$H/$f"
 done
 
@@ -406,6 +406,13 @@ run_corpus clashes "$EV/runs/replay-1"
 check "clashes lists a recorded clash with each answer's run and record and one settle line per answer, exit 0, a trailing newline" \
   "exit=0 text=${CLASH_TEXT}x" "exit=$STATUS text=$(listed)"
 
+ctrl_bytes() { LC_ALL=C tr -d '\n\040-\377' < "$1" | wc -c | tr -d ' '; }   # how many control bytes below 0x20, newline aside, the file holds
+fresh; default_runs; make_run third-1 "$SPEC" "$Q1" "$UX" $'all\x1b[2J of them'; record_clash replay-1 $'Which\x1b]0;pwned\x07 folders?' "$UL#0" "$UX#0"
+run_corpus clashes "$EV/runs/replay-1"
+check "clashes prints recorded text without control characters, the text around them kept" \
+  "exit=0 ctrl=0 answer=1 question=1" \
+  "exit=$STATUS ctrl=$(ctrl_bytes "$OUT") answer=$(grep -cF '[2J of them' "$OUT") question=$(grep -cF ']0;pwned folders?' "$OUT")"
+
 fresh; default_runs; third_run; record_clash replay-1 "$Q1" "$UL#0" "$UX#0"
 run_corpus clashes "$EV/runs/replay-1"
 check "clashes calls no claude" "claude=0" "claude=$(calls)"
@@ -527,7 +534,7 @@ check "a later settle that drops an id an earlier one kept exits 0, records it, 
 def_block() { # def_block <file> <name>: the blank-line-separated paragraph holding "def <name>", comments above included
   awk -v RS= -v pat="(^|\n)def $2[:(]" '$0 ~ pat { print; exit }' "$1"
 }
-for name in first_user_index final_chain owner_text is_owner_record owner_messages first_user_content assistant_text pairs segments_of; do
+for name in first_user_index final_chain owner_text is_owner_record owner_messages first_user_content assistant_text; do
   check "def $name is the same in corpus.jq and replay.jq" "$(def_block "$HERE/replay.jq" "$name")" "$(def_block "$HERE/corpus.jq" "$name")"
 done
 

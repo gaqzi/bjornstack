@@ -2,8 +2,7 @@
 # Used through `include "replay" {search: "<this directory>"};`, so that a
 # replay.jq in the caller's working directory is never found first.
 # replay.sh uses first_message_text, first_user_content, session_events and
-# replay_log; rex-run.sh uses owner_messages. segments and pairs are not used
-# by either script: the tests read them, and corpus.jq keeps copies of the
+# replay_log; rex-run.sh uses owner_messages. corpus.jq keeps copies of the
 # shared definitions (check-corpus.sh keeps them equal).
 
 # The first user record: the first message typed into the session, not an
@@ -79,22 +78,6 @@ def assistant_text:
        | if length > 0 then join("\n\n") else null end
   else null end;
 
-# Recorded pairs: each owner message with the assistant text since the
-# previous owner message (or the start).
-def pairs:
-  final_chain
-  | first_user_index as $first
-  | reduce to_entries[] as $e ({turn: [], out: []};
-      if $e.key == $first then .
-      elif ($e.value | is_owner_record) then
-        .out += [{id: $e.value.uuid, turn: (.turn | join("\n\n")), message: ($e.value | owner_text)}]
-        | .turn = []
-      else
-        ($e.value | assistant_text) as $t
-        | if $t != null then .turn += [$t] else . end
-      end)
-  | .out;
-
 # Events of the session's own transcript, in file order, one object each:
 # {kind: "first", content} (the first user record), {kind: "owner", content, uuid},
 # {kind: "assistant", text}, {kind: "turn_end"}, {kind: "exit"}.
@@ -109,32 +92,6 @@ def session_events:
     elif .type == "system" and .subtype == "turn_duration" then {kind: "turn_end"}
     else (assistant_text | select(. != null) | {kind: "assistant", text: .})
     end;
-
-# The segments of one owner message text, in order, as {label, segment}. A
-# numbered line (digits, then : . or ) and a next character that is not a
-# digit, so "10:30 ..." and "3.5 hours" are not numbered) is a segment
-# labelled with its digits; the label and the spaces after it are removed
-# from the segment. A word or a letter before a colon is not a label. A blank
-# line ends a segment. A line that is not labelled continues the open
-# segment, else starts a paragraph (label null).
-def segments_of:
-  reduce split("\n")[] as $line ({out: [], open: false};
-    if ($line | test("^\\s*$")) then .open = false
-    elif ($line | test("^[0-9]+[:.)]([^0-9]|$)")) then
-      ($line | capture("^(?<l>[0-9]+)[:.)] *(?<t>.*)$")) as $m
-      | .out += [{label: $m.l, segment: $m.t}] | .open = true
-    elif .open then .out[-1].segment += "\n" + $line
-    else .out += [{label: null, segment: $line}] | .open = true
-    end)
-  | .out;
-
-# Every segment of the recorded owner messages: id "<pair uuid>#<index>",
-# label, segment and the session turn the message answered.
-def segments:
-  [pairs[] | . as $p
-   | ($p.message | segments_of) | to_entries[]
-   | {id: ($p.id + "#" + (.key | tostring)), label: .value.label,
-      segment: .value.segment, session_turn: $p.turn}];
 
 # One line per owner message on the transcript's final chain, in order: the
 # message is "replayed" with its segment ids when its record's uuid is one of
