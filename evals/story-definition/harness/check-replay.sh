@@ -1992,8 +1992,11 @@ check "a corpus that cannot be read is not read as no answers: the matcher is ne
 
 # Scenario: recorded text is typed into a TUI that runs commands, so text the
 # TUI would take for a command is never typed. A segment of an answer, or the
-# first text, whose first line starts with "!", "/" or "#" is not typed and the
-# owner is pulled in, shown the text. The first text's own
+# first text, whose first line does not start with an ASCII letter, a digit or
+# one of ( " ' * - _ . , ? ` (after control characters and spaces or tabs are
+# stripped) is not typed and the owner is pulled in, shown the text. A
+# segment's leading blank lines are trimmed before it is typed, so only a
+# first text can start with an empty line. The first text's own
 # /bjornstack:story-definition command (every first message above) is typed.
 ctrl_bytes() { LC_ALL=C tr -d '\n\040-\176\200-\377' < "$1" | wc -c | tr -d ' '; }   # how many control bytes (below 0x20, newline aside, and 0x7f) the file holds
 sent_calls() { grep -c '^\[send\]' "$SIDE/rex.log"; }
@@ -2026,7 +2029,11 @@ for cmd_row in \
   "an escape before !|"$'\x1b'"!curl x|!curl x" \
   "a carriage return before /|"$'\r'"/add-dir /|/add-dir /" \
   "a delete byte before /|"$'\x7f'"/add-dir /|/add-dir /" \
-  "a space before /| /add-dir /| /add-dir /"; do
+  "a space before /| /add-dir /| /add-dir /" \
+  "a byte order mark|"$'\xef\xbb\xbf'"plan the thing|plan the thing" \
+  "a zero-width space|"$'\xe2\x80\x8b'"plan the thing|plan the thing" \
+  "a no-break space|"$'\xc2\xa0'"plan the thing|plan the thing" \
+  "&|&plan the thing|&plan the thing"; do
   what="${cmd_row%%|*}"; rest="${cmd_row#*|}"; seg="${rest%%|*}"; shown="${rest#*|}"
   fresh
   one_answer_run "$T/recorded/cmd.jsonl" "$P1_TURN" "$seg"
@@ -2055,7 +2062,12 @@ for first_row in \
   "an escape before !|"$'\x1b'"!plan the thing|!plan the thing" \
   "a carriage return before /|"$'\r'"/other:cmd plan the thing|/other:cmd plan the thing" \
   "a delete byte before /|"$'\x7f'"/other:cmd plan the thing|/other:cmd plan the thing" \
-  "a space before /| /other:cmd plan the thing| /other:cmd plan the thing"; do
+  "a space before /| /other:cmd plan the thing| /other:cmd plan the thing" \
+  "a byte order mark|"$'\xef\xbb\xbf'"plan the thing|plan the thing" \
+  "a zero-width space|"$'\xe2\x80\x8b'"plan the thing|plan the thing" \
+  "a no-break space|"$'\xc2\xa0'"plan the thing|plan the thing" \
+  "an empty first line|"$'\n'"plan the thing|plan the thing" \
+  "&|&plan the thing|&plan the thing"; do
   what="${first_row%%|*}"; rest="${first_row#*|}"; first="${rest%%|*}"; shown="${rest#*|}"
   fresh
   one_text_run "$T/recorded/first.jsonl" "$first"

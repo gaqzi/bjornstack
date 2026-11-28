@@ -45,8 +45,9 @@
 # copy is copied to live/<run-name>/.bjornstack and the session loads
 # --plugin-dir live/<run-name>/.bjornstack/plugin. Read is allowed and
 # Write/Edit denied on that copy.
-# A text the TUI would take for a command is never typed: R's first text, or an
-# answer segment, whose first line starts with "!", "/" or "#" after control characters are stripped (R's own
+# A text the TUI could take for a command is never typed: R's first text, or an
+# answer segment, whose first line does not start with a letter, a digit or a
+# safe punctuation character (see starts_command; R's own
 # /bjornstack:story-definition command is the one exception). The owner is
 # pulled in and shown it, and types it. A failed settle (see settle_picks) is
 # named in unsettled.txt in the run directory and on stdout.
@@ -239,28 +240,38 @@ pull_owner_in() {
 # other than newline.
 strip_control() { LC_ALL=C tr -d '\000-\011\013-\037\177'; }
 
-# starts_command <text>: true when the first non-blank character of the first
-# line of the text, after control characters are stripped, is "!", "/" or "#",
-# which the TUI takes for a command.
+# first_line <text>: the first line of the text, control characters stripped.
+first_line() {
+  local text
+  text="$(printf '%s' "$1" | strip_control)"
+  printf '%s' "${text%%$'\n'*}"
+}
+
+# starts_command <text>: true unless the text is plain enough to type. It is
+# plain when the first character of its first line, after control characters
+# and leading spaces and tabs are stripped, is an ASCII letter, an ASCII digit
+# or one of ( " ' * - _ . , ? and a backtick. None of these starts a mode of
+# the TUI. Anything else is not typed: "!", "/", "#" and "&" start a command or
+# mode, and a BOM, a zero-width space, a no-break space or an empty first line
+# could hide one, so the owner types it.
 starts_command() {
-  local line
-  line="$(printf '%s' "$1" | strip_control; printf x)"
-  line="${line%x}"
-  line="${line%%$'\n'*}"
-  line="${line#"${line%%[![:space:]]*}"}"
-  case "$line" in '!'* | '/'* | '#'*) return 0 ;; *) return 1 ;; esac
+  local line LC_ALL=C
+  line="$(first_line "$1")"
+  line="${line#"${line%%[! $'\t']*}"}"
+  case "$line" in
+    [A-Za-z0-9]* | '('* | '"'* | "'"* | '*'* | '-'* | '_'* | '.'* | ','* | '?'* | '`'*) return 1 ;;
+  esac
+  return 0
 }
 
 sleep "$STARTUP"
 OWNER_FIRST=0   # 1 when the owner, not the driver, types the first message
-FIRST_LINE="$(printf '%s' "$FIRST_TEXT" | strip_control; printf x)"
-FIRST_LINE="${FIRST_LINE%x}"
-FIRST_LINE="${FIRST_LINE%%$'\n'*}"
+FIRST_LINE="$(first_line "$FIRST_TEXT")"
 if [ "$FIRST_LINE" = /bjornstack:story-definition ] || [ "${FIRST_LINE#/bjornstack:story-definition }" != "$FIRST_LINE" ] || ! starts_command "$FIRST_TEXT"; then
   type_text "$FIRST_TEXT"
 else
   OWNER_FIRST=1
-  printf 'replay.sh: the first message starts with !, / or #, so it is not typed; type it yourself:\n%s\n' "$(printf '%s' "$FIRST_TEXT" | strip_control)"
+  printf 'replay.sh: the first message does not start with a letter or digit, so it is not typed; type it yourself:\n%s\n' "$(printf '%s' "$FIRST_TEXT" | strip_control)"
   pull_owner_in
 fi
 STARTED="$(date +%s)"
