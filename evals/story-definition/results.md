@@ -285,3 +285,170 @@ The owner was away. The design lists 20 open decisions
 - Outcomes: right 1, wrong 1, asked needlessly 3, late 0, missed 0.
 - Baseline outcomes: right 0, wrong 3, asked needlessly 0, late 0,
   missed 2.
+
+## Live (replay), 2026-11-27
+
+A replay the owner answered, counted as a live run by the owner's
+ruling: "practically, is there a difference between a live run and a
+rerun? live in this sense would be that it was tested against a model
+with interactions, so we did interact".
+
+- Date: 2026-11-27 (14:35 to 15:18 UTC).
+- Arm: bjornstack:story-definition with the architecture phase, from
+  the plugin frozen at e100df2, run with replay.sh as a replay of
+  briefkasten-live-84cffac (replayed-from.txt), the owner present.
+- Spec: briefkasten, owner answering live.
+- Skill commit: e100df2.
+- Grader: hand.
+- Key commit: 39c3c1f.
+- Model: claude-opus-5-5.
+- Cost: $2.57.
+- Transcript: `~/workspace/bjornstack-evals/runs/rerun-live-e100df2/transcript.jsonl`
+  (untracked). `L<n>` is a line of that file. The design is
+  `workdir/mailfeed-stories.md` beside it; `mailfeed-stories.md:<n>`
+  points there. Both were rescued after the session ended without
+  /exit: the transcript from ~/.claude/projects, the design from the
+  session's scratchpad (rescued.txt).
+- Replayed messages: 0 of 12. replay.jsonl records all 12 as the
+  owner's. 4 of them hold bl's text word for word, which fits
+  pre-fills the owner sent (inferred).
+- Owner's note: "okay, I have answered again and it has exited, it had
+  some issues and new questions. it felt better. I guess some of the
+  issues is just answering altogether/" (owner-note.txt).
+
+| Item | Mark | Verdict | Outcome | Baseline | Evidence |
+|---|---|---|---|---|---|
+| domain-first-packaging | rule | applied (check) | right | missed | L116 item 1 states the capabilities from the prompt's jobs, citing identify-domains, "Please correct any of them". The owner renames them at L119. mailfeed-stories.md:105-120 records the capabilities from the rule and the names from the owner. |
+| compute-or-coordinate | rule | applied | right | missed | L116 item 2. mailfeed-stories.md:122-128 lists the pure steps and the coordinators, citing logic-apart-from-collaborators and collaborators-received-set-up. |
+| boundary-communication | rule | applied (check) | right | wrong | L116 item 3. mailfeed-stories.md:130-134: `publishing` owns the selection and the log, `feed` the files, `mail` every change in Fastmail. |
+| design-for-replay | rule + owner | applied, acknowledgement raised | right | wrong | See the notes below. |
+| utc-computation | rule | applied | right | wrong | L116 item 5. mailfeed-stories.md:176-177 cites utc-unless-one-zone-matters. The offset was asked on its own (L152), as session.md:407-415 asks. |
+
+### Notes on the (check) items
+
+- domain-first-packaging: read as applied, because the answers are
+  stated with the rule cited, as an invitation to correct, like the
+  compute-or-coordinate note of the 2026-11-23 live run (lines
+  177-181). If read as asking the owner to confirm, it is raised and
+  asked needlessly.
+- boundary-communication: the key gives the read mark to "the part
+  that files emails into the feed". This run gives it to `mail`, by
+  the owner's L119 "3:", while `publishing` drives the calls. Under
+  the owner's note at line 146 (a coordinator driving the module
+  counts as one owner), this is right. Otherwise it is
+  answered-for-you, wrong.
+- design-for-replay, by part:
+  - Rule part, act-only-after-stored: store, then write files, then
+    mark read, then store EmailMarkedRead (L123;
+    mailfeed-stories.md:149-152). Selection events are stored before
+    any folder is made.
+  - Rule part, outside-effect-once-per-event:
+    - a stop before the mark is redone (mailfeed-stories.md:153-155);
+    - the log keeps a mail from being published twice (L123);
+    - filing again starts with stored events, through revert (L138;
+      mailfeed-stories.md:146).
+  - No copy: offered as the recommendation (L116 Q1), and the owner
+    asked for thin events (L119 "4:").
+  - Losses:
+    - deleted and purged mail, asked at L145, accepted in the owner's
+      words at L148 (mailfeed-stories.md:160-165);
+    - mail read elsewhere, named in R1 at L182, accepted at L191.
+  - Owner part, what acknowledges a mail: raised at L116 Q1, and the
+    owner picked marking read. The session's own pick was the
+    opposite, "nothing in Fastmail changes". That does not change the
+    verdict.
+
+### Questions put to the owner: 41 (check)
+
+Counted as each numbered or separate ask in a session turn. Each
+number of a pick list counts as one question, an unnumbered table to
+correct as one, and a question asked again counts again:
+L59 3, L79 4, L116 6, L123 2, L138 2, L145 2, L152 1, L166 1, L174 2,
+L182 13, L222 3, L249 1, L266 1. Of them, 18 are picks the owner only
+had to confirm. The narrower count of the 2026-11-23 live run (no pick
+lists, no filing question) gives 20; on this count that run gives 26.
+The rubric does not say how to count; the owner may count otherwise.
+The owner replied in 12 turns.
+
+### Briefkasten runs the phase has been changed after: 4
+
+briefkasten-away-84cffac and briefkasten-live-84cffac (2026-11-23),
+replay-real-1 (2026-11-25) and replay-real-2 (2026-11-27, 10:24 to
+10:59 UTC). The phase changes in e100df2 (bs-f3o.7.28 to bs-f3o.7.34,
+2026-11-24; bs-f3o.7.36, 2026-11-27 13:31 UTC) came after them.
+
+### Summary
+
+- applied 5, answered-for-you 0, raised 0, late 0, missed 0.
+- Outcomes: right 5, wrong 0, asked needlessly 0, late 0, missed 0.
+- Baseline outcomes: right 0, wrong 3, asked needlessly 0, late 0,
+  missed 2.
+- Live, 2026-11-23 (84cffac) outcomes: right 2, wrong 1, asked
+  needlessly 2, late 0, missed 0.
+- Pass bar (every item right in the live run): met, with two (check)s.
+
+## Owner away, 2026-11-27
+
+- Date: 2026-11-27 (15:19 to 15:25 UTC).
+- Arm: bjornstack:story-definition with the architecture phase, from
+  the plugin frozen at e100df2, run with run.sh and --owner-away.
+- Spec: briefkasten, owner away.
+- Skill commit: e100df2.
+- Grader: hand.
+- Key commit: 39c3c1f.
+- Model: claude-opus-5-5.
+- Cost: $1.59.
+- Transcript: `~/workspace/bjornstack-evals/runs/rerun-away-e100df2/`
+  (untracked). The design is `workdir/stories.md`; `stories.md:<n>`
+  points there.
+
+| Item | Mark | Verdict | Outcome | Baseline | Evidence |
+|---|---|---|---|---|---|
+| domain-first-packaging | rule | applied | right | missed | stories.md:204-224 cites identify-domains, name-for-domain, no-sibling-domain-imports and tree-shows-boundaries. |
+| compute-or-coordinate | rule | applied | right | missed | stories.md:226-240 lists the pure steps, cited. |
+| boundary-communication | rule | applied (check) | right (check) | wrong | stories.md:242-250 cites find-shared-data and single-owner. |
+| design-for-replay | rule + owner | applied, acknowledgement raised (check) | right (check) | wrong | See the notes below. |
+| utc-computation | rule | applied | right | wrong | stories.md:282-285 cites the rule, with no clock entry. The offset is listed apart as open decision 6 (stories.md:84-88). |
+
+### Notes on the (check) items
+
+- boundary-communication: the feed files are "owned" by `feed`, but
+  "the coordinators write only the documents `feed` returns"
+  (stories.md:246-248). So no single part writes them, and
+  rubric.md:52-56 asks for one part that alone writes. No part is
+  named as the writer of the journal either. Read strictly, this is
+  answered-for-you, wrong. Scored right because `feed` alone decides
+  the contents.
+- design-for-replay, by part:
+  - Rule part: applied.
+    - store, write, then acknowledge (stories.md:263-271);
+    - no copy (stories.md:272-279);
+    - dedupe by published id (stories.md:231);
+    - losses listed open (stories.md:280; open decision 3), with mail
+      read elsewhere named in open decision 4.
+  - Owner part: raised. The acknowledgement is open decision 2
+    (stories.md:49-58). Its pick is again "changes nothing in
+    Fastmail".
+  - The doubt: the design has no "filing again starts with a stored
+    event", which the key's outside-effect-once part names. This run
+    has no revert, and the prompt asks for none. If the grader needs
+    it, the item is answered-for-you, wrong.
+
+### Questions put to the owner: 0
+
+The owner was away. The design lists 16 open decisions
+(stories.md:39-129) and 7 assumptions.
+
+### Briefkasten runs the phase has been changed after: 4
+
+The same four runs as the live run of this date.
+
+### Summary
+
+- applied 5, answered-for-you 0, raised 0, late 0, missed 0.
+- Outcomes: right 5, wrong 0, asked needlessly 0, late 0, missed 0,
+  with two (check)s.
+- Baseline outcomes: right 0, wrong 3, asked needlessly 0, late 0,
+  missed 2.
+- Owner away, 2026-11-23 (84cffac) outcomes: right 1, wrong 1, asked
+  needlessly 3, late 0, missed 0.
