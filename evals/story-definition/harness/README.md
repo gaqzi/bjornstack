@@ -53,11 +53,17 @@ working directory, runs the repo's `run.sh` there with exactly those
 arguments and `EVALS_DIR` set to the eval home, and waits until it ends.
 It prints the run directory (`<eval home>/runs/<run-name>`) and exits with
 run.sh's status. The tab closes when run.sh ends. When run.sh fails,
-rex-run.sh prints the tab's last 20 lines first. No scan of earlier answers
-runs before or after a run, and nothing blocks a replay. Nothing else is saved:
+rex-run.sh prints the tab's last 20 lines first. Nothing else is saved:
 the run directory holds what the run needs.
-It runs only run.sh and freeze.sh: a first word that is not a plain run name is
-refused.
+It runs only run.sh, freeze.sh and replay.sh: a first word that is not a
+plain run name is refused. Before rex is called it also refuses, with exit 2:
+
+- an `--arm` that is not a plain name (letters, digits, `.`, `_`, `-`)
+- a `--prompt` or `--stand-in` file that resolves outside
+  `evals/story-definition/`
+- a `--replay` transcript outside `<eval home>/runs/` or `~/.claude/projects/`
+
+run.sh refuses the same `--arm`, `--prompt` and `--stand-in` values.
 
 The eval home is `~/workspace/bjornstack-evals`, or
 `$BJORNSTACK_EVALS_HOME`. It holds only the runs and frozen copies.
@@ -76,6 +82,8 @@ To run new plugin text, freeze it first: `rex-run.sh --freeze <commit>`
 opens the same tab and runs `freeze.sh` on a commit of this repo. It
 replaces the frozen bjornstack copy and `config/sources/bjornstack.commit`
 and touches nothing else in the eval home; it prints the full commit id.
+freeze.sh refuses a commit whose plugin holds `hooks/`, `.mcp.json` or
+`.lsp.json`, or a `plugin.json` with a `hooks` or `mcpServers` key.
 A `--prompt` run then copies that file to `plugin-commit.txt` in its run
 directory, and fails when the file is missing.
 
@@ -91,10 +99,12 @@ a live run.
 
 It opens the same `bjornstack-evals` tab as a run, running `replay.sh`
 with the run name and the transcript's absolute path, and prints
-`<eval home>/runs/<run-name>`. It is refused with exit 2, before rex is
-called, when the run name is not a plain name, the transcript is not a
-readable file or holds no owner message, or the run name already exists
-under `runs/` or `live/` in the eval home. `replay.jq` holds the
+`<eval home>/runs/<run-name>`. When replay.sh left `unsettled.txt` in the
+run directory, its content follows. It is refused with exit 2, before rex
+is called, when the run name is not a plain name, the transcript is not a
+readable file or holds no owner message, the transcript is outside
+`<eval home>/runs/` and `~/.claude/projects/`, or the run name already
+exists under `runs/` or `live/` in the eval home. `replay.jq` holds the
 definition of an owner message: a user record with string content that
 is not `isMeta` or `isCompactSummary` and does not start with `<command-message>`,
 `<command-name>` or `<local-command`, plus a `queued_command`
@@ -165,7 +175,9 @@ case) and starting a line of the turn's text.
     not), the driver drops every clashing answer the matcher listed (before
     the same-run pruning) at exit, with `corpus.sh settle <run> --drop <ids>`.
     Later replays are then offered the owner's answer, as a recorded answer
-    of this run, and none of the dropped ones. A failed settle does not change the run's exit status.
+    of this run, and none of the dropped ones. A failed settle does not change the run's exit status. replay.sh names
+the unsettled ids and why in `unsettled.txt` in the run directory and on
+stdout.
   - A turn that asked several questions, or any other case: nothing is read
     from the owner's answer. `corpus.sh clashes <run-dir>` lists the clashes
     and `corpus.sh settle` records the pick after the run.
@@ -205,10 +217,16 @@ as the run it came from.
 the effective corpus: the corpus less every answer the owner dropped when
 settling. Run on a run directory or on a recorded transcript anywhere.
 
-No scan runs before or after a run, and nothing blocks a replay: there is no
-`corpus.sh check`, and `corpus.sh` never calls `claude`. `corpus.sh`
-subcommands are `segments`, `clashes` and `settle`; any other name (`check` included) is
-an unknown subcommand, exit 2.
+`corpus.sh` never calls `claude`. Its subcommands are `segments`,
+`clashes` and `settle`; any other name is an unknown subcommand, exit 2.
+Run them with `EVALS_DIR` set to the eval home:
+
+```
+EVALS_DIR=~/workspace/bjornstack-evals evals/story-definition/harness/corpus.sh segments <run-dir|transcript>
+EVALS_DIR=~/workspace/bjornstack-evals evals/story-definition/harness/corpus.sh clashes <run-dir|transcript>
+EVALS_DIR=~/workspace/bjornstack-evals evals/story-definition/harness/corpus.sh settle <run-dir|transcript> --keep <id> --drop <id>...
+EVALS_DIR=~/workspace/bjornstack-evals evals/story-definition/harness/corpus.sh settle <run-dir|transcript> --drop <id>...
+```
 
 Settled choices live in the eval home, outside the repo and every run
 directory: `$EVALS_DIR/corpus/<sha256 of the spec text>/settled.jsonl`, one
@@ -230,19 +248,24 @@ A run directory with `replayed-from.txt` (a replay) also counts the recorded
 transcript it names, once, in the corpus for `settle` and `segments`;
 its ids can be settled from the replay's run directory.
 
-The recorded live run used `--add-dir` for the plugin copy. The replay
-instead uses the copy in `live/<run-name>/.bjornstack`: the plugin sits inside the session's
-working directory: `replay.sh` copies the whole frozen copy to
+A replay loads the plugin from `live/<run-name>/.bjornstack`, inside the
+session's working directory. `replay.sh` copies the whole frozen copy to
 `live/<run-name>/.bjornstack` and starts the session with
 `--plugin-dir live/<run-name>/.bjornstack/plugin`.
 Read is allowed and Write and Edit are denied on that copy. The run
 directory holds `transcript.jsonl`, `plugin-commit.txt`, `replay.jsonl`,
 `replayed-from.txt` and `workdir/`, a copy of the working
-directory without `.bjornstack`.
+directory without `.bjornstack`. It also holds `clashes.jsonl` when a
+clash was met and `unsettled.txt` when a settle failed.
 
-`check-freeze.sh` runs freeze.sh against a temp git repo.
-`check.sh` runs run.sh against a stub `claude` on PATH;
-`check-rex-run.sh` runs rex-run.sh against a stub `rex` and a stub run.sh.
+The check scripts, each run with `bash`:
+
+- `check.sh` runs run.sh against a stub `claude` on PATH.
+- `check-rex-run.sh` runs rex-run.sh against a stub `rex` and a stub run.sh.
+- `check-freeze.sh` runs freeze.sh against a temp git repo.
+- `check-git-env.sh` runs each check script with `GIT_DIR` and friends set to a decoy repo and expects the decoy untouched.
+- `check-corpus.sh` checks corpus.sh and corpus.jq.
+- `check-replay.sh` checks replay.sh.
 
 The spec is `briefkasten-spec.md`, the Test Task from bs-9qz.
 Score runs against `../keys/briefkasten.md` and `../rubric.md`.
