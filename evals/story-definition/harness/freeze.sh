@@ -61,13 +61,9 @@ for F in hooks .mcp.json .lsp.json; do
 done
 MANIFEST="$STAGE/plugin/.claude-plugin/plugin.json"
 if [ -f "$MANIFEST" ]; then
-  python3 -I - "$MANIFEST" <<'PY' || exit 1
-import json, sys
-m = json.load(open(sys.argv[1]))
-bad = [k for k in ("hooks", "mcpServers") if k in m]
-if bad:
-    sys.exit("plugin/.claude-plugin/plugin.json has %s, which would run code in an eval session; refusing the freeze" % ", ".join(bad))
-PY
+  BAD=$(jq -r '[("hooks", "mcpServers") as $k | select(has($k)) | $k] | join(", ")' "$MANIFEST") \
+    || { echo "plugin/.claude-plugin/plugin.json is unreadable or not a JSON object; refusing the freeze" >&2; exit 1; }
+  [ -z "$BAD" ] || { echo "plugin/.claude-plugin/plugin.json has $BAD, which would run code in an eval session; refusing the freeze" >&2; exit 1; }
 fi
 
 rm -rf "$SRC/bjornstack"

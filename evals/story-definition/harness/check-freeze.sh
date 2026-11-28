@@ -11,6 +11,10 @@ set -uo pipefail
 unset $(git rev-parse --local-env-vars)
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
+# freeze.sh runs python3, an asdf shim that picks its version from the working
+# directory's .tool-versions. Run from the repo, not from whatever the caller
+# was in (a linked worktree without one, say).
+cd "$HERE"
 T="$(mktemp -d "${TMPDIR:-/tmp}/freeze-check.XXXXXX")"
 T="$(cd "$T" && pwd)"
 trap 'rm -rf "$T"' EXIT
